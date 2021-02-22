@@ -318,14 +318,14 @@ class Bulldozer:
 
 
 if __name__ == "__main__":
-    dsmPath = "/home/pierre/ai4geo/CookerWorkspace/data/mnsto/Toulouse/cropped_dsm.tif"
-    outputFillDsmPath="/home/pierre/ai4geo/data/dsm_dtm/output/filledDsm.tif"
-    outputDsmPath = "/home/pierre/ai4geo/data/dsm_dtm/output/correctedDsm.tif"
-    outputDtmPath="/home/pierre/ai4geo/data/dsm_dtm/output/dtm.tif"
+    dsmPath = "/work/OT/eolab/DATA/DSM/Paris/PHR1A_201803261058106/tif/dsm_0_5m_radius30_PHR1A_201803261058106.tif"
+    outputFillDsmPath="/work/scratch/lallemd/bulldozer/filledDsm.tif"
+    #outputDsmPath = "/home/pierre/ai4geo/data/dsm_dtm/output/correctedDsm.tif"
+    #outputDtmPath="/work/scratch/lallemd/dtm.tif"
     bulldozer = Bulldozer()
 
-    #bulldozer.preprocess_FillCarsNoData(dsmPathToFill=dsmPath, 
-    #                                    outputFilledDsmPath=outputFillDsmPath)
+    bulldozer.preprocess_FillCarsNoData(dsmPathToFill=dsmPath, 
+                                        outputFilledDsmPath=outputFillDsmPath)
 
     #bulldozer.preprocess_DetectDisturbedAreasAndFill(dsmPath=dsmPath,
     #                                                 outputCorrectedDsmPath=outputDsmPath)
