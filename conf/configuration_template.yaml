@@ -1,0 +1,39 @@
+#-------------------------#
+#       File paths        #
+#-------------------------#
+# Input DSM path 
+dsmPath : "/work/scratch/lallemd/MNT/marseille/MNS.tif"
+# Output path for the filled DSM (DSM without noData)
+outputFillDsmPath : "/work/scratch/lallemd/MNT/marseille/filled_MNS.tif"
+# Output path for the corrected DSM (DSM without noData & without disturbed area)
+outputCorrectedDsmPath : "/work/scratch/lallemd/MNT/marseille/corrected_MNS.tif"
+# Output DTM path 
+outputDtmPath : "/work/scratch/lallemd/MNT/marseille/MNT.tif"
+
+#-------------------------#
+# Input image information #
+#-------------------------#
+nodata : -32768.0
+dsmResolution : 0.5
+
+#-------------------------#
+#    Advanced settings    #
+#-------------------------#
+# /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
+
+# FillNoData part
+# max search distance in meter
+maxSearchDistance : 100.0
+smoothingIterations : 0
+
+# DetectDisturbedAreasAndFill part
+slopeThreshold : 2.0
+disturbedThreshold : 3
+disturbedInfluenceDistance : 5.0
+
+# DtmExtractionWithCNESStrategy part
+# max object width in meter
+maxObjectWidth : 100.0
+numInnerIterationsStep1: 10
+numOuterIterationsStep2: 100
+numInnerIterationsStep2: 10

@@ -37,12 +37,14 @@ class TestConfigParser(unittest.TestCase):
         # check type
         self.assertIsInstance(cfg, dict)
 
-        # check dict size (expected 4)
-        self.assertEqual(len(cfg), 4)
+        # check dict size (expected 5)
+        self.assertEqual(len(cfg), 5)
 
         # check string element read
         self.assertIsInstance(cfg['str_test'], str)
+        self.assertIsInstance(cfg['str_test2'], str)
         self.assertEqual(cfg['str_test'], 'test')
+        self.assertEqual(cfg['str_test2'], 'test2')
 
         # check integer element read
         self.assertIsInstance(cfg['int_test'], int)

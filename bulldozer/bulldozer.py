@@ -8,6 +8,7 @@ import rasterio
 from rasterio.fill import fillnodata
 import scipy.ndimage as ndimage
 from tqdm import tqdm
+from config_parser import ConfigParser
 
 LOGGER = logging.getLogger(__name__)
 
@@ -318,17 +319,27 @@ class Bulldozer:
 
 
 if __name__ == "__main__":
-    dsmPath = "/work/OT/eolab/DATA/DSM/Paris/PHR1A_201803261058106/tif/dsm_0_5m_radius30_PHR1A_201803261058106.tif"
-    outputFillDsmPath="/work/scratch/lallemd/bulldozer/filledDsm.tif"
-    #outputDsmPath = "/home/pierre/ai4geo/data/dsm_dtm/output/correctedDsm.tif"
-    #outputDtmPath="/work/scratch/lallemd/dtm.tif"
+
+    path = "/work/scratch/lallemd/bulldozer/bulldozer/conf/configuration_template.yaml"
+    parser = ConfigParser(False)
+
+    cfg = parser.read(path)
     bulldozer = Bulldozer()
 
-    bulldozer.preprocess_FillCarsNoData(dsmPathToFill=dsmPath, 
-                                        outputFilledDsmPath=outputFillDsmPath)
+    bulldozer.preprocess_FillCarsNoData(dsmPathToFill=cfg['dsmPath'], 
+                                        outputFilledDsmPath=cfg['outputFillDsmPath'],
+                                        maxSearchDistance=cfg['maxSearchDistance'],
+                                        smoothingIterations=cfg['smoothingIterations'])
 
-    #bulldozer.preprocess_DetectDisturbedAreasAndFill(dsmPath=dsmPath,
-    #                                                 outputCorrectedDsmPath=outputDsmPath)
-    
-    #bulldozer.main_DtmExtractionWithCNESStrategy(dsmPath=outputDsmPath, 
-    #                                             dtmPath=outputDtmPath)
+    bulldozer.preprocess_DetectDisturbedAreasAndFill(dsmPath=cfg['outputFillDsmPath'],
+                                        outputCorrectedDsmPath=cfg['outputCorrectedDsmPath'],
+                                        slopeThreshold=cfg['slopeThreshold'],
+                                        disturbedThreshold=cfg['disturbedThreshold'],
+                                        disturbedInfluenceDistance=cfg['disturbedInfluenceDistance'])
+                                        
+    bulldozer.main_DtmExtractionWithCNESStrategy(dsmPath=cfg['outputCorrectedDsmPath'], 
+                                        dtmPath=cfg['outputDtmPath'],
+                                        maxObjectWidth=cfg['maxObjectWidth'],
+                                        numInnerIterationsStep1=cfg['numInnerIterationsStep1'],
+                                        numOuterIterationsStep2=cfg['numOuterIterationsStep2'],
+                                        numInnerIterationsStep2=cfg['numInnerIterationsStep2'])
