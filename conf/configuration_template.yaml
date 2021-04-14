@@ -2,13 +2,13 @@
 #       File paths        #
 #-------------------------#
 # Input DSM path 
-dsmPath : "/work/scratch/lallemd/MNT/marseille/MNS.tif"
+dsmPath : "/work/scratch/lallemd/PlanetObserver/MNS/Roquebilliere/dsm_align_20201014_fit.tif"
 # Output path for the filled DSM (DSM without noData)
-outputFillDsmPath : "/work/scratch/lallemd/MNT/marseille/filled_MNS.tif"
+outputFillDsmPath : "/work/scratch/lallemd/PlanetObserver/MNS/Roquebilliere/filled_MNS_50cm.tif"
 # Output path for the corrected DSM (DSM without noData & without disturbed area)
-outputCorrectedDsmPath : "/work/scratch/lallemd/MNT/marseille/corrected_MNS.tif"
+outputCorrectedDsmPath : "/work/scratch/lallemd/PlanetObserver/MNS/Roquebilliere/corrected_MNS_50cm.tif"
 # Output DTM path 
-outputDtmPath : "/work/scratch/lallemd/MNT/marseille/MNT.tif"
+outputDtmPath : "/work/scratch/lallemd/PlanetObserver/MNT/Roquebilliere/MNT_50cm.tif"
 
 #-------------------------#
 # Input image information #
@@ -19,6 +19,9 @@ dsmResolution : 0.5
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
+# if True, generates a logfile in the output directory
+keepLog : False
+
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
 # FillNoData part

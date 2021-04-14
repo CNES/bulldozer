@@ -2,6 +2,11 @@
 # All rights reserved
 
 import logging
+import logging.config
+import platform
+import psutil
+import os
+import getpass
 import numpy as np
 from danesfield_DTM import DTMEstimator
 import rasterio
@@ -9,9 +14,49 @@ from rasterio.fill import fillnodata
 import scipy.ndimage as ndimage
 from tqdm import tqdm
 from config_parser import ConfigParser
+from datetime import datetime
+from sys import stdout
+from git import Repo
+from shutil import copy
 
-LOGGER = logging.getLogger(__name__)
+logging.config.fileConfig(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../conf/logging.ini"), disable_existing_loggers=False)
+logger = logging.getLogger(__name__)
 
+def init_logger():
+    """
+            This method initiates the log file in order to store the environment state
+    """
+    info={}
+    try:
+        # Git info
+        try :
+            repo = Repo(search_parent_directories=True)
+            info['commit_sha'] = repo.head.object.hexsha
+            info['branch'] = repo.active_branch
+        except Exception as e:
+            info['commit_sha'] = "No git repo found ({})".format(e)
+            info['branch'] = "No git repo found ({})".format(e)
+            
+        # Node info
+        info['user']=getpass.getuser()
+        info['node']=platform.node()
+        info['processor']=platform.processor()
+        info['ram']=str(round(psutil.virtual_memory().total / (1024 **3)))+" GB"
+
+        # OS info
+        info['system']=platform.system()
+        info['release']=platform.release()
+        info['os_version']=platform.version()
+        
+        init = ("\n"+"#"*17+"\n#   BULLDOZER   #\n"+"#"*17+"\n# <Git info>\n#\t- branch: {}\n#\t- commit SHA: {}"
+                "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - processor: {}\n#\t - RAM: {}"
+                "\n#\n# <OS info>\n#\t - system: {}\n#\t - release: {}\n#\t - version: {}\n"
+                +"#"*17).format(info['commit_sha'], info['branch'], info['user'], info['node'], 
+                                info['processor'], info['ram'], info['system'], info['release'], info['os_version'])
+        logger.debug(init)
+    except Exception as e:
+        logger.warning("Init error: ", e)
+        
 def checkInputArray(bufferPath: str, inputBuffer: np.ndarray, outputPath: str, flushFlag: bool):
     
     dataset = None
@@ -232,23 +277,23 @@ class Bulldozer:
         if abs(2**(power-1) - nbObjectPixels) <  abs(2**(power) - nbObjectPixels):
             power -= 1
 
-        print("The dezoom factor is " + str(2**power) + " pixels")
+        logger.info("The dezoom factor is " + str(2**power) + " pixels")
         drapClothHandler =  DTMEstimator()
 
-        print("Building the pyramid...")
+        logger.info("Building the pyramid...")
         dsmPyramids = []
         dsmPyramids.append(np.copy(dsmBuffer))
         for j in tqdm(range(1,power)):
             dsmPyramids.append(drapClothHandler.downsample(dsmPyramids[j-1]))
 
         pyramidSize = len(dsmPyramids)
-        print("Length of the pyramid " + str(pyramidSize))
+        logger.info("Length of the pyramid " + str(pyramidSize))
 
 
         # Dtm is initialized at the most dezoomed dsm
         dtm = np.copy(dsmPyramids[pyramidSize-1])
 
-        print("Step 1: prevent unhook from the hills")
+        logger.info("Step 1: prevent unhook from the hills")
         # For the step, we only apply nInnerIterationsStep1.
         # This step allows to not unhook from the hills.
         for i in tqdm(range(numInnerIterationsStep1)):
@@ -262,17 +307,17 @@ class Bulldozer:
         level = max_level
         num_iter = numOuterIterationsStep2
 
-        print("Step 2: classical drap cloth filtering...")
+        logger.info("Step 2: classical drap cloth filtering...")
         for j in tqdm(range(0, power-1)):
 
-            print("Process level " + str(j))
-            print("Dtm upsampling...")
+            logger.info("Process level " + str(j))
+            logger.info("Dtm upsampling...")
             # DTM upsampling
             dtmNext = np.copy(dsmPyramids[pyramidSize-2-j])
             drapClothHandler.upsample(dtm, dtmNext)
             dtm = dtmNext
 
-            print("Filtering step...")
+            logger.info("Filtering step...")
             for i in range(num_iter):
                 dtm += step
                 for i in range(numInnerIterationsStep2):
@@ -319,8 +364,9 @@ class Bulldozer:
 
 
 if __name__ == "__main__":
-
-    path = "/work/scratch/lallemd/bulldozer/bulldozer/conf/configuration_template.yaml"
+    init_logger()
+    logger.info("Starting time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../conf/configuration_template.yaml")
     parser = ConfigParser(False)
 
     cfg = parser.read(path)
@@ -335,11 +381,21 @@ if __name__ == "__main__":
                                         outputCorrectedDsmPath=cfg['outputCorrectedDsmPath'],
                                         slopeThreshold=cfg['slopeThreshold'],
                                         disturbedThreshold=cfg['disturbedThreshold'],
-                                        disturbedInfluenceDistance=cfg['disturbedInfluenceDistance'])
+                                        disturbedInfluenceDistance=cfg['disturbedInfluenceDistance'],
+                                        dsmResolution=cfg['dsmResolution'],
+                                        noDataValue=cfg['nodata'])
                                         
     bulldozer.main_DtmExtractionWithCNESStrategy(dsmPath=cfg['outputCorrectedDsmPath'], 
                                         dtmPath=cfg['outputDtmPath'],
                                         maxObjectWidth=cfg['maxObjectWidth'],
+                                        dsmResolution=cfg['dsmResolution'],
                                         numInnerIterationsStep1=cfg['numInnerIterationsStep1'],
                                         numOuterIterationsStep2=cfg['numOuterIterationsStep2'],
                                         numInnerIterationsStep2=cfg['numInnerIterationsStep2'])
+    
+    if cfg['keepLog']:
+        try:
+            copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../logs/bulldozer_logfile.log"),
+                     os.path.dirname(os.path.abspath(cfg['outputDtmPath'])))
+        except Exception as e:
+            logger.warning("Error while writting the logfile: " + str(e), exc_info=True)

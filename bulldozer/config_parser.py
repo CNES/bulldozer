@@ -8,6 +8,8 @@ from yaml import safe_load,YAMLError
 import os.path
 import logging
 
+logger = logging.getLogger(__name__)
+
 class ConfigParser(object):
     """
         Configuration file parser. Used to read the bulldozer parameters.
@@ -21,9 +23,9 @@ class ConfigParser(object):
                 verbose (bool=False): increase output verbosity if true
         """
         if verbose:
-            logging.basicConfig(level=logging.DEBUG)
+            self.level=logging.DEBUG
         else:
-            logging.basicConfig(level=logging.INFO)
+            self.level=logging.INFO
 
 
     def read(self, path : str)->dict:
@@ -49,12 +51,14 @@ class ConfigParser(object):
         if not os.path.isfile(path):
             raise FileNotFoundError('The input config file \'{}\' doesn\'t exist'.format(path))
         
-        logging.debug('{} - [read] : Check input config file => Passed'.format(__class__.__name__))
+        if self.level == logging.DEBUG:
+            logging.debug('Check input config file => Passed')
 
         with open(path, 'r') as stream:
             try:
                 cfg = safe_load(stream)
-                logging.debug('{0} - [read] : Retrieved data: {1}'.format(__class__.__name__, cfg))
+                if self.level == logging.DEBUG:
+                    logging.debug('Retrieved data: {}'.format(cfg))
             except YAMLError:
                 raise YAMLError('Exception occured while reading the configuration file: ' + path)
         return cfg
