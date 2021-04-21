@@ -112,7 +112,8 @@ class Bulldozer:
                                   flushFlag:bool = True,
                                   maxSearchDistance=100.0,
                                   smoothingIterations=0,
-                                  noDataValue=-32768.0):
+                                  noDataValue=-32768.0,
+                                  newValue=np.nan):
         """
             This methods uses raterio library to fill cars no data value with interpolation.
             This pre-processing is advised for using Bulldozer DTM extraction to minimize artefact results.
@@ -126,12 +127,21 @@ class Bulldozer:
                 smoothingIterations (int): The number of 3x3 smoothing filter passes to run.
                 
                 noDataValue (float) : the value of no data to fill in the DSM.
+                
+                newValue (float) : The value that replaces the noData values. If nan (default value), the method
+                                     computes an interpolation for each noData point.
         """
         dsmDataset, dsmBuffer = checkInputArray(dsmPathToFill, dsmBufferToFill, outputFilledDsmPath, flushFlag)
 
         nodatamask = np.ma.masked_equal(dsmBuffer, noDataValue)
-
-        dsmBuffer = fillnodata(dsmBuffer, mask=nodatamask, max_search_distance=maxSearchDistance, smoothing_iterations=smoothingIterations)
+        
+        if(np.isnan(newValue)):
+            # if newValue is not set, than use the rasterio interpolation to fill the noDataValues
+            dsmBuffer = fillnodata(dsmBuffer, mask=nodatamask, max_search_distance=maxSearchDistance,
+                                   smoothing_iterations=smoothingIterations)
+        else : 
+            # otherwise replace noDataValues by newDataValues
+            dsmBuffer = np.where(dsmBuffer == noDataValue, newValue, dsmBuffer)
 
         handleOutputBuffer(dsmPathToFill, dsmBuffer, outputFilledDsmPath, flushFlag)
 
@@ -365,9 +375,10 @@ class Bulldozer:
 
 if __name__ == "__main__":
     init_logger()
-    logger.info("Starting time: " + datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    starting_time = datetime.now()
+    logger.info("Starting time: " + starting_time.strftime("%Y-%m-%d %H:%M:%S"))
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../conf/configuration_template.yaml")
-    parser = ConfigParser(False)
+    parser = ConfigParser(verbose=True)
 
     cfg = parser.read(path)
     bulldozer = Bulldozer()
@@ -375,7 +386,9 @@ if __name__ == "__main__":
     bulldozer.preprocess_FillCarsNoData(dsmPathToFill=cfg['dsmPath'], 
                                         outputFilledDsmPath=cfg['outputFillDsmPath'],
                                         maxSearchDistance=cfg['maxSearchDistance'],
-                                        smoothingIterations=cfg['smoothingIterations'])
+                                        smoothingIterations=cfg['smoothingIterations'],
+                                        noDataValue=cfg['nodata'],
+                                        newValue=float(cfg['new_value']))
 
     bulldozer.preprocess_DetectDisturbedAreasAndFill(dsmPath=cfg['outputFillDsmPath'],
                                         outputCorrectedDsmPath=cfg['outputCorrectedDsmPath'],
@@ -392,7 +405,7 @@ if __name__ == "__main__":
                                         numInnerIterationsStep1=cfg['numInnerIterationsStep1'],
                                         numOuterIterationsStep2=cfg['numOuterIterationsStep2'],
                                         numInnerIterationsStep2=cfg['numInnerIterationsStep2'])
-    
+    logger.info("Ending time: {} (Runtime: {})".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), datetime.now()-starting_time))
     if cfg['keepLog']:
         try:
             copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "../logs/bulldozer_logfile.log"),

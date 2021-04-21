@@ -2,7 +2,7 @@
 #       File paths        #
 #-------------------------#
 # Input DSM path 
-dsmPath : "/work/scratch/lallemd/PlanetObserver/MNS/Roquebilliere/dsm_align_20201014_fit.tif"
+dsmPath : "/home/il/lallemd/scratch/PlanetObserver/MNS/Réunion/MNS_50cm.tif"
 # Output path for the filled DSM (DSM without noData)
 outputFillDsmPath : "/work/scratch/lallemd/PlanetObserver/MNS/Roquebilliere/filled_MNS_50cm.tif"
 # Output path for the corrected DSM (DSM without noData & without disturbed area)
@@ -28,6 +28,7 @@ keepLog : False
 # max search distance in meter
 maxSearchDistance : 100.0
 smoothingIterations : 0
+new_value : 10000
 
 # DetectDisturbedAreasAndFill part
 slopeThreshold : 2.0

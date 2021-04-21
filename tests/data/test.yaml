@@ -5,3 +5,4 @@ boolean_test : True
 parent:
   child: 10.3
   child2: 13
+nan_test : nan

@@ -3,6 +3,7 @@
 import unittest
 import os.path
 from bulldozer.config_parser import ConfigParser
+import numpy as np
 
 class TestConfigParser(unittest.TestCase):
     
@@ -42,9 +43,7 @@ class TestConfigParser(unittest.TestCase):
 
         # check string element read
         self.assertIsInstance(cfg['str_test'], str)
-        self.assertIsInstance(cfg['str_test2'], str)
         self.assertEqual(cfg['str_test'], 'test')
-        self.assertEqual(cfg['str_test2'], 'test2')
 
         # check integer element read
         self.assertIsInstance(cfg['int_test'], int)
@@ -58,4 +57,7 @@ class TestConfigParser(unittest.TestCase):
         self.assertIsInstance(cfg['parent'], dict)
         self.assertIsInstance(cfg['parent']['child'], float)
         self.assertEqual(cfg['parent']['child'], 10.3)
-        self.assertEqual(cfg['parent']['child2'], 13)        
+        self.assertEqual(cfg['parent']['child2'], 13)
+        
+        # check nan reading
+        self.assertTrue(np.isnan(float(cfg['nan_test'])))

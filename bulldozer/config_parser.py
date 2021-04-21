@@ -46,19 +46,22 @@ class ConfigParser(object):
         """
         # input file format check
         if not (isinstance(path, str) and (path.endswith('.yaml') or path.endswith('.yml'))) :
-            raise ValueError('\'path\' argument should be a path to the YAML config file (here: {})'.format(path))
+            logger.exception('\'path\' argument should be a path to the YAML config file (here: {})'.format(path))
+            raise ValueError()
         # input file existence check
         if not os.path.isfile(path):
-            raise FileNotFoundError('The input config file \'{}\' doesn\'t exist'.format(path))
+            logger.exception('The input config file \'{}\' doesn\'t exist'.format(path))
+            raise FileNotFoundError()
         
         if self.level == logging.DEBUG:
-            logging.debug('Check input config file => Passed')
+            logger.debug('Check input config file => Passed')
 
         with open(path, 'r') as stream:
             try:
                 cfg = safe_load(stream)
                 if self.level == logging.DEBUG:
-                    logging.debug('Retrieved data: {}'.format(cfg))
-            except YAMLError:
-                raise YAMLError('Exception occured while reading the configuration file: ' + path)
+                    logger.debug('Retrieved data: {}'.format(cfg))
+            except YAMLError as e:
+                logger.exception('Exception occured while reading the configuration file: {}\nException: {}'.format(path, str(e)))
+                raise YAMLError()
         return cfg
