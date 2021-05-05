@@ -51,11 +51,11 @@ def init_logger():
         init = ("\n"+"#"*17+"\n#   BULLDOZER   #\n"+"#"*17+"\n# <Git info>\n#\t- branch: {}\n#\t- commit SHA: {}"
                 "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - processor: {}\n#\t - RAM: {}"
                 "\n#\n# <OS info>\n#\t - system: {}\n#\t - release: {}\n#\t - version: {}\n"
-                +"#"*17).format(info['commit_sha'], info['branch'], info['user'], info['node'], 
+                +"#"*17).format(info['branch'], info['commit_sha'], info['user'], info['node'], 
                                 info['processor'], info['ram'], info['system'], info['release'], info['os_version'])
         logger.debug(init)
     except Exception as e:
-        logger.warning("Init error: ", e)
+        logger.warning("Init error: " + e)
         
 def checkInputArray(bufferPath: str, inputBuffer: np.ndarray, outputPath: str, flushFlag: bool):
     
@@ -133,15 +133,16 @@ class Bulldozer:
         """
         dsmDataset, dsmBuffer = checkInputArray(dsmPathToFill, dsmBufferToFill, outputFilledDsmPath, flushFlag)
 
-        nodatamask = np.ma.masked_equal(dsmBuffer, noDataValue)
+        self.nodatamask = np.ma.masked_equal(dsmBuffer, noDataValue)
         
         if(np.isnan(newValue)):
             # if newValue is not set, than use the rasterio interpolation to fill the noDataValues
-            dsmBuffer = fillnodata(dsmBuffer, mask=nodatamask, max_search_distance=maxSearchDistance,
+            dsmBuffer = fillnodata(dsmBuffer, mask=self.nodatamask, max_search_distance=maxSearchDistance,
                                    smoothing_iterations=smoothingIterations)
         else : 
             # otherwise replace noDataValues by newDataValues
-            dsmBuffer = np.where(dsmBuffer == noDataValue, newValue, dsmBuffer)
+            #REPLACE BY dsmBuffer[self.nodatamask.mask] = newValue?
+            dsmBuffer[dsmBuffer == noDataValue] = newValue
 
         handleOutputBuffer(dsmPathToFill, dsmBuffer, outputFilledDsmPath, flushFlag)
 
@@ -251,9 +252,8 @@ class Bulldozer:
         
         print("Step: fill nodata by interpolation")
         # Use rasterio fill nodata interpolate
-        nodatamask = np.ma.masked_equal(dsmBuffer, noDataValue)
-        dsmBuffer = fillnodata(dsmBuffer, mask=nodatamask, max_search_distance=maxDistance)
-
+        self.disturbedAreaMask = np.ma.masked_equal(dsmBuffer, noDataValue)
+        dsmBuffer = fillnodata(dsmBuffer, mask=self.disturbedAreaMask, max_search_distance=maxDistance)
         handleOutputBuffer(dsmPath, dsmBuffer, outputCorrectedDsmPath, flushFlag)
 
     
@@ -266,7 +266,8 @@ class Bulldozer:
                                            dsmResolution: float = 0.5,
                                            numInnerIterationsStep1: int = 10,
                                            numOuterIterationsStep2: int = 100,
-                                           numInnerIterationsStep2: int = 10):
+                                           numInnerIterationsStep2: int = 10,
+                                           noDataValue: float = -32768):
         """
             Add a notion of max width for an object which is not a ground.
             From this max width results a dezoom resolution where we initialize the DTM at the dezoomed DSM
@@ -343,7 +344,10 @@ class Bulldozer:
             # Decrease the number of iterations as well
             num_iter = max(1, int(numOuterIterationsStep2 / (2 ** (max_level - level))))
             level-=1
-        
+
+        #TODO merge nodatamask in the previous step to reduce memory print + add option to keep the interpolation
+        dtm[self.nodatamask.mask] = noDataValue
+        dtm[self.disturbedAreaMask.mask] = noDataValue
         handleOutputBuffer(dsmPath, dtm, dtmPath, flushFlag)
 
     
@@ -389,7 +393,6 @@ if __name__ == "__main__":
                                         smoothingIterations=cfg['smoothingIterations'],
                                         noDataValue=cfg['nodata'],
                                         newValue=float(cfg['new_value']))
-
     bulldozer.preprocess_DetectDisturbedAreasAndFill(dsmPath=cfg['outputFillDsmPath'],
                                         outputCorrectedDsmPath=cfg['outputCorrectedDsmPath'],
                                         slopeThreshold=cfg['slopeThreshold'],
@@ -404,7 +407,8 @@ if __name__ == "__main__":
                                         dsmResolution=cfg['dsmResolution'],
                                         numInnerIterationsStep1=cfg['numInnerIterationsStep1'],
                                         numOuterIterationsStep2=cfg['numOuterIterationsStep2'],
-                                        numInnerIterationsStep2=cfg['numInnerIterationsStep2'])
+                                        numInnerIterationsStep2=cfg['numInnerIterationsStep2'],
+                                        noDataValue=cfg['nodata'])
     logger.info("Ending time: {} (Runtime: {})".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), datetime.now()-starting_time))
     if cfg['keepLog']:
         try:
