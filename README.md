@@ -85,7 +85,8 @@ This package was created with Cookiecutter and the [ai4geo/cookiecutter-python](
 
 ## Contributing
 
-Commit messages follow rules defined by [Conventional Commits](https://www.conventionalcommits.org).
-
+Commit messages follow rules defined by [Conventional Commits](https://www.conventionalcommits.org).  
+Documentation : [Google style Python Docstring](https://google.github.io/styleguide/pyguide.html) used with [PEP 484 type annotations](https://www.python.org/dev/peps/pep-0484/).  
+Style : [PEP 8](https://www.python.org/dev/peps/pep-0008/#other-recommendations) used.
 *Copyright 2021 PIERRE LASSALLE  
 All rights reserved*

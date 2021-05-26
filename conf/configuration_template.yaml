@@ -13,12 +13,14 @@ nbMaxWorkers : 16
 #-------------------------#
 # If True, generates the DHM (DSM - DTM) in the output directory 
 DHM : True
-# If True, generates a logfile in the output directory
-keepLog : True
+# If true, merge all the noData masks (disturbed areas, correlations issues, CARS noData, etc.)
+mergeNoData : True
 # If True, generates the filled MNS (MNS without noData but still with disturbed areas)
 keepFilledDSM : True
 # If True, generates the corrected MNS (MNS without noData and without disturbed areas)
 keepCorrectedDSM : True
+# If True, generates a logfile in the output directory
+keepLog : True
 
 #-------------------------#
 #    Advanced settings    #
@@ -27,10 +29,17 @@ keepCorrectedDSM : True
 outputCRS : null
 # If null, the output DTM resolution will be the same as the input DSM (float value in meter)
 outputResolution : null
-# If null, the nodata value will be extracted from the input DSM (float value in meter)
-nodata : null
 # If null, the DSM resolution will be extracted from the input DSM (float value in meter)
 DSMResolution : null
+# If null, the nodata value will be extracted from the input DSM (float value in meter)
+nodata : null
+# No data value of inner nodata mask (mainly correlation issues during the DSM making).  If null retrieve the main nodata value defined above
+innerNoData : null
+# No data value referring to the border nodata areas mask. If null retrieve the main nodata value defined above
+borderNoData : null
+# No data value referring to the disturbed area (water, etc.). If null retrieve the main nodata value defined above
+disturbanceNoData : null
+
 
 #-------------------------#
 # Bulldozer core settings #
