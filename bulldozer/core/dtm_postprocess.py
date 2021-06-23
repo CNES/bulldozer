@@ -14,25 +14,30 @@ from bulldozer.utils.helper import write_dataset
 
 logger = logging.getLogger(__name__)
 
-def build_sinks_mask(dtm: np.ndarray):
+def build_sinks_mask(dtm : np.ndarray, resolution : float) -> (np.ndarray, np.ndarray):
     """
-    The extraction of DTM from photogrametric DSM can result in some sharp sinks (dark areas, local height artefacts).
-    This methods uses a median filter / or sinks detection and remove them by interpolation.
+    This method detects sinks in the input DTM.
+    Those sinks are generated during the DTM extraction by remaining artefacts.
+
+    Args:
+        dtm: DTM extracted with bulldozer.
+        resolution: DTM resolution (in meters).
+
+    Returns:
+        low frequency DTM and the mask flagging the sinks area in the input DTM.
     """
     sharp_sinks_mask = np.zeros(np.shape(dtm), dtype=bool)
-    
-    # Sharpsinks are high frenquency objects and local minima
-    # First, we extract the high frenquency DTM removing low frequency
-    dtm_LF = ndimage.uniform_filter(dtm, size = 71)
+    # Generates the low frenquency DTM
+    # TODO remove the magic number for the filter size
+    dtm_LF = ndimage.uniform_filter(dtm, size = round(35.5/resolution))
+
+    # Retrieves the high frenquencies in the input DTM
     dtm_HF = dtm - dtm_LF
     
-    # Then we detect minima
-    sharp_sinks = dtm_HF < 0.
-         
-    dtm[sharp_sinks] = dtm_LF[sharp_sinks]
-    sharp_sinks_mask[sharp_sinks] = 1
+    # Tags the sinks
+    sharp_sinks_mask[dtm_HF < 0.] = 1
     
-    return dtm, sharp_sinks_mask
+    return dtm_LF, sharp_sinks_mask
 
 def restoreNoDataOnEdge(dtm: np.ndarray, border_no_data_mask: np.ndarray, no_data_value: float) -> np.ndarray:
     """
@@ -58,11 +63,14 @@ def merge_nodata_masks(border_nodata_mask: np.array,
         # Iterates throught rows and columns and assigns the corresponding value
         for row in range(border_nodata_mask.shape[0]):
             for col in range(border_nodata_mask.shape[1]):
-                quality_mask[row,col] = compute_nodata_value(border_nodata_mask[row,col], inner_nodata_mask[row,col], disturbance_mask[row,col], sink_mask[row,col])
+                quality_mask[row,col] = compute_nodata_value(border_nodata_mask[row,col], inner_nodata_mask[row,col], 
+                                                            disturbance_mask[row,col], sink_mask[row,col])
         # Returns the merged nodata mask
         return quality_mask
     except IndexError:
-        logger.exception("Input nodata masks shape mismatch:\n- border nodata mask shape:{}\n- inner nodata mask shape:{}\n- disturbance mask shape:{}\n- sink mask shape:{}".format(border_nodata_mask.shape, inner_nodata_mask.shape, disturbance_mask.shape, sink_mask.shape))
+        logger.exception("Input nodata masks shape mismatch:\n- border nodata mask shape:{}\n- inner nodata mask shape:{}\
+            \n- disturbance mask shape:{}\n- sink mask shape:{}".format(border_nodata_mask.shape, inner_nodata_mask.shape, 
+                                                                        disturbance_mask.shape, sink_mask.shape))
         raise IndexError
 
 
@@ -70,7 +78,8 @@ def compute_nodata_value(border_nodata : bool, inner_nodata : bool, disturbance 
     """
     This method assigns a nodata value for a given pixel.
     According to the quality masks values for this pixel, it returns a value corresponding to the nodata source.
-    There is a priority order: border_nodata > inner_nodata > disturbance > sink (e.g. if a pixel is tagged as disturbed and border_nodata, the output value will correspond to border_nodata).
+    There is a priority order: border_nodata > inner_nodata > disturbance > sink 
+    (e.g. if a pixel is tagged as disturbed and border_nodata, the output value will correspond to border_nodata).
 
     Args:
         border_nodata: value of the border nodata mask of the analyzed pixel.
@@ -97,11 +106,17 @@ def compute_nodata_value(border_nodata : bool, inner_nodata : bool, disturbance 
         # Not a nodata pixel 
         return 0
 
-def postprocess(dtm, output_dir, border_nodata_mask, inner_nodata_mask, disturbance_mask, sink_mask):
+def postprocess(dtm_path, output_dir, border_nodata_mask, inner_nodata_mask, disturbance_mask, sink_mask, output_CRS, output_res):
     """
     Remove sharpsinks and restore NO_DATA values on edges
     """
-    dtm, sink_mask = build_sinks_mask(dtm)
+    open
+    dtm_LF, sinks_mask = build_sinks_mask(dtm)
+    # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
+    dtm[sink_mask] = dtm_LF[sink_mask]
+    # overide the old dtm
+    # lire le masque
+    # écrit
     quality_mask = merge_nodata_masks(border_nodata_mask, inner_nodata_mask, disturbance_mask, sink_mask)
     # Check if the output CRS or resolution is different from the input. If it's different, 
     # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
