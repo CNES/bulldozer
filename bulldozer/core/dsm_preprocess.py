@@ -16,6 +16,7 @@ import numpy as np
 import scipy.ndimage as ndimage
 from rasterio.windows import Window
 from rasterio.fill import fillnodata
+from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
 
@@ -41,7 +42,7 @@ def build_nodata_mask(dsm : np.ndarray, nodata_value : float) -> [np.ndarray, np
     if np.isnan(nodata_value):
         #TODO discuss about that (copy or not?) + very long process
         nodata_value = -32768
-        np.nan_to_num(dsm, False, nodata_value)
+        dsm = np.nan_to_num(dsm, False, nodata_value)
     nodata_area = (dsm == nodata_value)
 
     # Connect the groups of nodata elements into labels (non-zero values)
@@ -165,6 +166,7 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
                 for disturbed_area in merged_disturbed_areas[row]:
                     for col in disturbed_area:
                         disturbation_mask[row][col] = 1
+                        #TODO change return (bool)
         return disturbation_mask, window
 
 ###########
@@ -205,7 +207,11 @@ def build_disturbance_mask(dsm_path: str,
             futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]), 
             slope_treshold, disturbed_treshold, disturbed_influence_distance , dsm_resolution) for strip in strips}
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
+                #TODO remove
                 mask_strips.append(future.result())
+                mask = future.result()
+                disturbance_indices = np.where(mask[0]==1)
+                output_mask
 
         #TODO remove this part and return a boolean np.array 
         meta = dataset.profile
@@ -217,95 +223,79 @@ def build_disturbance_mask(dsm_path: str,
                 dst.write(mask[0], window=mask[1], indexes=1)
 
 ###########
-# #TODO WIP #
-# ###########
-# def preprocess(dsm_path : str, 
-#                 output_dir : str,
-#                 nodata : float,
-#                 nb_max_workers : int,
-#                 keep_filled_dsm : bool,
-#                 keep_corrected_dsm : bool,
-#                 slope_treshold, disturbed_treshold,
-#                  disturbed_influence_distance, 
-#                  dsm_resolution) -> (np.ndarray, list):
-#     logger.debug("Starting preprocess")
-#     with rasterio.open(dsm_path) as src_dataset:
-#         if not nodata:
-#             # If nodata is not specified in the config file, retrieve the value from the dsm metadata
-#             nodata = src_dataset.nodata
+#TODO WIP #
+###########
+def preprocess(dsm_path : str, 
+                output_dir : str,
+                nodata : float,
+                nb_max_workers : int,
+                keep_filled_dsm : bool,
+                slope_treshold, disturbed_treshold,
+                 disturbed_influence_distance, 
+                 dsm_resolution) -> (np.ndarray, list):
+    logger.debug("Starting preprocess")
+    with rasterio.open(dsm_path) as src_dataset:
+        if not nodata:
+            # If nodata is not specified in the config file, retrieve the value from the dsm metadata
+            nodata = src_dataset.nodata
         
-#         dsm = src_dataset.read(1)
-#         # Generates border and inner nodata mask
-#         border_nodata_mask, inner_nodata_mask = build_nodata_mask(dsm, nodata)
-#         # Interpolates the inner nodata points (mainly correlation issues in the DSM computation)
-#         filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
-#         filled_dsm_path = output_dir + 'filled_DSM.tif'
+        dsm = src_dataset.read(1)
+        # Generates border and inner nodata mask
+        border_nodata_mask, inner_nodata_mask = build_nodata_mask(dsm, nodata)
+        # Interpolates the inner nodata points (mainly correlation issues in the DSM computation)
+        filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
+        filled_dsm_path = output_dir + 'filled_DSM.tif'
         
-#         # Write the filled DSM raster in a new file in order to provide preprocessed DSM to the disturbance detection
-#         try:
-#             write_dataset(filled_dsm_path, filled_dsm, src_dataset.profile)
-#         except (FileNotFoundError, rasterio.RasterioIOError) as e:
-#             logger.error('Invalid filled DSM path provided ({})\nError: {}'.format(filled_dsm_path, e))
+        # Write the filled DSM raster in a new file in order to provide preprocessed DSM to the disturbance detection
+        write_dataset(filled_dsm_path, filled_dsm, src_dataset.profile)
 
-#         #TODO change disturbance nodata since we want to retrieve boolean mask
-#         build_disturbance_mask(filled_dsm_path, output_dir + 'corrected_DSM.tif', nb_max_workers, 1, slope_treshold, 
-#                                 disturbed_treshold, disturbed_influence_distance, dsm_resolution)
+        #TODO change disturbance nodata since we want to retrieve boolean mask
+        disturbed_area_mask = build_disturbance_mask(filled_dsm_path, output_dir + 'corrected_DSM.tif', nb_max_workers, slope_treshold, 
+                                disturbed_treshold, disturbed_influence_distance, dsm_resolution)
+        filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
 
-#         #TODO change disturbance mask
-#         #corrected_dsm = rasterio.fill(dsm, mask=np.invert(disturbed_area_mask))
-
-#         # #TODO create preprocessed file
-#         # if keep_corrected_dsm:
-#         #     corrected_dsm_path = output_dir + "corrected_DSM.tif"
-#         #     try:
-#         #         write_dataset(corrected_dsm_path, corrected_dsm, src_dataset.profile)
-#         #     except (FileNotFoundError, rasterio.RasterioIOError) as e:
-#         #         logger.error('Invalid corrected DSM path provided ({})\nError: {}'.format(corrected_dsm_path, e))
-
-#         # # Remove the filled DSM if the option is not True
-#         # if not keep_filled_dsm:
-#         #     try:
-#         #         remove(filled_dsm_path)
-#         #     except OSError:
-#         #         logger.warning("Error occured during the filled DSM deletion. Path : {}".format(filled_dsm_path))
+        if keep_filled_dsm:
+            # Overwrites the filled DSM file with the disturbance areas filled
+            write_dataset(filled_dsm_path, filled_dsm, src_dataset.profile)
+        else:
+            # Removes the filled DSM
+            try:
+                remove(filled_dsm_path)
+            except OSError:
+                logger.warning("Error occured during the filled DSM deletion. Path: {}".format(filled_dsm_path))
         
-#         src_dataset.close()
-#         logger.info("preprocess : Done")
-#         #TODO discuss about quality mask: does the allocation make a copy ?
-#         # quality_masks = [border_nodata_mask, inner_nodata_mask, disturbed_area_mask]
-#         # return corrected_dsm, quality_masks
+        # Creates the preprocessed DSM (without nodata, even border). This DSM is only intended for bulldozer DTM extraction function.
+        preprocessed_dsm = filled_dsm
+        # We set a very high value for those nodata points
+        preprocessed_dsm[border_nodata_mask] = 9000
+        preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
+        write_dataset(preprocessed_dsm_path, preprocessed_dsm, src_dataset.profile)
+
+        src_dataset.close()
+        logger.info("preprocess: Done")
 
 
-# if __name__ == "__main__":
-#     #TODO remove:
-#     with rasterio.open('/home/il/lallemd/scratch/test_preprocess/Toulouse_cropped_2.tif') as t:
-#         nodata = t.nodata
-#         print(type(t.profile))
-#         # preprocess('/home/il/lallemd/scratch/test_preprocess/Toulouse_cropped_2.tif','/home/il/lallemd/scratch/test_preprocess/test_new/', nodata, True, True)
+if __name__ == "__main__":
+    # assert(len(sys.argv)>=X)#X = nb arguments obligatoires +1 car il y a sys.argv[0] qui vaut le nom de la fonction
+    # argv[1] should be the path to the input DSM
+    input_dsm_path = sys.argv[1]
+
+    # input file format check
+    if not (input_dsm_path.endswith('.tiff') or input_dsm_path.endswith('.tif')) :
+        logger.exception('\'dsm_path\' argument should be a path to a TIF file (here: {})'.format(input_dsm_path))
+        raise ValueError()
+    # input file existence check
+    if not os.path.isfile(input_dsm_path):
+        logger.exception('The input DSM file \'{}\' doesn\'t exist'.format(input_dsm_path))
+        raise FileNotFoundError()
     
-#     #TODO discuss about argv vs argparse in this case (standalone call)
-#     input_dsm_path = sys.argv[1]
-    
-#      # input file format check
-#     if not (isinstance(input_dsm_path, str) and (input_dsm_path.endswith('.tiff') or input_dsm_path.endswith('.tif'))) :
-#         logger.exception('\'path\' argument should be a path to the TIFF config file (here: {})'.format(input_dsm_path))
-#         raise ValueError()
-#     # input file existence check
-#     if not os.path.isfile(input_dsm_path):
-#         logger.exception('The input DSM file \'{}\' doesn\'t exist'.format(input_dsm_path))
-#         raise FileNotFoundError()
-#     #TODO Create a class/module?
-#     #TODO which arguments are required for the command line usage
-#     # preprocessed_dsm, quality_masks = preprocess() 
-#     # try:
-#     #     write_dataset(XXX, preprocessed_dsm, XXX)
-#     # except (FileNotFoundError, rasterio.RasterioIOError) as err:
-#     #     logger.error('Invalid filled DSM path provided ({})\nError: {}'.format(XXX, err))
-#     # Merges quality masks
-#     #TODO merging
-#     #TODO discuss about this
-#     # If this module is called in standalone, the user doesn't required the preprocessed DSM, it will produces the filled and corrected DSM
-#     # try:
-#     #     remove(filled_dsm_path)
-#     # except OSError:
-#     #     logger.warning("Error occured during the filled DSM deletion. Path : {}".format(filled_dsm_path))
+    output_dir = sys.argv[2]
+
+    # preprocess(input_dsm_path, output_dir,XXX)
+
+    # If this module is called in standalone, the user doesn't required the preprocessed DSM. We remove it
+    preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif' 
+    try:
+        remove(preprocessed_dsm_path)
+    except OSError:
+        logger.warning("Error occured during the preprocessed DSM file deletion. Path: {}".format(preprocessed_dsm_path))
