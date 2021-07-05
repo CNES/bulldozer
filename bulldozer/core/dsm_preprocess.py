@@ -222,6 +222,38 @@ def build_disturbance_mask(dsm_path: str,
             for mask in mask_strips :
                 dst.write(mask[0], window=mask[1], indexes=1)
 
+
+def write_quality_mask(border_nodata_mask : np.ndarray, 
+                        inner_nodata_mask : np.ndarray, 
+                        disturbed_area_mask : np.ndarray,
+                        output_dir : str,
+                        profile : rasterio.profiles.Profile) -> None:
+    """
+    This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
+    There is a priority order: border_nodata > inner_nodata > disturbance
+    (e.g. if a pixel is tagged as disturbed and border_nodata, the output value will correspond to border_nodata).
+
+    Args:
+        border_nodata_mask: nodata areas that are connected to the border of the input DSM.
+        inner_nodata_mask: nodata areas in the input DSM.
+        disturbed_area_mask: areas flagged as nodata due to their aspect (mainly correlation issue).
+        output_dir: bulldozer output directory. The quality mask will be written in this folder.
+        profile: DSM profile (TIF metadata).
+    """     
+    quality_mask = np.zeros(np.shape(border_nodata_mask), dtype=np.uint8)
+    quality_mask_path = output_dir + "quality_mask.tif"
+
+    # Metadata update
+    profile['dtype'] = np.uint8
+    profile['count'] = 1
+    # We don't except nodata value in this mask
+    profile['nodata'] = 255
+    quality_mask[disturbed_area_mask] = 3
+    quality_mask[inner_nodata_mask] = 2
+    quality_mask[border_nodata_mask] = 1
+    write_dataset(quality_mask_path, quality_mask, profile)
+
+
 ###########
 #TODO WIP #
 ###########
