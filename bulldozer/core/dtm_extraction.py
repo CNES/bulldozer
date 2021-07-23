@@ -1,22 +1,22 @@
+import os
 from collections import namedtuple
 import concurrent.futures
 import rasterio
 import numpy as np
 import scipy.ndimage as ndimage
 from tqdm import tqdm
+import bulldozerfilters as bf 
 
-Strip = namedtuple('Strip', ['start', 'end', 'margin_top', 'margin_bottom'])
-
-def compute_margin_for_level(num_outer_iterations: int,
-                             num_inner_iterations: int,
-                             uniform_filter_size: int) -> int :
-    return num_outer_iterations * num_inner_iterations * uniform_filter_size
+Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 
 def retrieve_dsm_resolution(dsm_dataset: rasterio.DatasetReader) -> float:
     """ """
     # We assume that resolution is the same wrt to both image axis
-    print(dsm_dataset.transform)
-    return 0.0
+    res_x: float =  dsm_dataset.transform[0]
+    res_y: float = dsm_dataset.transform[4]
+    if abs(res_x) != abs(res_y):
+        raise ValueError("DSM GSD must be the same wrt to the rows and columns.")
+    return abs(res_x)
 
 def get_max_pyramid_level(max_object_size_pixels: int) -> int :
     """ 
@@ -26,17 +26,17 @@ def get_max_pyramid_level(max_object_size_pixels: int) -> int :
     """
     power = 0
     while 2**power < max_object_size_pixels:
-            power+=1
+        power+=1
     
     # Take the closest power to the max object size
     if abs(2**(power-1) - max_object_size_pixels) <  abs(2**(power) - max_object_size_pixels):
-    power -= 1
+        power -= 1
 
     return power
-
+    
 def downsample(buffer: np.ndarray) -> np.ndarray:
     """
-        Simple 2X downsampling, take every other pixel
+        Simple factor X downsample
     """
     return buffer[::2, ::2]
 
@@ -47,15 +47,15 @@ def upsample(buffer: np.ndarray,
     """
     # Adjust the slicing for odd row count
     if out.shape[0] % 2 == 1:
-        s0 = numpy.s_[:-1]
+        s0 = np.s_[:-1]
     else:
-        s0 = numpy.s_[:]
+        s0 = np.s_[:]
 
     # Adjust the slicing for odd column count
     if out.shape[1] % 2 == 1:
-        s1 = numpy.s_[:-1]
+        s1 = np.s_[:-1]
     else:
-        s1 = numpy.s_[:]
+        s1 = np.s_[:]
 
     # copy in duplicate values for blocks of 2x2 pixels
     out[::2, ::2] = buffer
@@ -63,213 +63,169 @@ def upsample(buffer: np.ndarray,
     out[::2, 1::2] = buffer[:, s1]
     out[1::2, 1::2] = buffer[s0, s1]
 
-def build_pyramid(dsm_dataset: rasterio.DatasetReader,
-                  nb_levels: int) -> list :
-    """
-        Given the number of levels, this method builds the
-        dsm pyramid.
-    """
-    dsm_pyramid = []
+    return out
 
-    dsm_pyramid.append(dsm_dataset.read(1))
-    for l in range(1, nb_levels):
-        dsm_pyramid.append(downsample(dsm_pyramid[l-1]))
-
-    return dsm_pyramid
-
-def prevent_unhook_from_hills(dsm_pyramid: list,
-                              prevent_unhook_iter: int) -> np.ndarray:
+def write_tiles(tile_buffer: np.ndarray, 
+                tile_path: str,
+                original_profile: dict) -> None:
     """
-        This first step is introduced for preventing the drap
-        to unhook from hills. To do that, the DTM is initialized
-        to the DSM with the highest dezoom and then only ninner iterations
-        are applied to smooth the dtm
     """
-    # Dtm is initialized at the most dezoomed dsm
-    dtm = np.copy(dsm_pyramid[-1])
+    tile_profile = original_profile
+    tile_profile["count"] = 1
+    tile_profile["width"] = tile_buffer.shape[1]
+    tile_profile["height"] = tile_buffer.shape[0]
+    tile_profile["dtype"] = np.float32
+    with rasterio.open(tile_path, 'w', **tile_profile) as dst:
+        dst.write(tile_buffer, 1)
 
-    for i in range(prevent_unhook_iter):
-        dtm = ndimage.uniform_filter(dtm, size=3)
+def build_tiles(dtm: np.ndarray,
+                dsm: np.ndarray,
+                tile_size: int,
+                margin: int,
+                tmp_dir: str,
+                dsm_profile: dict) -> list:
+    """
+        Write dsm and dtm tiles to disk
+        returns a list of tiles
+    """
+    nb_tiles_y = int(dsm.shape[0] / tile_size) # 1
+    if float(dsm.shape[0]) / tile_size - int(dsm.shape[0] / tile_size) > 0:
+        nb_tiles_y+=1
     
+    nb_tiles_x = int(dsm.shape[1] / tile_size)
+    if float(dsm.shape[1]) / tile_size - int(dsm.shape[1] / tile_size) > 0:
+        nb_tiles_x+=1
+
+    tile_pair_list = []
+    
+    # TODO handle cases where nb_tiles = 0
+    for ty in range(nb_tiles_y):
+        for tx in range(nb_tiles_x):
+            start_y = ty * tile_size
+            start_x = tx * tile_size
+            end_y = min(dsm.shape[0] - 1, (ty+1)*tile_size - 1)
+            end_x = min(dsm.shape[1] - 1, (tx+1)*tile_size - 1)
+            margin_top = margin if start_y - margin > -1 else start_y
+            margin_right = margin if end_x + margin < dsm.shape[1] else dsm.shape[1] - 1 - end_x
+            margin_bottom = margin if end_y + margin < dsm.shape[0] else dsm.shape[0] - 1 - end_y
+            margin_left = margin if start_x - margin > 0 else start_x
+
+            # Extract the tiles
+            tile_start_y = start_y - margin_top
+            tile_start_x = start_x - margin_left
+            tile_end_y = end_y + margin_bottom
+            tile_end_x = end_x + margin_right
+
+            tile_dsm_buffer = dsm[tile_start_y:tile_end_y+1, tile_start_x:tile_end_x+1]
+            tile_dtm_buffer = dtm[tile_start_y:tile_end_y+1, tile_start_x:tile_end_x+1]
+            tile_dsm_path = tmp_dir + "/dsm_" + str(ty) + "_" + str(tx) + ".tif"
+            tile_dtm_path = tmp_dir + "/dtm_" + str(ty) + "_" + str(tx) + ".tif"
+
+            write_tiles(tile_buffer = tile_dsm_buffer, 
+                        tile_path=tile_dsm_path, 
+                        original_profile=dsm_profile)
+            
+            write_tiles(tile_buffer = tile_dtm_buffer, 
+                        tile_path=tile_dtm_path, 
+                        original_profile=dsm_profile)
+
+            tile_dsm = Tile(start_y, start_x, end_y, end_x, 
+                            margin_top, margin_right, margin_bottom, margin_left, 
+                            tile_dsm_path)
+            
+            tile_dtm = Tile(start_y, start_x, end_y, end_x, 
+                            margin_top, margin_right, margin_bottom, margin_left, 
+                            tile_dtm_path)
+
+            tile_pair_list.append((tile_dsm, tile_dtm))
+    
+    
+    return tile_pair_list
+
+
+def sequential_drape_cloth(dtm: np.ndarray,
+                           dsm: np.ndarray,
+                           num_outer_iterations: int,
+                           num_inner_iterations: int,
+                           uniform_filter_size: int,
+                           step: float,
+                           nodata_val: float) -> None:
+
+    bfilters = bf.PyBulldozerFilters()
+
+    valid = dsm != nodata_val
+
+    for i in range(num_outer_iterations):
+        
+        dtm[valid] += step
+        
+        for j in range(num_inner_iterations):
+
+            # handle DSM intersections, snap back to below DSM
+            np.minimum(dtm, dsm, out=dtm, where=valid)
+
+            # apply spring tension forces (blur the DTM)
+            nb_rows = dtm.shape[0]
+            nb_cols = dtm.shape[1]
+            dtm = bfilters.run(dtm, nb_rows, nb_cols, uniform_filter_size, nodata_val)
+            dtm = dtm.reshape((nb_rows, nb_cols))
+            
+    # One final intersection check
+    np.minimum(dtm, dsm, out=dtm, where=valid)
+
     return dtm
 
-def sequential_drap_cloth(dtm: np.ndarray,
-                          dsm: np.ndarray,
-                          n_outer_iter: int,
-                          n_inner_iter: int,
-                          step: float):
-    for i in range(n_outer_iter):
-        dtm += step
-        for i in range(n_inner_iter):
-            # handle DSM intersections, snap back to below DSM
-            np.minimum(dtm, dsm, out=dtm)
-            # apply spring tension forces (blur the DTM)
-            dtm = ndimage.uniform_filter(dtm, size=3)
-
-        # Final check intersection, snap back to below DSM
-        np.minimum(dtm, dsm, out=dtm)
-
-def compute_margin_top(n: int,
-                       margin: int,
-                       start: int) -> int:
-    if n > 0:
-        if (start - margin) < 0:
-            return start
-        else:
-            return margin
-    else:
-        # There is no top margin for the first strip
-        return 0
-
-def compute_margin_bottom(n: int,
-                          nb_cpus: int,
-                          margin: int,
-                          end: int,
-                          buffer_height: int) -> int:
-    if n < nb_cpus - 1:
-        if end + margin > buffer_height - 1:
-            return buffer_height - 1 - end
-        else:
-            return margin
-    else:
-        # There is no bottom margin for the last strip
-        return 0
-
-def compute_strips(dtm: np.ndarray,
-                   nb_cpus: int,
-                   margin: int) -> list :
-
-    strip_height = dtm.shape[0] // nb_cpus
-    remainder_strip = dtm.shape[0] % nb_cpus    
-    strips = []
-    
-    for n in range(nb_cpus):
-        start = n*strip_height
-        end = (n+1)*strip_height-1 if n < nb_cpus - 1 else (n+1)*strip_height-1 + remainder_strip
-        margin_top = compute_margin_top(n, margin, start)
-        margin_bottom = compute_margin_bottom(n, nb_cpus, margin, end, dtm.shape[0])
-        strips.append(Strip(start, end, margin_top, margin_bottom))
-    
-    return strips
-
-def chunk_drap_cloth(dtm_path: str,
-                     dsm_path: str,
-                     strip: Strip,
-                     width: int,
-                     n_outer_iter: int,
-                     n_inner_iter: int,
-                     step: float):
-
-    start_y = strip.start - strip.margin_top
-    size_y = strip.end + strip.margin_bottom - start_y + 1 
-    wd = Window(0, start_y, width, size_y)
-    dtm = rasterio.open(dtm_path).read(window=wd)
-    dsm = rasterio.open(dsm_path).read(window=wd)
-    
-
-    for i in range(n_outer_iter):
-        dtm += step
-        for i in range(n_inner_iter):
-            # handle DSM intersections, snap back to below DSM
-            np.minimum(dtm, dsm, out=dtm)
-            # apply spring tension forces (blur the DTM)
-            dtm = ndimage.uniform_filter(dtm, size=3)
-
-        # Final check intersection, snap back to below DSM
-        np.minimum(dtm, dsm, out=dtm)
-    
-    return ( dtm[strip.margin_bottom:strip.end+strip.margin_bottom+1, :], strip )
-
-def parallel_drap_cloth(ref_dataset: rasterio.DatasetReader,
-                        dtm: np.ndarray,
-                        dsm: np.ndarray,
-                        n_outer_iter: int,
-                        n_inner_iter: int,
-                        step: int,
-                        nb_cpus: int,
-                        output_directory: str):
-
-    # Compute stable margin
-    margin = compute_margin_for_level(n_outer_iter, num_inner_iterations, 3)
-
-    # Compute list of strips to run in //
-    strips = compute_strips(dtm, nb_cpus, margin)
-
-    # Write temporary to disk and delete to avoid memory redundancy
-    profile = ref_dataset.profile
-    profile["height"] = dtm.shape[0]
-    profile["width"] = dtm.shape[1]
-    
-    in_tmp_dtm_path = output_directory + "/tmp_dtm.tif"
-    in_tmp_dsm_path = output_directory + "/tmp_dsm.tif"
-
-    with rasterio.open(in_tmp_dtm_path, "w", **profile) as dst:
-        dst.write(1, dtm)
-
-    with rasterio.open(in_tmp_dsm_path, "w", **profile) as dst:
-        dst.write(1, dsm)
-    
-    dtm = None
-    dsm = None
-
-    out_dtm_dataset = rasterio.open(output_directory + "/dtm.tif", "w", **profile)
-
-    # Run in drap cloth in //
-    with concurrent.futures.ProcessPoolExecutor(max_workers=nb_cpus) as executor:
-        futures = {executor.submit(chunk_drap_cloth,
-                                   in_tmp_dtm_path,
-                                   int_tmp_dsm_path,
-                                   strip,
-                                   profile["width"],
-                                   n_outer_iter,
-                                   n_inner_iter,
-                                   step) for strip in strips}
-        for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Drap Cloth execution"):
-            chunk_dtm, strip = future.result()
-            wd = Window(0, strip.start, profile["width"], strip.end - strip.start + 1)
-            out_dtm_dataset.write(chunk_dtm, window=wd)
-        
-    out_dtm_dataset.close()
-
-    # Now we can load the new dtm and the dsm
-    dtm = rasterio.open(output_directory + "/dtm.tif").read(1)
-    dsm = rasterio.open(in_tmp_dsm_path).read(1)
-#
-# Large scale implementation of CNES strategy for drap cloth
-# strip parallel execution when strip height is lower than 
-# dsm to process.
-#
-def dtm_extraction(in_dsm_path: str,
-                   out_dtm_directory: str,
-                   min_height: int,
-                   nb_cpus: int,
-                   max_object_size: int,
-                   prevent_unhook_iter: int,
-                   num_outer_iterations: int,
-                   num_inner_iterations: int):
+def tiled_drape_cloth(tile_pair: tuple,
+                      num_outer_iterations: int,
+                      num_inner_iterations: int,
+                      uniform_filter_size: int,
+                      step: float,
+                      nodata_val: float,
+                      tmp_dir: str) -> tuple:
     """
-        This methods executes the extraction of the modified drap cloth
-        algorithm using multi processing.
-
-        Args:
-            in_dsm_path: path to the dsm file
-            out_dtm_directory: ouput directory path where dtm will be stored (dtm.tif) and where temporary rasters will be stored and removed.
-            min_height: minimum image height to process in //
-            nb_cpus: maximum number of cpus to use in //
-            max_object_size: max size of an over-ground object
-            prevent_unhook_iter: Retrieve the number of inner iterations for prenventing from unhooking from hills.
-            num_outer_iterations: Number of iterations for drap fall by gravity
-            num_inner_iterations: Number of iterations to smooth the drap after a gravity fall
-        Returns:
-
-        Raise:
     """
+    dsm_dataset = rasterio.open(tile_pair[0].path)
+    dsm_profile = dsm_dataset.profile
+    dsm = dsm_dataset.read()[0]
+    dtm = rasterio.open(tile_pair[1].path).read()[0]
+
+    dtm = sequential_drape_cloth(dtm = dtm,
+                                 dsm = dsm,
+                                 num_outer_iterations = num_outer_iterations,
+                                 num_inner_iterations = num_inner_iterations,
+                                 uniform_filter_size = uniform_filter_size,
+                                 step = step,
+                                 nodata_val = nodata_val)
+
+    item = tile_pair[1].path.split("/")[-1]
+    output_tile_dtm_path = tmp_dir + "/" + "output_" + item
+    write_tiles(dtm, output_tile_dtm_path, dsm_profile)
+
+    return (tile_pair, output_tile_dtm_path)
+
+def run(dsm_path: str,
+        dtm_path: str,
+        tmp_dir: str,
+        max_object_size: int,
+        uniform_filter_size: int,
+        prevent_unhook_iter: int,
+        num_outer_iterations: int,
+        num_inner_iterations: int,
+        mp_tile_size: int,
+        sequential: bool,
+        mp_nb_procs: int):
 
     # Open the dsm dataset
-    in_dsm_dataset = rasterio.open(in_dsm_path)
+    in_dsm_dataset = rasterio.open(dsm_path)
+    in_dsm_profile = in_dsm_dataset.profile
+
+    # Initial dsm
+    dsm_pyramid = []
+    dsm_pyramid.append(in_dsm_dataset.read().astype(np.float32)[0])
+    nodata_val = in_dsm_dataset.nodata
 
     # Retrieve dsm resolution
-    dsm_res = retrieve_dsm_resolution(in_dsm_dataset)
+    dsm_res = retrieve_dsm_resolution(dsm_dataset=in_dsm_dataset)
 
     # Determine max object size in pixels
     max_object_size_pixels = max_object_size / dsm_res
@@ -278,57 +234,147 @@ def dtm_extraction(in_dsm_path: str,
     # on the ground.
     nb_levels = get_max_pyramid_level(max_object_size_pixels) + 1
 
-    # Build the dsm pyramid
-    dsm_pyramid = build_pyramid(dsm_dataset, nb_levels)
+    # Build the pyramid
+    for j in tqdm(range(1, nb_levels), desc="Building dsm pyramid..."):
+        dsm_pyramid.append(downsample(dsm_pyramid[j-1]))
+    
+    
+    # Initialize the dtm at this current dsm.
+    dtm = (dsm_pyramid[nb_levels-1]).copy()
+     
 
-    # Prevent from unhooking from hills
-    dtm = prevent_unhook_from_hills(dsm_pyramid, prevent_unhook_iter)
+    # Prevent unhook from hills
+    bfilters = bf.PyBulldozerFilters()
+    for i in tqdm(range(prevent_unhook_iter), desc="Prevent unhook from hills..."):
+        nb_rows = dtm.shape[0]
+        nb_cols = dtm.shape[1]
+        dtm = bfilters.run(dtm, nb_rows, nb_cols, uniform_filter_size, nodata_val)
+        dtm = dtm.reshape((nb_rows, nb_cols))
+    
+    # Get min and max valid height from dsm
+    valid_data = dsm_pyramid[0][dsm_pyramid[0] != nodata_val]
+    min_alt = np.min(valid_data)
+    max_alt = np.max(valid_data)
+
+    # We deduce the initial step
+    step = (max_alt - min_alt) / num_outer_iterations
 
     # Init classical parameters of drap cloth
-    min_alt = np.min(dsm_pyramid[0])
-    max_alt = np.max(dsm_pyramid[0])
-    step = (max_alt - min_alt) / num_outer_iterations
+    level = nb_levels - 1
     max_level = nb_levels - 1
-    level = max_level
-    n_outer_iter = num_outer_iterations
+    current_num_outer_iterations = num_outer_iterations
 
-    # On applique le multi-scale de len(dsmPyramid) - 2 à 0
-    j = len(dsm_pyramid) - 2
-    while j > 0:
+    while level > -1:
 
-        # Upsample dtm to lower level
-        dtmNext = np.copy(dsm_pyramid[j])
-        drapClothHandler.upsample(dtm, dtmNext)
-        dtm = dtmNext
+        print("Process level " + str(level) + "...")
 
-        if dtm.shape[0] >= min_height:
-            # Run in //
-            parallel_drap_cloth(ref_dataset = in_dsm_dataset,
-                                dtm = dtm,
-                                dsm = dsm_pyramid[j],
-                                n_outer_iter = n_outer_iter,    
-                                n_inner_iter = num_inner_iterations,
-                                step=step
-                                nb_cpus = nb_cpus,
-                                output_directory=out_dtm_directory)
+        if level < max_level:
+            # Upsample current dtm to the next level
+            next_dtm = np.zeros(dsm_pyramid[level].shape, dtype = np.float32)
+            dtm = upsample(dtm, next_dtm)
+            dtm = next_dtm
+
+        # Check if we need to tile for multi processing execution
+        # We tile only if tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1])
+        margin = current_num_outer_iterations * num_inner_iterations * uniform_filter_size
+        if not sequential and mp_tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1]):
+            # Build tiles and save them to disk
+            tile_pair_list = build_tiles(dtm= dtm,
+                                         dsm=dsm_pyramid[level],
+                                         tile_size=mp_tile_size,
+                                         margin=margin,
+                                         tmp_dir=tmp_dir,
+                                         dsm_profile=in_dsm_profile)
+
+            output_tiles = []
+
+            # process each tile independently (results are flushed on disk, today disk accees is fast (SSD))
+            with concurrent.futures.ProcessPoolExecutor(max_workers=mp_nb_procs) as executor:
+                futures = {executor.submit(tiled_drape_cloth,
+                                           tile_pair,
+                                           current_num_outer_iterations,
+                                           num_inner_iterations,
+                                           uniform_filter_size,
+                                           step,
+                                           nodata_val,
+                                           tmp_dir) for tile_pair in tile_pair_list}
+                
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Parallel Drape Cloth execution..."):
+                tile_pair, output_path = future.result()
+                output_tiles.append((tile_pair, output_path))
+
+
+            # concatenate in the output dtm
+            for res in output_tiles:
+                input_tile_pair = res[0]
+                output_tile = res[1]
+                tile_dtm = rasterio.open(output_tile).read()[0]
+                
+                # Stable interval in input referential
+                start_y = input_tile_pair[0].start_y
+                start_x = input_tile_pair[0].start_x
+                end_y = input_tile_pair[0].end_y
+                end_x = input_tile_pair[0].end_x
+
+                # Stable area in tile
+                tstart_y = input_tile_pair[0].margin_top
+                tend_y = tstart_y + end_y - start_y
+                tstart_x = input_tile_pair[0].margin_left 
+                tend_x = tstart_x + end_x - start_x
+
+                # Remove the temp tile files
+                os.remove(output_tile)
+                os.remove(input_tile_pair[0].path)
+                os.remove(input_tile_pair[1].path)
+
+                dtm[start_y:end_y+1, start_x:end_x+1] = tile_dtm[tstart_y: tend_y + 1, tstart_x:tend_x+1]
+
         else:
-            # Sequential run
-            sequential_drap_cloth(dtm=dtm,
-                                  dsm=dsm_pyramid[j],
-                                  n_outer_iter = n_outer_iter,
-                                  n_inner_iter = num_inner_iterations,
-                                  step=step)
-        
-        # Decrease step
+            dtm = sequential_drape_cloth(dtm = dtm,
+                                         dsm = dsm_pyramid[level],
+                                         num_outer_iterations = current_num_outer_iterations,
+                                         num_inner_iterations = num_inner_iterations,
+                                         uniform_filter_size = uniform_filter_size,
+                                         step = step,
+                                         nodata_val = nodata_val)
+
+        # Decrease level
+        level -= 1
+
+        # Decrease step and number of outer iterations
         step = step / (2 * 2 ** (max_level - level))
-        # Decrease the number of iterations as well
-        n_outer_iter = max(1, int(numOuterIterationsStep2 / (2 ** (max_level - level))))
-        # Decrease the current level
-        level-=1
-        j+=1
+        current_num_outer_iterations = max(1, int(num_outer_iterations / 2**(max_level - level)))
 
-
-    in_dsm_dataset.close()
+    write_tiles(tile_buffer= dtm, 
+                tile_path = dtm_path ,
+                original_profile = in_dsm_profile)
 
 if __name__ == "__main__":
-    print("Hello")
+
+    # Input parameters
+    input_dsm_path = "/work/scratch/lassallep/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
+    max_object_size: float = 100
+    uniform_filter_size: int = 1
+    prevent_unhook_iter: int = 10
+    num_inner_iterations : int = 10
+    num_outer_iterations : int = 100
+    mp_tile_size: int = 1500
+    mp_nb_procs: int = 24
+    tmp_dir: str = "/work/scratch/lassallep/bulldozer_tmp/"
+    output_dtm = "/work/scratch/lassallep/bulldozer_tmp/dtm.tif"
+    sequential: bool = False
+    
+    run(dsm_path = input_dsm_path,
+        dtm_path = output_dtm,
+        tmp_dir = tmp_dir,
+        max_object_size = max_object_size,
+        uniform_filter_size = uniform_filter_size,
+        prevent_unhook_iter = prevent_unhook_iter,
+        num_outer_iterations = num_outer_iterations,
+        num_inner_iterations = num_inner_iterations,
+        mp_tile_size = mp_tile_size,
+        sequential=sequential,
+        mp_nb_procs=mp_nb_procs)
+
+
+

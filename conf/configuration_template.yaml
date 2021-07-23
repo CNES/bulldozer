@@ -2,13 +2,13 @@
 #       File paths        #
 #-------------------------#
 # Input DSM path 
-dsmPath : "/work/scratch/lallemd/bulldozer/rtdrapcloth/test/cropped_Tlse_MNS.tif"
+dsmPath : "/work/OT/ai4geo/DATA/PROCESSED/MNS/PHR/Toulouse/mergedDSM.tif"
 # Output path for the filled DSM (DSM without noData)
-outputFillDsmPath : "/work/scratch/lallemd/tmp/filled_test.tif"
+outputFillDsmPath : "/work/scratch/lassallep/filled_dsm.tif"
 # Output path for the corrected DSM (DSM without noData & without disturbed area)
-outputCorrectedDsmPath : "/work/scratch/lallemd/tmp/corrected_test.tif"
+outputCorrectedDsmPath : "/work/scratch/lassallep/tmp/corrected_dsm.tif"
 # Output DTM path 
-outputDtmPath : "/work/scratch/lallemd/tmp/dtm_test.tif"
+outputDtmPath : "/work/scratch/lassallep/dtm.tif"
 
 #-------------------------#
 # Input image information #
