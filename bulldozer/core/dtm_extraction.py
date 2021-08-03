@@ -22,6 +22,9 @@ def next_power_of_2(x : int) -> int:
     """
     This function returns the smallest power of 2 that is greater than or equal to a given non-negative integer x.
 
+    Args:
+        x : non negative integer.
+
     Returns:
         the corresponding power index power (2**index >= x).
     """
@@ -48,29 +51,38 @@ def downsample(buffer: np.ndarray) -> np.ndarray:
     return buffer[::2, ::2]
 
 def upsample(buffer: np.ndarray, 
-             out: np.ndarray):
+             shape : tuple):
     """
-        Simple 2X upsampling, duplicate pixels
+        Simple 2X upsampling, duplicate pixels (nearest neighbor interpolation).
+
+        Args :
+            buffer : input dtm.
+            shape : output dimension of the next dtm.
+        
+        Returns :
+            the input dtm upsampled with the NN-interpolation with the input shape dimension.
     """
+    next_dtm = np.zeros(shape, dtype = np.float32)
+
     # Adjust the slicing for odd row count
-    if out.shape[0] % 2 == 1:
+    if next_dtm.shape[0] % 2 == 1:
         s0 = np.s_[:-1]
     else:
         s0 = np.s_[:]
 
     # Adjust the slicing for odd column count
-    if out.shape[1] % 2 == 1:
+    if next_dtm.shape[1] % 2 == 1:
         s1 = np.s_[:-1]
     else:
         s1 = np.s_[:]
 
     # copy in duplicate values for blocks of 2x2 pixels
-    out[::2, ::2] = buffer
-    out[1::2, ::2] = buffer[s0, :]
-    out[::2, 1::2] = buffer[:, s1]
-    out[1::2, 1::2] = buffer[s0, s1]
+    next_dtm[::2, ::2] = buffer
+    next_dtm[1::2, ::2] = buffer[s0, :]
+    next_dtm[::2, 1::2] = buffer[:, s1]
+    next_dtm[1::2, 1::2] = buffer[s0, s1]
 
-    return out
+    return next_dtm
 
 def write_tiles(tile_buffer: np.ndarray, 
                 tile_path: str,
@@ -277,9 +289,7 @@ def run(dsm_path: str,
 
         if level < max_level:
             # Upsample current dtm to the next level
-            next_dtm = np.zeros(dsm_pyramid[level].shape, dtype = np.float32)
-            dtm = upsample(dtm, next_dtm)
-            dtm = next_dtm
+            dtm = upsample(dtm, dsm_pyramid[level].shape)
 
         # Check if we need to tile for multi processing execution
         # We tile only if tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1])
