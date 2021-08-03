@@ -18,15 +18,22 @@ def retrieve_dsm_resolution(dsm_dataset: rasterio.DatasetReader) -> float:
         raise ValueError("DSM GSD must be the same wrt to the rows and columns.")
     return abs(res_x)
 
+def next_power_of_2(x : int) -> int:
+    """
+    This function returns the smallest power of 2 that is greater than or equal to a given non-negative integer x.
+
+    Returns:
+        the corresponding power index power (2**index >= x).
+    """
+    return 0 if x==0 else (1<<(x-1).bit_length()).bit_length() - 1
+    
 def get_max_pyramid_level(max_object_size_pixels: int) -> int :
     """ 
         Given the max size of an object on the ground,
         this methods compute the max level of the pyramid
         for drap cloth algorithm
     """
-    power = 0
-    while 2**power < max_object_size_pixels:
-        power+=1
+    power = next_power_of_2(max_object_size_pixels)
     
     # Take the closest power to the max object size
     if abs(2**(power-1) - max_object_size_pixels) <  abs(2**(power) - max_object_size_pixels):
