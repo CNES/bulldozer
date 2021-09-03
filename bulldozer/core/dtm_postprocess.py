@@ -28,7 +28,7 @@ def build_sinks_mask(dtm : np.ndarray, resolution : float) -> (np.ndarray, np.nd
     """
     sharp_sinks_mask = np.zeros(np.shape(dtm), dtype=bool)
     # Generates the low frenquency DTM
-    # TODO remove the magic number for the filter size
+    # TODO Release 2 : remove the magic number for the filter size
     dtm_LF = ndimage.uniform_filter(dtm, size = round(35.5/resolution))
 
     # Retrieves the high frenquencies in the input DTM
@@ -39,94 +39,56 @@ def build_sinks_mask(dtm : np.ndarray, resolution : float) -> (np.ndarray, np.nd
     
     return dtm_LF, sharp_sinks_mask
 
-def restoreNoDataOnEdge(dtm: np.ndarray, border_no_data_mask: np.ndarray, no_data_value: float) -> np.ndarray:
+def postprocess(dtm_path : str, 
+                output_dir : str,
+                quality_mask_path : str, 
+                dhm : bool = False,
+                dsm_path : str = None) -> None:
     """
-    XXX
-    """
-    restored_dtm = np.copy(dtm)
-    restored_dtm[border_no_data_mask] = no_data_value
-    
-    return restored_dtm
-
-def merge_nodata_masks(border_nodata_mask: np.array, 
-                    inner_nodata_mask : np.array,
-                    disturbance_mask : np.array,
-                    sink_mask : np.array):
-    """
-      #TODO
-    border_mask_value: mask value referring to the border nodata areas.
-        inner_mask_value: mask value referring to the inner nodata areas.
-    """
-    try:
-        # Init the quality mask based on one of the input mask shape (all the input mask should have the same shape)
-        quality_mask = np.zeros(border_nodata_mask.shape)
-        # Iterates throught rows and columns and assigns the corresponding value
-        for row in range(border_nodata_mask.shape[0]):
-            for col in range(border_nodata_mask.shape[1]):
-                quality_mask[row,col] = compute_nodata_value(border_nodata_mask[row,col], inner_nodata_mask[row,col], 
-                                                            disturbance_mask[row,col], sink_mask[row,col])
-        # Returns the merged nodata mask
-        return quality_mask
-    except IndexError:
-        logger.exception("Input nodata masks shape mismatch:\n- border nodata mask shape:{}\n- inner nodata mask shape:{}\
-            \n- disturbance mask shape:{}\n- sink mask shape:{}".format(border_nodata_mask.shape, inner_nodata_mask.shape, 
-                                                                        disturbance_mask.shape, sink_mask.shape))
-        raise IndexError
-
-
-def compute_nodata_value(border_nodata : bool, inner_nodata : bool, disturbance : bool, sink : bool) -> np.uint8:
-    """
-    This method assigns a nodata value for a given pixel.
-    According to the quality masks values for this pixel, it returns a value corresponding to the nodata source.
-    There is a priority order: border_nodata > inner_nodata > disturbance > sink 
-    (e.g. if a pixel is tagged as disturbed and border_nodata, the output value will correspond to border_nodata).
+    This method removes sharpsinks and reprojects/dezoom the output DTM if required.
+    It also generates the DHM if the option is activated.
 
     Args:
-        border_nodata: value of the border nodata mask of the analyzed pixel.
-        inner_nodata: value of the inner nodata mask of the analyzed pixel.
-        disturbance: value of the disturbance mask of the analyzed pixel.
-        sink: value of the sink mask of the analyzed pixel.
+        dtm_path: path to the DTM generated with bulldozer.
+        output_dir : path to the output directory.
+        quality_mask_path: path to the quality mask associated with the DTM.
+        dhm : option that indicates if bulldozer has to generate the DHM (DSM-DTM).
+        dsm_path : path to the input DSM. This argument is required for the DHM generation.
 
-    Returns:
-        integer value (0: not a nodata point/1: border nodata/2: inner nodata/3: disturbed area/4: filled sink).
     """
-    if border_nodata:
-        # Nodata value referring to the border nodata areas mask
-        return 1
-    elif inner_nodata:
-        # Nodata value of inner nodata mask (mainly correlation issues during the DSM making)
-        return 2
-    elif disturbance:
-        # Nodata value referring to the disturbed area (water, etc.)
-        return 3
-    elif sink:
-        # Nodata value referring to the sharp sinks observed after the dtm computation
-        return 4
-    else:
-        # Not a nodata pixel 
-        return 0
+    with rasterio.open(dtm_path) as dtm_dataset:
+        # Read the result DTM from the DTM extraction
+        dtm = dtm_dataset.read(1)
+        # Generates the sinks mask and retrieves the low frequency DTM
+        dtm_LF, sinks_mask = build_sinks_mask(dtm, dtm_dataset)
+        # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
+        dtm[sinks_mask] = dtm_LF[sinks_mask]
+        # Overrides the old DTM
+        write_dataset(dtm_path, dtm, dtm_dataset.profile)
 
-def postprocess(dtm_path, output_dir, border_nodata_mask, inner_nodata_mask, disturbance_mask, sink_mask, output_CRS, output_res):
-    """
-    Remove sharpsinks and restore NO_DATA values on edges
-    """
-    open
-    dtm_LF, sinks_mask = build_sinks_mask(dtm)
-    # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
-    dtm[sink_mask] = dtm_LF[sink_mask]
-    # overide the old dtm
-    # lire le masque
-    # écrit
-    quality_mask = merge_nodata_masks(border_nodata_mask, inner_nodata_mask, disturbance_mask, sink_mask)
-    # Check if the output CRS or resolution is different from the input. If it's different, 
-    # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
-    
-    # Writes quality mask
-    quality_path = output_dir + "quality_mask.tif"
-    try:
-        write_dataset(quality_path, quality_mask, dtm.profile)
-    except (FileNotFoundError, rasterio.RasterioIOError) as err:
-        logger.error('Invalid quality mask path provided ({})\nError: {}'.format(quality_path, err))
+        # Updates the output quality mask
+        with rasterio.open(quality_mask_path) as q_mask_dataset:
+            # Retrieves the quality masks generated during the DSM preprocess
+            quality_mask = q_mask_dataset.read(1)
+            border_nodata = (quality_mask == 1)
+            inner_nodata = (quality_mask == 2)
+            disturbed_areas = (quality_mask == 3)
+            
+            # Keeps the following priority order : border_nodata(1) > inner_nodata(2) > disturbance(3) > sink(4)
+            quality_mask[sinks_mask] = 4
+            quality_mask[disturbed_areas] = 3
+            quality_mask[inner_nodata] = 2
+            quality_mask[border_nodata] = 1
+            # Overrides the previous quality mask by adding the sinks_masks
+            write_dataset(quality_mask_path, quality_mask, q_mask_dataset.profile)
+                
+        # Generates the DHM (DSM - DTM) if the option is activated
+        if dhm:
+            with rasterio.open(dsm_path) as dsm_dataset:
+                dsm = dsm_dataset.read(1)
+                write_dataset(output_dir, dsm - dtm, dtm_dataset.profile)
+        #TODO Release2 : add reprojection and dezoom option
+        # Check if the output CRS or resolution is different from the input. If it's different, 
+        # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
+        
 
-    
-    #self.dtm = core.restoreNoDataOnEdge(self.dtm, self.border_no_data_mask, self.no_data_value)
