@@ -2,16 +2,17 @@
 # This file is part of Bulldozer
 #
 # All rights reserved.
+from libcpp cimport bool
 
 # Necessary to include the C++ code
-cdef extern from "DisturbedAreas.cpp":
+cdef extern from "src/DisturbedAreas.cpp":
     pass
 
 # Declare the class with cdef
-cdef extern from "DisturbedAreas.h" namespace "bulldozer":
+cdef extern from "src/DisturbedAreas.h" namespace "bulldozer":
 
     cdef cppclass DisturbedAreas:
         
         DisturbedAreas() except +
-
-        void build_disturbance_mask(float *, bool *, unsigned int, unsigned int, float, unsigned int, float, float)
+        DisturbedAreas(bool) except +
+        void build_disturbance_mask(float *, bool *, unsigned int, unsigned int, float, bool)

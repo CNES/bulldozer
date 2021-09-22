@@ -5,6 +5,7 @@
 #
 # All rights reserved.
 
+from libcpp cimport bool
 from DisturbedAreas cimport DisturbedAreas
 import numpy as np
 
@@ -34,11 +35,9 @@ cdef class PyDisturbedAreas:
         self.disturbed_areas = DisturbedAreas()
     
     def build_disturbance_mask(self, 
-                                dsm_strip : np.array, 
-                                slope_treshold : float,
-                                disturbed_treshold : int,
-                                disturbed_influence_distance : float, 
-                                dsm_resolution : float):
+                               dsm_strip : np.array, 
+                               slope_treshold : float,
+                               is_four_connexity: bool = True):
         """
         This method detects the disturbed areas along horizontal axis in the input DSM window.
         For the disturbed areas along vertical axis, transpose the input DSM window.
@@ -46,11 +45,7 @@ cdef class PyDisturbedAreas:
         Args:
             dsm_strip: part of the DSM analyzed.
             slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-            disturbed_treshold: if the number of successive disturbed pixels along a row is lower than this threshold 
-                                then this sequence of pixels is considered as a disturbed area.
-            disturbed_influence_distance: if the distance between 2 lists of disturbed cols is lower than this threshold 
-                                            expressed in meters then they are merged.
-            dsm_resolution: input DSM resolution (in meters).
+            is_four_connexity: Nb of evaluated axis: vertical and horizontal if true else vertical, horizontal and diagonals
 
         Returns:
             mask of the disturbed areas in the input DSM window.
@@ -58,7 +53,5 @@ cdef class PyDisturbedAreas:
         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
         cdef bool[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.bool))
-        self.disturbed_areas.detectDisturbedAreas(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], 
-                                                slope_treshold, disturbed_treshold, disturbed_influence_distance, dsm_resolution)
-        #TODO reshape
-        return np.asarray(disturbance_mask_memview)
+        self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1],  slope_treshold, is_four_connexity)
+        return np.asarray(disturbance_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])

@@ -7,11 +7,11 @@
 # All rights reserved.
 
 # Necessary to include the C++ code
-cdef extern from "cpp_core/BulldozerFilters.cpp":
+cdef extern from "src/BulldozerFilters.cpp":
     pass
 
 # Declare the class with cdef
-cdef extern from "cpp_core/BulldozerFilters.h" namespace "bulldozer":
+cdef extern from "src/BulldozerFilters.h" namespace "bulldozer":
 
     cdef cppclass BulldozerFilters:
         
