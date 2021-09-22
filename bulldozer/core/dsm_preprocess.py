@@ -40,7 +40,6 @@ def build_nodata_mask(dsm : np.ndarray, nodata_value : float) -> [np.ndarray, np
     logger.debug("Starting noDataMask building")
     # Get the global nodata mask
     if np.isnan(nodata_value):
-        #TODO discuss about that (copy or not?) + very long process
         nodata_value = -32768
         dsm = np.nan_to_num(dsm, False, nodata_value)
     nodata_area = (dsm == nodata_value)
@@ -59,11 +58,11 @@ def build_nodata_mask(dsm : np.ndarray, nodata_value : float) -> [np.ndarray, np
 
     # Retrieve all the border nodata areas and create the corresponding mask 
     border_nodata_mask = np.isin(labeled_array,border_region_ident)
-    logger.debug("border_nodata_mask generation : Done")
+    logger.debug("border_nodata_mask generation: Done")
 
     # Retrieve all the nodata areas in the input DSM that aren't border areas and create the corresponding mask 
     inner_nodata_mask = np.logical_and(nodata_area == True, np.isin(labeled_array,border_region_ident) != True)
-    logger.debug("inner_nodata_mask generation : Done")
+    logger.debug("inner_nodata_mask generation: Done")
 
     return [border_nodata_mask, inner_nodata_mask]
 
@@ -91,6 +90,7 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
     Returns:
         mask flagging the disturbed area and its associated window location in the input DSM.
     """
+    logger.debug("Starting disturbed area computation")
     with rasterio.open(dsm_path, 'r') as dataset:
         dsm_strip = dataset.read(1, window=window).astype(np.float32)
         disturbation_mask = np.zeros(np.shape(dsm_strip), dtype=np.ubyte)
@@ -167,6 +167,8 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
                     for col in disturbed_area:
                         disturbation_mask[row][col] = 1
                         #TODO change return (bool)
+
+        logger.debug("Disturbance mask computation: Done")
         return disturbation_mask, window
 
 ###########
@@ -247,7 +249,7 @@ def write_quality_mask(border_nodata_mask : np.ndarray,
     profile['dtype'] = np.uint8
     profile['count'] = 1
     # We don't except nodata value in this mask
-    profile['nodata'] = 255
+    profile['nodata'] = 0
     quality_mask[disturbed_area_mask] = 3
     quality_mask[inner_nodata_mask] = 2
     quality_mask[border_nodata_mask] = 1
@@ -262,33 +264,37 @@ def preprocess(dsm_path : str,
                 nodata : float,
                 nb_max_workers : int,
                 keep_filled_dsm : bool,
-                slope_treshold, disturbed_treshold,
-                 disturbed_influence_distance, 
-                 dsm_resolution) -> (np.ndarray, list):
+                slope_treshold, 
+                disturbed_treshold,
+                disturbed_influence_distance, 
+                dsm_resolution) -> None:
     logger.debug("Starting preprocess")
-    with rasterio.open(dsm_path) as src_dataset:
+    with rasterio.open(dsm_path) as dsm_dataset:
         if not nodata:
             # If nodata is not specified in the config file, retrieve the value from the dsm metadata
-            nodata = src_dataset.nodata
+            nodata = dsm_dataset.nodata
         
-        dsm = src_dataset.read(1)
+        dsm = dsm_dataset.read(1)
         # Generates border and inner nodata mask
         border_nodata_mask, inner_nodata_mask = build_nodata_mask(dsm, nodata)
         # Interpolates the inner nodata points (mainly correlation issues in the DSM computation)
         filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
         filled_dsm_path = output_dir + 'filled_DSM.tif'
         
-        # Write the filled DSM raster in a new file in order to provide preprocessed DSM to the disturbance detection
-        write_dataset(filled_dsm_path, filled_dsm, src_dataset.profile)
+        # Writes the filled DSM raster in a new file in order to provide preprocessed DSM to the disturbance detection
+        write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
 
-        #TODO change disturbance nodata since we want to retrieve boolean mask
+        # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         disturbed_area_mask = build_disturbance_mask(filled_dsm_path, output_dir + 'corrected_DSM.tif', nb_max_workers, slope_treshold, 
                                 disturbed_treshold, disturbed_influence_distance, dsm_resolution)
         filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
 
+        # Merges and writes the quality mask
+        write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
+
         if keep_filled_dsm:
             # Overwrites the filled DSM file with the disturbance areas filled
-            write_dataset(filled_dsm_path, filled_dsm, src_dataset.profile)
+            write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
         else:
             # Removes the filled DSM
             try:
@@ -301,9 +307,9 @@ def preprocess(dsm_path : str,
         # We set a very high value for those nodata points
         preprocessed_dsm[border_nodata_mask] = 9000
         preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
-        write_dataset(preprocessed_dsm_path, preprocessed_dsm, src_dataset.profile)
+        write_dataset(preprocessed_dsm_path, preprocessed_dsm, dsm_dataset.profile)
 
-        src_dataset.close()
+        dsm_dataset.close()
         logger.info("preprocess: Done")
 
 
