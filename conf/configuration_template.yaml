@@ -1,41 +1,54 @@
 #-------------------------#
-#       File paths        #
+#       Parameters        #
 #-------------------------#
 # Input DSM path 
-dsmPath : "/work/OT/ai4geo/DATA/PROCESSED/MNS/PHR/Toulouse/mergedDSM.tif"
-# Output path for the filled DSM (DSM without noData)
-outputFillDsmPath : "/work/scratch/lassallep/filled_dsm.tif"
-# Output path for the corrected DSM (DSM without noData & without disturbed area)
-outputCorrectedDsmPath : "/work/scratch/lassallep/tmp/corrected_dsm.tif"
-# Output DTM path 
-outputDtmPath : "/work/scratch/lassallep/dtm.tif"
+dsmPath : "/work/scratch/lallemd/bulldozer/rtdrapcloth/test/cropped_Tlse_MNS.tif"
+# Output directory
+outputDir : "/work/scratch/lallemd/tmp/"
+# If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
+nbMaxWorkers : 16
 
 #-------------------------#
-# Input image information #
+#         Options         #
 #-------------------------#
-nodata : -32768.0
-dsmResolution : 0.5
+# If True, generates the DHM (DSM - DTM) in the output directory 
+dhm : True
+# If True, generates the filled MNS : MNS without inner noData or disturbed areas
+keepFilledDSM : True
+# If True, generates a logfile in the output directory
+keepLog : True
 
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
-# if True, generates a logfile in the output directory
-keepLog : False
+# If null, the output DTM CRS will be the same as the input CRS. 
+# Expected PROJ parameters (e.g: 'epsg:3005') or EPSG codes (e.g: 3005). FYI : WGS84 is analogous to EPSG:4326
+outputCRS : null
+# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
+outputResolution : null
+# If null, the DSM resolution will be extracted from the input DSM (float value in meter)
+dsmResolution : null
+# If null, the nodata value will be extracted from the input DSM (float value or nan)
+noData : null
 
+
+#-------------------------#
+# Bulldozer core settings #
+#-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
 # FillNoData part
 # max search distance in meter
 maxSearchDistance : 100.0
 smoothingIterations : 0
-new_value : nan
+newValue : nan
 
 # DetectDisturbedAreasAndFill part
 slopeThreshold : 2.0
 disturbedThreshold : 3
 disturbedInfluenceDistance : 5.0
 
-# DtmExtractionWithCNESStrategy part
+# DtmExtraction part
 # max object width in meter
 maxObjectWidth : 100.0
 numInnerIterationsStep1: 10

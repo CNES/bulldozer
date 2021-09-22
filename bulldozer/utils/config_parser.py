@@ -1,4 +1,7 @@
-# coding: utf-8
+# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+# This file is part of Bulldozer
+#
+# All rights reserved.
 
 """
     This module is used to retrieve the bulldozer parameters from an YAML configuration file.
@@ -17,10 +20,10 @@ class ConfigParser(object):
 
     def __init__(self, verbose : bool = False) -> None:
         """
-            Parser constructor
+            Parser constructor.
 
-            @params:
-                verbose (bool=False): increase output verbosity if true
+            Args:
+                verbose (defaults=False): increase output verbosity if true.
         """
         if verbose:
             self.level=logging.DEBUG
@@ -28,21 +31,21 @@ class ConfigParser(object):
             self.level=logging.INFO
 
 
-    def read(self, path : str)->dict:
+    def read(self, path : str) -> dict:
         """
             This method returns the dict containing the bulldozer parameters extracted from 
             the input YAML configuration file.
 
-            @params:
-                path (str): path to the configuration file (expected YAML file)
+            Args:
+                path: path to the configuration file (expected YAML file).
 
-            @returns:
-                cfg (dict): configuration parameters for bulldozer
+            Returns:
+                cfg: configuration parameters for bulldozer.
 
-            @raises:
-                ValueError: when bad input path is provided
-
-                FileNotFoundError: when the input file doesn't exist
+            Raises:
+                ValueError: if bad input path is provided.
+                FileNotFoundError: if the input file doesn't exist.
+                YAMLError: if an error occured while reading the yaml file.
         """
         # input file format check
         if not (isinstance(path, str) and (path.endswith('.yaml') or path.endswith('.yml'))) :

@@ -38,8 +38,8 @@ class TestConfigParser(unittest.TestCase):
         # check type
         self.assertIsInstance(cfg, dict)
 
-        # check dict size (expected 5)
-        self.assertEqual(len(cfg), 5)
+        # check dict size (expected 6)
+        self.assertEqual(len(cfg), 6)
 
         # check string element read
         self.assertIsInstance(cfg['str_test'], str)
@@ -61,3 +61,5 @@ class TestConfigParser(unittest.TestCase):
         
         # check nan reading
         self.assertTrue(np.isnan(float(cfg['nan_test'])))
+        self.assertTrue(cfg['none_test'] is None)
+
