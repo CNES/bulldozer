@@ -4,7 +4,7 @@
 from setuptools import find_packages, setup
 from Cython.Build import cythonize
 
-setup(ext_modules=cythonize("bulldozer/core/cpp_core/BulldozerFilters.pyx"))
+setup(ext_modules=cythonize(["bulldozer/core/cpp_core/*.pyx"], build_dir="bulldozer/core/cpp_core/build/disturbedareas/"))
 
 # setup(
 #     name="bulldozer",

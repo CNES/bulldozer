@@ -31,13 +31,12 @@ cdef class PyDisturbedAreas:
 
     cdef DisturbedAreas disturbed_areas # Hold a C++ instance wich we're wrapping
 
-    def __cinit__(self):
-        self.disturbed_areas = DisturbedAreas()
+    def __cinit__(self, is_four_connexity=True):
+        self.disturbed_areas = DisturbedAreas(is_four_connexity)
     
     def build_disturbance_mask(self, 
                                dsm_strip : np.array, 
-                               slope_treshold : float,
-                               is_four_connexity: bool = True):
+                               slope_treshold : float):
         """
         This method detects the disturbed areas along horizontal axis in the input DSM window.
         For the disturbed areas along vertical axis, transpose the input DSM window.
@@ -53,5 +52,5 @@ cdef class PyDisturbedAreas:
         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
         cdef bool[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.bool))
-        self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1],  slope_treshold, is_four_connexity)
+        self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1],  slope_treshold)
         return np.asarray(disturbance_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])
