@@ -30,8 +30,7 @@ namespace bulldozer
                                         bool * disturbance_mask,
                                         unsigned int nb_rows,
                                         unsigned int nb_cols,
-                                        float slope_treshold,
-                                        bool four_connexity = true);
+                                        float slope_treshold);
 
         private:
 
