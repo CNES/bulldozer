@@ -1,1 +1,46 @@
- 
+2021-05-31 07:48:05 [DEBUG] cmd - execute (line 818): Popen(['git', 'cat-file', '--batch-check'], cwd=/home/il/lassallep/Ai4geo/GitlabEC2/bulldozer, universal_newlines=False, shell=None, istream=<valid stream>)
+2021-05-31 07:48:05 [DEBUG] bulldozer - init_logger (line 56): 
+#################
+#   BULLDOZER   #
+#################
+# <Git info>
+#	- branch: d_dev
+#	- commit SHA: ed08f41113816e68184dcc4066f36685876eeabf
+#
+# <Node info>
+#	 - user: lassallep
+#	 - node: node241.sis.cnes.fr
+#	 - processor: x86_64
+#	 - RAM: 125 GB
+#
+# <OS info>
+#	 - system: Linux
+#	 - release: 3.10.0-957.12.2.el7.x86_64
+#	 - version: #1 SMP Tue May 14 21:24:32 UTC 2019
+#################
+2021-05-31 07:48:05 [INFO] bulldozer - <module> (line 383): Starting time: 2021-05-31 07:48:05
+2021-05-31 07:48:05 [DEBUG] config_parser - read (line 57): Check input config file => Passed
+2021-05-31 07:48:05 [DEBUG] config_parser - read (line 63): Retrieved data: {'dsmPath': '/work/OT/ai4geo/DATA/PROCESSED/MNS/PHR/Toulouse/mergedDSM.tif', 'outputFillDsmPath': '/work/scratch/lassallep/filled_dsm.tif', 'outputCorrectedDsmPath': '/work/scratch/lassallep/tmp/corrected_dsm.tif', 'outputDtmPath': '/work/scratch/lassallep/dtm.tif', 'nodata': -32768.0, 'dsmResolution': 0.5, 'keepLog': False, 'maxSearchDistance': 100.0, 'smoothingIterations': 0, 'new_value': 'nan', 'slopeThreshold': 2.0, 'disturbedThreshold': 3, 'disturbedInfluenceDistance': 5.0, 'maxObjectWidth': 100.0, 'numInnerIterationsStep1': 10, 'numOuterIterationsStep2': 100, 'numInnerIterationsStep2': 10}
+2021-05-31 07:48:05 [DEBUG] env - __enter__ (line 258): Entering env context: <rasterio.env.Env object at 0x2b792359b048>
+2021-05-31 07:48:05 [DEBUG] env - __enter__ (line 260): Starting outermost env
+2021-05-31 07:48:05 [DEBUG] env - defenv (line 307): No GDAL environment exists
+2021-05-31 07:48:05 [DEBUG] env - defenv (line 311): New GDAL environment <rasterio._env.GDALEnv object at 0x2b79119c2278> created
+2021-05-31 07:48:05 [DEBUG] env - defenv (line 312): GDAL_DATA found in environment: '/work/scratch/lassallep/VENV/ai4geo/lib64/python3.6/site-packages/rasterio/gdal_data'.
+2021-05-31 07:48:05 [DEBUG] env - defenv (line 312): PROJ data found in wheel, setting to '/work/scratch/lassallep/VENV/ai4geo/lib64/python3.6/site-packages/rasterio/proj_data'.
+2021-05-31 07:48:05 [DEBUG] env - defenv (line 312): Started GDALEnv <rasterio._env.GDALEnv object at 0x2b79119c2278>.
+2021-05-31 07:48:05 [DEBUG] env - __enter__ (line 282): Entered env context: <rasterio.env.Env object at 0x2b792359b048>
+2021-05-31 07:48:05 [DEBUG] __init__ - open (line 207): Sharing flag: 0
+2021-05-31 07:48:05 [DEBUG] __init__ - open (line 207): Nodata success: 1, Nodata value: -32768.000000
+2021-05-31 07:48:05 [DEBUG] __init__ - open (line 207): Dataset <open DatasetReader name='/work/OT/ai4geo/DATA/PROCESSED/MNS/PHR/Toulouse/mergedDSM.tif' mode='r'> is started.
+2021-05-31 07:48:05 [DEBUG] env - __exit__ (line 286): Exiting env context: <rasterio.env.Env object at 0x2b792359b048>
+2021-05-31 07:48:05 [DEBUG] env - delenv (line 347): Cleared existing <rasterio._env.GDALEnv object at 0x2b79119c2278> options
+2021-05-31 07:48:05 [DEBUG] env - delenv (line 348): Stopped GDALEnv <rasterio._env.GDALEnv object at 0x2b79119c2278>.
+2021-05-31 07:48:05 [DEBUG] env - __exit__ (line 292): Exiting outermost env
+2021-05-31 07:48:05 [DEBUG] env - __exit__ (line 299): Exited env context: <rasterio.env.Env object at 0x2b792359b048>
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): Output nodata value read from file: -32768.0
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): Output nodata values: [-32768.0]
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): all_valid: False
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): mask_flags: ([<MaskFlags.nodata: 8>],)
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): Jump straight to _read()
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): Window: None
+2021-05-31 07:48:05 [DEBUG] bulldozer - checkInputArray (line 69): IO window xoff=0.0 yoff=0.0 width=37716.0 height=41093.0

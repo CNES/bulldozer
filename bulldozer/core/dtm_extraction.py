@@ -7,6 +7,9 @@ import scipy.ndimage as ndimage
 from tqdm import tqdm
 import bulldozerfilters as bf 
 
+# For display
+import matplotlib.pyplot as plt
+
 Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 
 def retrieve_dsm_resolution(dsm_dataset: rasterio.DatasetReader) -> float:
@@ -241,7 +244,8 @@ def run(dsm_path: str,
     
     # Initialize the dtm at this current dsm.
     dtm = (dsm_pyramid[nb_levels-1]).copy()
-     
+
+    
 
     # Prevent unhook from hills
     bfilters = bf.PyBulldozerFilters()
@@ -250,6 +254,7 @@ def run(dsm_path: str,
         nb_cols = dtm.shape[1]
         dtm = bfilters.run(dtm, nb_rows, nb_cols, uniform_filter_size, nodata_val)
         dtm = dtm.reshape((nb_rows, nb_cols))
+    
     
     # Get min and max valid height from dsm
     valid_data = dsm_pyramid[0][dsm_pyramid[0] != nodata_val]
@@ -352,7 +357,7 @@ def run(dsm_path: str,
 if __name__ == "__main__":
 
     # Input parameters
-    input_dsm_path = "/work/scratch/lassallep/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
+    input_dsm_path = "/work/scratch/lassalp/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
     max_object_size: float = 100
     uniform_filter_size: int = 1
     prevent_unhook_iter: int = 10
@@ -360,8 +365,8 @@ if __name__ == "__main__":
     num_outer_iterations : int = 100
     mp_tile_size: int = 1500
     mp_nb_procs: int = 24
-    tmp_dir: str = "/work/scratch/lassallep/bulldozer_tmp/"
-    output_dtm = "/work/scratch/lassallep/bulldozer_tmp/dtm.tif"
+    tmp_dir: str = "/work/scratch/lassalp/bulldozer_tmp/"
+    output_dtm = "/work/scratch/lassalp/bulldozer_tmp/dtm.tif"
     sequential: bool = False
     
     run(dsm_path = input_dsm_path,
