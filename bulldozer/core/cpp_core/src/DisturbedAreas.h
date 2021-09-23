@@ -30,7 +30,8 @@ namespace bulldozer
                                         bool * disturbance_mask,
                                         unsigned int nb_rows,
                                         unsigned int nb_cols,
-                                        float slope_treshold);
+                                        float slope_treshold,
+                                        float nodata_value);
 
         private:
 
@@ -39,21 +40,25 @@ namespace bulldozer
             bool isVerticalDisturbed(float * dsm, 
                                     const unsigned int coords,
                                     const unsigned int nb_cols,
-                                    const float thresh);
+                                    const float thresh,
+                                    const float nodata_value);
 
             bool isHorizontalDisturbed(float * dsm, 
                                         const unsigned int coords,
-                                        const float thresh);
+                                        const float thresh,
+                                        const float nodata_value);
 
             bool isDiag1Disturbed(float * dsm, 
                                     const unsigned int coords,
                                     const unsigned int nb_cols,
-                                    const float thresh);
+                                    const float thresh,
+                                    const float nodata_value);
 
             bool isDiag2Disturbed(float * dsm, 
                                     const unsigned int coords,
                                     const unsigned int nb_cols,
-                                    const float thresh);
+                                    const float thresh,
+                                    const float nodata_value);
         
     };
 

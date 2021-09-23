@@ -36,7 +36,8 @@ cdef class PyDisturbedAreas:
     
     def build_disturbance_mask(self, 
                                dsm_strip : np.array, 
-                               slope_treshold : float):
+                               slope_treshold : float,
+                               no_data_value : float):
         """
         This method detects the disturbed areas along horizontal axis in the input DSM window.
         For the disturbed areas along vertical axis, transpose the input DSM window.
@@ -44,13 +45,15 @@ cdef class PyDisturbedAreas:
         Args:
             dsm_strip: part of the DSM analyzed.
             slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-            is_four_connexity: Nb of evaluated axis: vertical and horizontal if true else vertical, horizontal and diagonals
-
+            is_four_connexity: number of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.
+            no_data_value: nodata value used in the input DSM.
         Returns:
             mask of the disturbed areas in the input DSM window.
         """
         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
         cdef bool[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.bool))
-        self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1],  slope_treshold)
+        # Disturbance detection
+        self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_treshold, no_data_value)
+        # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
         return np.asarray(disturbance_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])

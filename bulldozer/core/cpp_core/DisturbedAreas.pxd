@@ -15,4 +15,4 @@ cdef extern from "src/DisturbedAreas.h" namespace "bulldozer":
         
         DisturbedAreas() except +
         DisturbedAreas(bool) except +
-        void build_disturbance_mask(float *, bool *, unsigned int, unsigned int, float)
+        void build_disturbance_mask(float *, bool *, unsigned int, unsigned int, float, float)
