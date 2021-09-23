@@ -12,27 +12,58 @@ namespace bulldozer
                                                     const unsigned int coords,
                                                     const unsigned int nb_cols,
                                                     const float thresh) {
-        return abs(dsm[coords] - dsm[coords-nb_cols]) > thresh || abs(dsm[coords] - dsm[coords+nb_cols])  > thresh;
-    }
+        if (dsm[coords-nb_cols] != -32768 && dsm[coords+nb_cols] != -32768){
+            return abs(dsm[coords-nb_cols] - dsm[coords]) > thresh || abs(dsm[coords] - dsm[coords+nb_cols]) > thresh;
+        } else if (dsm[coords-nb_cols] == -32768){
+            return abs(dsm[coords] - dsm[coords+nb_cols]) > thresh;
+        } else if (dsm[coords+nb_cols] == -32768){
+            return abs(dsm[coords-nb_cols] - dsm[coords]) > thresh;
+        } else {
+            return true;
+        }
 
     inline bool DisturbedAreas::isHorizontalDisturbed(float * dsm, 
                                                     const unsigned int coords,
                                                     const float thresh) {
-        return abs(dsm[coords] - dsm[coords-1])  > thresh || abs(dsm[coords] - dsm[coords+1]) > thresh ;
+        if (dsm[coords-1] != -32768 && dsm[coords+1] != -32768){
+            return abs(dsm[coords-1] - dsm[coords]) > thresh || abs(dsm[coords] - dsm[coords+1]) > thresh;
+        } else if (dsm[coords-1] == -32768){
+            return abs(dsm[coords] - dsm[coords+1]) > thresh;
+        } else if (dsm[coords+1] == -32768){
+            return abs(dsm[coords-1] - dsm[coords]) > thresh;
+        } else {
+            return true;
+        }
     }
 
     inline bool DisturbedAreas::isDiag1Disturbed(float * dsm, 
                                                 const unsigned int coords,
                                                 const unsigned int nb_cols,
                                                 const float thresh) {
-        return abs(dsm[coords] - dsm[coords-nb_cols-1]) > std::sqrt(2) * thresh || abs(dsm[coords] - dsm[coords+nb_cols+1]) >  std::sqrt(2) * thresh;
+        if (dsm[coords-nb_cols-1] != -32768 && dsm[coords+nb_cols+1] != -32768){
+            return abs(dsm[coords-nb_cols-1] - dsm[coords]) > std::sqrt(2) * thresh || abs(dsm[coords] - dsm[coords+nb_cols+1]) > std::sqrt(2) * thresh;
+        } else if (dsm[coords-nb_cols-1] == -32768){
+            return abs(dsm[coords] - dsm[coords+nb_cols+1]) > std::sqrt(2) * thresh;
+        } else if (dsm[coords+nb_cols+1] == -32768){
+            return abs(dsm[coords-nb_cols-1] - dsm[coords]) > std::sqrt(2) * thresh;
+        } else {
+            return true;
+        }
     }
 
     inline bool DisturbedAreas::isDiag2Disturbed(float * dsm, 
                                                 const unsigned int coords,
                                                 const unsigned int nb_cols,
                                                 const float thresh) {
-        return abs(dsm[coords] - dsm[coords-nb_cols+1]) >  std::sqrt(2) * thresh || abs(dsm[coords] - dsm[coords+nb_cols-1]) > std::sqrt(2) * thresh;
+        if (dsm[coords-nb_cols+1] != -32768 && dsm[coords+nb_cols-1] != -32768){
+            return abs(dsm[coords-nb_cols+1] - dsm[coords]) > std::sqrt(2) * thresh || abs(dsm[coords] - dsm[coords+nb_cols-1]) > std::sqrt(2) * thresh;
+        } else if (dsm[coords-nb_cols+1] == -32768){
+            return abs(dsm[coords] - dsm[coords+nb_cols-1]) > std::sqrt(2) * thresh;
+        } else if (dsm[coords+nb_cols-1] == -32768){
+            return abs(dsm[coords-nb_cols+1] - dsm[coords]) > std::sqrt(2) * thresh;
+        } else {
+            return true;
+        }
     }
 
     void DisturbedAreas::build_disturbance_mask(float * dsm,
@@ -48,7 +79,10 @@ namespace bulldozer
             for(unsigned int r = 1; r < nb_rows -2; r++) {
                 for(unsigned int c = 1; c < nb_cols -2; c++) {
                     const unsigned int coords = r * nb_cols + c;
-                    disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) && isHorizontalDisturbed(dsm, coords, thresh);
+                    if(dsm[coords] != -32768){
+                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) 
+                                                    && isHorizontalDisturbed(dsm, coords, thresh);
+                    }
                 }
             }
         }
@@ -56,10 +90,12 @@ namespace bulldozer
             for(unsigned int r = 1; r < nb_rows -2; r++) {
                 for(unsigned int c = 1; c < nb_cols -2; c++) {
                     const unsigned int coords = r * nb_cols + c;
-                    disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) && 
+                    if(dsm[coords] != -32768){
+                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) && 
                                                 isHorizontalDisturbed(dsm, coords, thresh) &&
                                                 isDiag1Disturbed(dsm, coords, nb_cols, thresh) &&
                                                 isDiag2Disturbed(dsm, coords, nb_cols, thresh);
+                    }
                 }
             }
         }

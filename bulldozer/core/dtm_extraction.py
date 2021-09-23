@@ -299,6 +299,7 @@ def run(dsm_path: str,
         # Check if we need to tile for multi processing execution
         # We tile only if tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1])
         margin = current_num_outer_iterations * num_inner_iterations * uniform_filter_size
+        #TODO remove sequential mode
         if not sequential and mp_tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1]):
             # Build tiles and save them to disk
             tile_pair_list = build_tiles(dtm= dtm,
@@ -368,11 +369,11 @@ def run(dsm_path: str,
         current_num_outer_iterations = max(1, int(num_outer_iterations / 2**(max_level - level)))
 
     write_tiles(tile_buffer= dtm, 
-                tile_path = dtm_path ,
+                tile_path = dtm_path,
                 original_profile = in_dsm_profile)
 
 if __name__ == "__main__":
-
+    #TODO change to standalone call
     # Input parameters
     input_dsm_path = "/work/scratch/lassalp/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
     max_object_size: float = 100

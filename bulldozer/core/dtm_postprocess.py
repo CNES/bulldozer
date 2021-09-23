@@ -56,29 +56,31 @@ def postprocess(dtm_path : str,
         dsm_path : path to the input DSM. This argument is required for the DHM generation.
 
     """
+    #TODO handle filled DSM
     with rasterio.open(dtm_path) as dtm_dataset:
         # Read the result DTM from the DTM extraction
         dtm = dtm_dataset.read(1)
-        # Generates the sinks mask and retrieves the low frequency DTM
-        dtm_LF, sinks_mask = build_sinks_mask(dtm, dtm_dataset)
-        # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
-        dtm[sinks_mask] = dtm_LF[sinks_mask]
-        # Overrides the old DTM
-        write_dataset(dtm_path, dtm, dtm_dataset.profile)
+        # Fill disturbed and inner no data
+        with rasterio.open(quality_mask_path) as q_mask_dataset:
+            quality_mask = q_mask_dataset.read(1)
+            filled_dtm = fillnodata(dtm, mask=np.invert(quality_mask > 0))
+
+            # Generates the sinks mask and retrieves the low frequency DTM
+            dtm_LF, sinks_mask = build_sinks_mask(filled_dtm, dtm_dataset)
+            # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
+            dtm[sinks_mask] = dtm_LF[sinks_mask]
+            # Overrides the old DTM
+            write_dataset(dtm_path, filled_dtm, dtm_dataset.profile)
 
         # Updates the output quality mask
-        with rasterio.open(quality_mask_path) as q_mask_dataset:
             # Retrieves the quality masks generated during the DSM preprocess
-            quality_mask = q_mask_dataset.read(1)
-            border_nodata = (quality_mask == 1)
-            inner_nodata = (quality_mask == 2)
-            disturbed_areas = (quality_mask == 3)
+            inner_nodata = (quality_mask == 1)
+            disturbed_areas = (quality_mask == 2)
             
-            # Keeps the following priority order : border_nodata(1) > inner_nodata(2) > disturbance(3) > sink(4)
-            quality_mask[sinks_mask] = 4
-            quality_mask[disturbed_areas] = 3
-            quality_mask[inner_nodata] = 2
-            quality_mask[border_nodata] = 1
+            # Keeps the following priority order : inner_nodata(1) > disturbance(2) > sink(3)
+            quality_mask[sinks_mask] = 3
+            quality_mask[disturbed_areas] = 2
+            quality_mask[inner_nodata] = 1
             # Overrides the previous quality mask by adding the sinks_masks
             write_dataset(quality_mask_path, quality_mask, q_mask_dataset.profile)
                 
@@ -86,7 +88,7 @@ def postprocess(dtm_path : str,
         if dhm:
             with rasterio.open(dsm_path) as dsm_dataset:
                 dsm = dsm_dataset.read(1)
-                write_dataset(output_dir, dsm - dtm, dtm_dataset.profile)
+                write_dataset(output_dir, dsm - filled_dtm, dtm_dataset.profile)
         #TODO Release2 : add reprojection and dezoom option
         # Check if the output CRS or resolution is different from the input. If it's different, 
         # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
