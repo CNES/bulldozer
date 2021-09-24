@@ -41,7 +41,7 @@ def build_sinks_mask(dtm : np.ndarray, resolution : float) -> (np.ndarray, np.nd
 
 def postprocess(dtm_path : str, 
                 output_dir : str,
-                quality_mask_path : str, 
+                quality_mask_path : str = None, 
                 dhm : bool = False,
                 dsm_path : str = None) -> None:
     """
@@ -85,10 +85,10 @@ def postprocess(dtm_path : str,
             write_dataset(quality_mask_path, quality_mask, q_mask_dataset.profile)
                 
         # Generates the DHM (DSM - DTM) if the option is activated
-        if dhm:
+        if dhm and dsm_path:
             with rasterio.open(dsm_path) as dsm_dataset:
                 dsm = dsm_dataset.read(1)
-                write_dataset(output_dir, dsm - filled_dtm, dtm_dataset.profile)
+                write_dataset(output_dir + 'DHM.tif', dsm - filled_dtm, dtm_dataset.profile)
         #TODO Release2 : add reprojection and dezoom option
         # Check if the output CRS or resolution is different from the input. If it's different, 
         # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):

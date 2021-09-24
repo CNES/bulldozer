@@ -173,8 +173,7 @@ def preprocess(dsm_path : str,
                create_filled_dsm : bool = False,
                nodata : float = None,
                slope_treshold : float = 2.0, 
-               is_four_connexity : bool = True
-               ) -> None:
+               is_four_connexity : bool = True) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -228,7 +227,7 @@ def preprocess(dsm_path : str,
             write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
         
         dsm[disturbed_area_mask] = nodata
-        
+
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
         preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
         write_dataset(preprocessed_dsm_path, dsm, dsm_dataset.profile)
