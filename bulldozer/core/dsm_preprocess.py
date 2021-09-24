@@ -22,25 +22,23 @@ from tqdm import tqdm
 from os import remove
 
 logger = logging.getLogger(__name__)
+# No data value constant used in bullozer
+NO_DATA_VALUE = -32768
 
-def build_nodata_mask(dsm : np.ndarray, nodata_value : float) -> np.ndarray:
+def build_inner_nodata_mask(dsm : np.ndarray) -> np.ndarray:
     """
     This method builds a mask corresponding to inner nodata values in a given DSM.
     (mainly correlation issues in the DSM)
 
     Args:
         dsm: array containing DSM values.
-        nodata_value: nodata value.
 
     Returns:
         boolean mask corresponding to the inner nodata areas.
     """
-    logger.debug("Starting noDataMask building")
+    logger.debug("Starting inner_nodata_mask building")
     # Get the global nodata mask
-    if np.isnan(nodata_value):
-        nodata_value = -32768
-        dsm = np.nan_to_num(dsm, False, nodata_value)
-    nodata_area = (dsm == nodata_value)
+    nodata_area = (dsm == NO_DATA_VALUE)
 
     # Connect the groups of nodata elements into labels (non-zero values)
     labeled_array, _ = ndimage.label(nodata_area)
@@ -74,57 +72,51 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
         dsm_path: path to the input DSM.
         window: coordinates of the concerned window.
         slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-        disturbed_treshold: if the number of successive disturbed pixels along a row is lower than this threshold 
-                            then this sequence of pixels is considered as a disturbed area.
-        disturbed_influence_distance: if the distance between 2 lists of disturbed cols is lower than this threshold 
-                                        expressed in meters then they are merged.
-        dsm_resolution: input DSM resolution (in meters).
+        is_four_connexity: number of evaluated axis. 
+                           Vertical and horizontal if true else vertical, horizontal and diagonals.
 
     Returns:
         mask flagging the disturbed area and its associated window location in the input DSM.
     """
-    logger.debug("Starting disturbed area computation")
+    logger.debug("Starting disturbed area analysis. Window strip: {}".format(window))
     with rasterio.open(dsm_path, 'r') as dataset:
         dsm_strip = dataset.read(1, window=window).astype(np.float32)
         disturbed_areas = da.PyDisturbedAreas(is_four_connexity)
-        disturbance_mask = disturbed_areas.build_disturbance_mask(dsm_strip, slope_treshold).astype(np.ubyte)
-        logger.debug("Disturbance mask computation: Done")
+        disturbance_mask = disturbed_areas.build_disturbance_mask(dsm_strip, slope_treshold, NO_DATA_VALUE).astype(np.ubyte)
+        logger.debug("Disturbance mask computation: Done (Window strip: {}".format(window))
         return disturbance_mask, window
 
-###########
-#TODO WIP #
-###########
+
 def build_disturbance_mask(dsm_path: str,
-                        outputMaskPath : str,
-                        nb_max_workers : int,
-                        disturbance_nodata : np.uint8,
-                        slope_treshold: float = 2.0,
-                        is_four_connexity : bool = True):
+                           nb_max_workers : int,
+                           slope_treshold: float = 2.0,
+                           is_four_connexity : bool = True) -> np.array:
     """
     This method builds a mask corresponding to the disturbed areas in a given DSM.
     Most of those areas correspond to water or correlation issues during the DSM generation (obstruction, etc.).
 
     Args:
         dsm_path: path to the input DSM.
-        window: coordinates of the concerned window.
+        nb_max_workers: number of availables workers (multiprocessing).
         slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-        disturbed_treshold: if the number of successive disturbed pixels along a row is lower than this threshold 
-                            then this sequence of pixels is considered as a disturbed area.
-        disturbed_influence_distance: if the distance between 2 lists of disturbed cols is lower than this threshold 
-                                        expressed in meters then they are merged.
+        is_four_connexity: number of evaluated axis. 
+                           Vertical and horizontal if true else vertical, horizontal and diagonals.
 
     Returns:
-        masks containing the inner and border nodata areas.
+        masks containing the disturbed areas.
     """
     # Determine the number of strip and their height
     with rasterio.open(dsm_path, 'r') as dataset:
         strip_height = dataset.height // nb_max_workers
         strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
-        # border handling
+        # Borders handling
         strip[0][0] = 0
         strips[-1][1] = dataset.height - 1
 
+        # Output binary mask initialization
         disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
+
+        # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
         with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
             futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
             slope_treshold, is_four_connexity) for strip in strips}
@@ -146,6 +138,7 @@ def build_disturbance_mask(dsm_path: str,
         
         return disturbance_mask       
     
+
 def write_quality_mask(inner_nodata_mask : np.ndarray, 
                        disturbed_area_mask : np.ndarray,
                        output_dir : str,
@@ -174,16 +167,31 @@ def write_quality_mask(inner_nodata_mask : np.ndarray,
     write_dataset(quality_mask_path, quality_mask, profile)
 
 
-###########
-#TODO WIP #
-###########
 def preprocess(dsm_path : str, 
-                output_dir : str,
-                nodata : float,
-                nb_max_workers : int,
-                slope_treshold : float, 
-                is_four_connexity : bool,
-                filled_dsm_path : str = None) -> None:
+               output_dir : str,
+               nb_max_workers : int,
+               create_filled_dsm : bool = False,
+               nodata : float = None,
+               slope_treshold : float = 2.0, 
+               is_four_connexity : bool = True
+               ) -> None:
+    """
+    This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
+    There is a priority order: inner_nodata > disturbance
+    (e.g. if a pixel is tagged as disturbed and inner_nodata, the output value will correspond to inner_nodata).
+
+    Args:
+        dsm_path: path to the input DSM.
+        output_dir: bulldozer output directory. The quality mask will be written in this folder.
+        nb_max_workers: number of availables workers (for multiprocessing purpose).
+        nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
+        create_filled_dsm: flag to indicate if bulldozer has to generate a filled DSM (without nodata or disturbed areas).
+        slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
+        is_four_connexity: number of evaluated axis. 
+                           Vertical and horizontal if true else vertical, horizontal and diagonals.
+    """   
+
+
     logger.debug("Starting preprocess")
     with rasterio.open(dsm_path) as dsm_dataset:
         if not nodata:
@@ -193,36 +201,35 @@ def preprocess(dsm_path : str,
         dsm = dsm_dataset.read(1)
 
         # Converts no data
-        nodata_value = -32768
-        # Get the global nodata mask
         if np.isnan(nodata):
-            dsm = np.nan_to_num(dsm, False, nodata_value)
+            dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
         else:
-            dsm = np.where(dsm == nodata, nodata_value, dsm)
+            dsm = np.where(dsm == nodata, NO_DATA_VALUE, dsm)
 
-        dsm_dataset.profile['nodata'] = nodata_value
+        dsm_dataset.profile['nodata'] = NO_DATA_VALUE
         
-        # Generates border and inner nodata mask
-        inner_nodata_mask = build_nodata_mask(dsm, nodata)
+        # Generates inner nodata mask
+        inner_nodata_mask = build_inner_nodata_mask(dsm)
                 
-         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
+        # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
         
         # Merges and writes the quality mask
         write_quality_mask(inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
 
         # Generates filled DSM if the user provides a valid filled_dsm_path
-        if filled_dsm_path is not None:
+        if create_filled_dsm:
             filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
             filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
 
-            # Overwrites the filled DSM file with the disturbance areas filled
+            filled_dsm_path = output_dir + 'filled_DSM.tif'
+
+            # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
             write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
         
-        # Creates the preprocessed DSM (without disturbed areas). This DSM is only intended for bulldozer DTM extraction function.
         dsm[disturbed_area_mask] = nodata
-
-        # We set a very high value for those nodata points
+        
+        # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
         preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
         write_dataset(preprocessed_dsm_path, dsm, dsm_dataset.profile)
 
