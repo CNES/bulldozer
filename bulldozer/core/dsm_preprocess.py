@@ -22,7 +22,7 @@ from tqdm import tqdm
 from os import remove
 
 logger = logging.getLogger(__name__)
-# No data value constant used in bullozer
+# No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
 
 def build_inner_nodata_mask(dsm : np.ndarray) -> np.ndarray:
@@ -110,7 +110,7 @@ def build_disturbance_mask(dsm_path: str,
         strip_height = dataset.height // nb_max_workers
         strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
         # Borders handling
-        strip[0][0] = 0
+        strips[0][0] = 0
         strips[-1][1] = dataset.height - 1
 
         # Output binary mask initialization
@@ -124,18 +124,19 @@ def build_disturbance_mask(dsm_path: str,
                 mask, window = future.result()
                 window_shape = window.flatten()
                 start_row = window_shape[1]
-                end_row = window.shape[2]
+                end_row = start_row + window_shape[3] - 1
                 start_row_mask = 0
                 end_row_mask = mask.shape[0] - 1 
                 if start_row > 0:
                     start_row_mask = 1
-                    start_row = start_row - 1
+                    start_row = start_row + 1
                 
                 if end_row < dataset.height - 1:
-                    end_row_mask = mask.shape[0]
+                    end_row_mask = end_row_mask - 1
+                    end_row = end_row - 1
 
-                disturbance_mask[start_row:end_row,:] = mask[start_row_mask:end_row_mask+1, :]
-        
+                disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
+        print("mask done")
         return disturbance_mask       
     
 
@@ -226,8 +227,10 @@ def preprocess(dsm_path : str,
             # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
             write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
         
+        print(type(disturbed_area_mask), np.min(disturbed_area_mask), np.max(disturbed_area_mask))
         dsm[disturbed_area_mask] = nodata
 
+        print("done")
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
         preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
         write_dataset(preprocessed_dsm_path, dsm, dsm_dataset.profile)

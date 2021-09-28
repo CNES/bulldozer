@@ -27,7 +27,7 @@ namespace bulldozer
             DisturbedAreas(bool is_four_connexity);
 
             void build_disturbance_mask(float * dsm_strip,
-                                        bool * disturbance_mask,
+                                        unsigned char * disturbance_mask,
                                         unsigned int nb_rows,
                                         unsigned int nb_cols,
                                         float slope_treshold,

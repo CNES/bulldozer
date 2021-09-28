@@ -3,12 +3,9 @@ from collections import namedtuple
 import concurrent.futures
 import rasterio
 import numpy as np
-import scipy.ndimage as ndimage
 from tqdm import tqdm
 import bulldozerfilters as bf 
 
-# For display
-import matplotlib.pyplot as plt
 
 Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 

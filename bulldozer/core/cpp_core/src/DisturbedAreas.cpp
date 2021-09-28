@@ -1,5 +1,4 @@
 #include "DisturbedAreas.h"
-#include <iostream>
 
 namespace bulldozer 
 {
@@ -22,6 +21,7 @@ namespace bulldozer
         } else {
             return true;
         }
+    }
 
     inline bool DisturbedAreas::isHorizontalDisturbed(float * dsm, 
                                                     const unsigned int coords,
@@ -58,7 +58,7 @@ namespace bulldozer
                                                 const unsigned int coords,
                                                 const unsigned int nb_cols,
                                                 const float thresh,
-                                                const float nodata_value {
+                                                const float nodata_value) {
         if (dsm[coords-nb_cols+1] != nodata_value && dsm[coords+nb_cols-1] != nodata_value){
             return abs(dsm[coords-nb_cols+1] - dsm[coords]) > std::sqrt(2) * thresh || abs(dsm[coords] - dsm[coords+nb_cols-1]) > std::sqrt(2) * thresh;
         } else if (dsm[coords-nb_cols+1] == nodata_value){
@@ -71,22 +71,19 @@ namespace bulldozer
     }
 
     void DisturbedAreas::build_disturbance_mask(float * dsm,
-                                                bool * disturbance_mask,
+                                                unsigned char * disturbance_mask,
                                                 unsigned int nb_rows,
                                                 unsigned int nb_cols,
                                                 float thresh,
                                                 float nodata_value) {
 
         if(m_IsFourConnexity) {
-
-            std::cout << "ok " << nb_rows << " " << nb_cols << std::endl;
-
             for(unsigned int r = 1; r < nb_rows -2; r++) {
                 for(unsigned int c = 1; c < nb_cols -2; c++) {
                     const unsigned int coords = r * nb_cols + c;
                     if(dsm[coords] != nodata_value){
-                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) 
-                                                    && isHorizontalDisturbed(dsm, coords, thresh);
+                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh, nodata_value) 
+                                                    && isHorizontalDisturbed(dsm, coords, thresh, nodata_value);
                     }
                 }
             }
@@ -96,10 +93,10 @@ namespace bulldozer
                 for(unsigned int c = 1; c < nb_cols -2; c++) {
                     const unsigned int coords = r * nb_cols + c;
                     if(dsm[coords] != nodata_value){
-                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh) && 
-                                                isHorizontalDisturbed(dsm, coords, thresh) &&
-                                                isDiag1Disturbed(dsm, coords, nb_cols, thresh) &&
-                                                isDiag2Disturbed(dsm, coords, nb_cols, thresh);
+                        disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh, nodata_value) && 
+                                                isHorizontalDisturbed(dsm, coords, thresh, nodata_value) &&
+                                                isDiag1Disturbed(dsm, coords, nb_cols, thresh, nodata_value) &&
+                                                isDiag2Disturbed(dsm, coords, nb_cols, thresh, nodata_value);
                     }
                 }
             }

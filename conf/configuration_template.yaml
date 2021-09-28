@@ -2,11 +2,11 @@
 #       Parameters        #
 #-------------------------#
 # Input DSM path 
-dsmPath : "/work/scratch/lallemd/bulldozer/rtdrapcloth/test/cropped_Tlse_MNS.tif"
+dsmPath : "/work/OT/ai4geo/DATA/ZONES_EC2/Toulouse/mergedMNS.tif"
 # Output directory
-outputDir : "/work/scratch/lallemd/tmp/"
+outputDir : "/work/scratch/lallemd/test_bulldozer_release1/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
-nbMaxWorkers : 16
+nbMaxWorkers : 24
 
 #-------------------------#
 #         Options         #
@@ -14,7 +14,7 @@ nbMaxWorkers : 16
 # If True, generates the DHM (DSM - DTM) in the output directory 
 dhm : True
 # If True, generates the filled MNS : MNS without inner noData or disturbed areas
-keepFilledDSM : True
+createFilledDsm : True
 # If True, generates a logfile in the output directory
 keepLog : True
 
@@ -37,20 +37,17 @@ noData : null
 #-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
-# FillNoData part
-# max search distance in meter
-maxSearchDistance : 100.0
-smoothingIterations : 0
-newValue : nan
-
 # DetectDisturbedAreasAndFill part
 slopeThreshold : 2.0
-disturbedThreshold : 3
-disturbedInfluenceDistance : 5.0
+# numnumber of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.
+fourConnexity : True
 
 # DtmExtraction part
 # max object width in meter
 maxObjectWidth : 100.0
-numInnerIterationsStep1: 10
-numOuterIterationsStep2: 100
-numInnerIterationsStep2: 10
+uniformFilterSize : 1
+preventUnhookIter : 10
+numOuterIter : 100
+numInnerIter : 10
+mpTileSize : 1500
+sequential : False
