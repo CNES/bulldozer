@@ -15,6 +15,9 @@ from bulldozer.utils.helper import write_dataset
 logger = logging.getLogger(__name__)
 
 class PostProcess(object):
+    """
+        Bulldozer post processing set of functions.
+    """
 
     def __init__(self) -> None:
         pass

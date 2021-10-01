@@ -1,3 +1,11 @@
+# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
+# This file is part of Bulldozer
+#
+# All rights reserved.
+
+"""
+    This module is used to postprocess the DTM in order to improve its quality. It required a DTM generated from Bulldozer.
+"""
 import os
 import sys
 import logging
@@ -7,7 +15,8 @@ from datetime import datetime
 from sys import stdout
 from bulldozer.core.dsm_preprocess import preprocess
 from bulldozer.core.dtm_extraction import run
-from bulldozer.core.dtm_postprocess import postprocess
+from bulldozer.core.dsm_preprocess import PreProcess
+from bulldozer.core.dtm_postprocess import PostProcess
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.helper import init_logger
 
@@ -15,15 +24,20 @@ logging.config.fileConfig(os.path.join(os.path.dirname(os.path.abspath(__file__)
                           disable_existing_loggers=False)
 logger = logging.getLogger(__name__)
 
-class Pipeline:
-    def __init__(self, config_path : str, verbosity = False):
+class Pipeline(object):
+    """
+        Bulldozer main pipeline.
+    """
+    
+    def __init__(self, config_path : str) -> None:
         """
-
+            Pipeline constructor.
         """
         init_logger(logger)
         starting_time = datetime.now()
         logger.info("Starting time: " + starting_time.strftime("%Y-%m-%d %H:%M:%S"))
-        parser = ConfigParser(verbosity)
+        parser = ConfigParser(False)
+        # Retrieves all the settings
         cfg = parser.read(config_path)
 
         preprocess(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
@@ -39,7 +53,8 @@ class Pipeline:
             cfg['sequential'], cfg['nbMaxWorkers'] )
         
         quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
-        postprocess(dtm_path, cfg['outputDir'], quality_mask_path, 
+        postprocess = PostProcess()
+        postprocess.run(dtm_path, cfg['outputDir'], quality_mask_path, 
                     cfg['dhm'], cfg['dsmPath'])
 
         logger.info("Ending time: {} (Runtime: {}s)"
@@ -55,5 +70,20 @@ class Pipeline:
                 logger.warning("Error while writting the logfile: " + str(e), exc_info=True)
 
 if __name__ == "__main__":
+    assert(len(sys.argv)>=2)
+
+    # The first parameter should be the path to the configuration file
     config_path = sys.argv[1]
+
+    # Configuration file format check
+    if not (config_path.endswith('.yaml') or config_path.endswith('.yml')) :
+        logger.exception('\'config_path\' argument should be a path to a Yaml file (here: {})'.format(config_path))
+        raise ValueError('Expected yaml configuration file')
+
+    # Configuration file existence check
+    if not os.path.isfile(config_path):
+        logger.exception('The input configuration file \'{}\' doesn\'t exist'.format(config_path))
+        raise FileNotFoundError('Expected yaml configuration file')
+    logger.debug('Configuration file existence check: Done')
+
     Pipeline(config_path)
