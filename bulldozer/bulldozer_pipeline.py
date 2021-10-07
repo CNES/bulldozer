@@ -13,7 +13,6 @@ import logging.config
 from shutil import copy
 from datetime import datetime
 from sys import stdout
-from bulldozer.core.dsm_preprocess import preprocess
 from bulldozer.core.dtm_extraction import run
 from bulldozer.core.dsm_preprocess import PreProcess
 from bulldozer.core.dtm_postprocess import PostProcess
@@ -39,20 +38,21 @@ class Pipeline(object):
         parser = ConfigParser(False)
         # Retrieves all the settings
         cfg = parser.read(config_path)
+        preprocess = PreProcess()
 
-        preprocess(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
+        preprocess.run(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
                    cfg['createFilledDsm'], cfg['noData'], 
                    cfg['slopeThreshold'], cfg['fourConnexity'])
 
-        dsm_path = cfg['outputDir'] + 'preprocessed_DSM.tif'
-        dtm_path = cfg['outputDir'] + 'dtm.tif'
-        tmp_dir = cfg['outputDir'] + 'tmp/'
-        run(dsm_path, dtm_path, tmp_dir, cfg['maxObjectWidth'], 
+        dsm_path = cfg['outputDir'] + 'filled_DSM.tif'
+
+        run(dsm_path, cfg['outputDir'], cfg['maxObjectWidth'], 
             cfg['uniformFilterSize'], cfg['preventUnhookIter'],
             cfg['numOuterIter'], cfg['numInnerIter'], cfg['mpTileSize'], 
             cfg['sequential'], cfg['nbMaxWorkers'] )
         
         quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
+        dtm_path = cfg['outputDir'] + 'DTM.tif'
         postprocess = PostProcess()
         postprocess.run(dtm_path, cfg['outputDir'], quality_mask_path, 
                     cfg['dhm'], cfg['dsmPath'])

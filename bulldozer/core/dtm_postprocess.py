@@ -10,6 +10,7 @@ import logging
 import rasterio
 import numpy as np
 import scipy.ndimage as ndimage
+from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ class PostProcess(object):
     def __init__(self) -> None:
         pass
 
-    def build_sinks_mask(dtm : np.ndarray) -> (np.ndarray, np.ndarray):
+    def build_sinks_mask(self, dtm : np.ndarray) -> (np.ndarray, np.ndarray):
         """
         This method detects sinks in the input DTM.
         Those sinks are generated during the DTM extraction by remaining artefacts.
@@ -49,7 +50,7 @@ class PostProcess(object):
         return dtm_LF, sharp_sinks_mask
 
 
-    def build_dhm(dtm : np.ndarray, dsm_path : str, output_dir : str) -> None:
+    def build_dhm(self, dtm : np.ndarray, dsm_path : str, output_dir : str) -> None:
         """
         This method generates a DHM (DTM-DSM) in the directory provided.
 
@@ -66,7 +67,8 @@ class PostProcess(object):
         return dtm_LF, sharp_sinks_mask
 
 
-    def run(dtm_path : str, 
+    def run(self,
+            dtm_path : str, 
             output_dir : str,
             quality_mask_path : str = None, 
             dhm : bool = False,
@@ -92,7 +94,7 @@ class PostProcess(object):
                 filled_dtm = fillnodata(dtm, mask=np.invert(quality_mask > 0))
 
                 # Generates the sinks mask and retrieves the low frequency DTM
-                dtm_LF, sinks_mask = build_sinks_mask(filled_dtm)
+                dtm_LF, sinks_mask = self.build_sinks_mask(filled_dtm)
                 # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
                 dtm[sinks_mask] = dtm_LF[sinks_mask]
                 # Overrides the old DTM if run funct is called throught the bulldozer pipeline
@@ -112,7 +114,7 @@ class PostProcess(object):
                     
             # Generates the DHM (DSM - DTM) if the option is activated
             if dhm and dsm_path:
-                build_dhm(filled_dtm, dsm_path, output_dir)
+                self.build_dhm(filled_dtm, dsm_path, output_dir)
 
             #TODO Release2 : add reprojection and dezoom option
             # Check if the output CRS or resolution is different from the input. If it's different, 

@@ -30,13 +30,13 @@ def next_power_of_2(x : int) -> int:
     """
     return 0 if x==0 else (1<<(x-1).bit_length()).bit_length() - 1
     
-def get_max_pyramid_level(max_object_size_pixels: int) -> int :
+def get_max_pyramid_level(max_object_size_pixels: float) -> int :
     """ 
         Given the max size of an object on the ground,
         this methods compute the max level of the pyramid
         for drap cloth algorithm
     """
-    power = next_power_of_2(max_object_size_pixels)
+    power = next_power_of_2(int(max_object_size_pixels))
     
     # Take the closest power to the max object size
     if abs(2**(power-1) - max_object_size_pixels) <  abs(2**(power) - max_object_size_pixels):
@@ -223,8 +223,7 @@ def tiled_drape_cloth(tile_pair: tuple,
     return (tile_pair, output_tile_dtm_path)
 
 def run(dsm_path: str,
-        dtm_path: str,
-        tmp_dir: str,
+        output_dir: str,
         max_object_size: int,
         uniform_filter_size: int,
         prevent_unhook_iter: int,
@@ -237,7 +236,7 @@ def run(dsm_path: str,
     # Open the dsm dataset
     in_dsm_dataset = rasterio.open(dsm_path)
     in_dsm_profile = in_dsm_dataset.profile
-
+    dtm_path = output_dir + "/DTM.tif"
     # Initial dsm
     dsm_pyramid = []
     dsm_pyramid.append(in_dsm_dataset.read().astype(np.float32)[0])
@@ -303,7 +302,7 @@ def run(dsm_path: str,
                                          dsm=dsm_pyramid[level],
                                          tile_size=mp_tile_size,
                                          margin=margin,
-                                         tmp_dir=tmp_dir,
+                                         tmp_dir=output_dir,
                                          dsm_profile=in_dsm_profile)
 
             output_tiles = []
@@ -317,7 +316,7 @@ def run(dsm_path: str,
                                            uniform_filter_size,
                                            step,
                                            nodata_val,
-                                           tmp_dir) for tile_pair in tile_pair_list}
+                                           output_dir) for tile_pair in tile_pair_list}
                 
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Parallel Drape Cloth execution..."):
                 tile_pair, output_path = future.result()
@@ -386,7 +385,6 @@ if __name__ == "__main__":
     
     run(dsm_path = input_dsm_path,
         dtm_path = output_dtm,
-        tmp_dir = tmp_dir,
         max_object_size = max_object_size,
         uniform_filter_size = uniform_filter_size,
         prevent_unhook_iter = prevent_unhook_iter,

@@ -1,9 +1,9 @@
 #-------------------------#
 #       Parameters        #
 #-------------------------#
-# Input DSM path 
+# Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
 dsmPath : "/work/OT/ai4geo/DATA/ZONES_EC2/Toulouse/mergedMNS.tif"
-# Output directory
+# Output directory path
 outputDir : "/work/scratch/lallemd/test_bulldozer_release1/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
 nbMaxWorkers : 24
