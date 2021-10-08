@@ -50,7 +50,7 @@ class PostProcess(object):
         return dtm_LF, sharp_sinks_mask
 
 
-    def build_dhm(self, dtm : np.ndarray, dsm_path : str, output_dir : str) -> None:
+    def build_dhm(self, dtm : np.ndarray, dsm_path : str, output_dir : str, profile : rasterio.profiles.Profile) -> None:
         """
         This method generates a DHM (DTM-DSM) in the directory provided.
 
@@ -62,9 +62,8 @@ class PostProcess(object):
         logger.debug("Starting DHM generation") 
         with rasterio.open(dsm_path) as dsm_dataset:
             dsm = dsm_dataset.read(1)
-            write_dataset(output_dir + 'DHM.tif', dsm - filled_dtm, dtm_dataset.profile)
+            write_dataset(output_dir + 'DHM.tif', dsm - dtm, profile)
         logger.info("DHM generation: Done")
-        return dtm_LF, sharp_sinks_mask
 
 
     def run(self,
@@ -112,11 +111,11 @@ class PostProcess(object):
                 # Overrides the previous quality mask by adding the sinks_masks
                 write_dataset(quality_mask_path, quality_mask, q_mask_dataset.profile)
                     
-            # Generates the DHM (DSM - DTM) if the option is activated
-            if dhm and dsm_path:
-                self.build_dhm(filled_dtm, dsm_path, output_dir)
+                # Generates the DHM (DSM - DTM) if the option is activated
+                if dhm and dsm_path:
+                    self.build_dhm(filled_dtm, dsm_path, output_dir, dtm_dataset.profile)
 
             #TODO Release2 : add reprojection and dezoom option
             # Check if the output CRS or resolution is different from the input. If it's different, 
             # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
-            logger.info("Postprocess : Done")
+                logger.info("Postprocess : Done")
