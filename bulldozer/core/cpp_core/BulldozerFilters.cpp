@@ -8,15 +8,16 @@
             "bulldozer/core/cpp_core/src/BulldozerFilters.h"
         ],
         "include_dirs": [
-            "bulldozer/core/cpp_core"
+            "bulldozer/core/cpp_core",
+            "./bulldozer/core/cpp_core"
         ],
         "language": "c++",
-        "name": "BulldozerFilters",
+        "name": "bulldozer.core.cpp_core.BulldozerFilters",
         "sources": [
             "bulldozer/core/cpp_core/BulldozerFilters.pyx"
         ]
     },
-    "module_name": "BulldozerFilters"
+    "module_name": "bulldozer.core.cpp_core.BulldozerFilters"
 }
 END: Cython Metadata */
 
@@ -624,8 +625,8 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__BulldozerFilters
-#define __PYX_HAVE_API__BulldozerFilters
+#define __PYX_HAVE__bulldozer__core__cpp_core__BulldozerFilters
+#define __PYX_HAVE_API__bulldozer__core__cpp_core__BulldozerFilters
 /* Early includes */
 #include "src/BulldozerFilters.cpp"
 #include "ios"
@@ -959,20 +960,20 @@ typedef struct {
 
 
 /*--- Type declarations ---*/
-struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters;
+struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters;
 struct __pyx_array_obj;
 struct __pyx_MemviewEnum_obj;
 struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 
-/* "BulldozerFilters.pyx":14
+/* "bulldozer/core/cpp_core/BulldozerFilters.pyx":14
  * # as an attribute and create a bunch of forwarding methdss
  * # Python extention type.
  * cdef class PyBulldozerFilters:             # <<<<<<<<<<<<<<
  * 
  *     cdef BulldozerFilters c_bf # Hold a C++ instance wich we're wrapping
  */
-struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters {
+struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters {
   PyObject_HEAD
   bulldozer::BulldozerFilters c_bf;
 };
@@ -1792,8 +1793,8 @@ static PyObject *__pyx_memoryview_assign_item_from_object(struct __pyx_memoryvie
 static PyObject *__pyx_memoryviewslice_convert_item_to_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp); /* proto*/
 static PyObject *__pyx_memoryviewslice_assign_item_from_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp, PyObject *__pyx_v_value); /* proto*/
 
-/* Module declarations from 'BulldozerFilters' */
-static PyTypeObject *__pyx_ptype_16BulldozerFilters_PyBulldozerFilters = 0;
+/* Module declarations from 'bulldozer.core.cpp_core.BulldozerFilters' */
+static PyTypeObject *__pyx_ptype_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters = 0;
 static PyTypeObject *__pyx_array_type = 0;
 static PyTypeObject *__pyx_MemviewEnum_type = 0;
 static PyTypeObject *__pyx_memoryview_type = 0;
@@ -1839,11 +1840,11 @@ static void __pyx_memoryview_slice_assign_scalar(__Pyx_memviewslice *, int, size
 static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize_t *, int, size_t, void *); /*proto*/
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
-#define __Pyx_MODULE_NAME "BulldozerFilters"
-extern int __pyx_module_is_main_BulldozerFilters;
-int __pyx_module_is_main_BulldozerFilters = 0;
+#define __Pyx_MODULE_NAME "bulldozer.core.cpp_core.BulldozerFilters"
+extern int __pyx_module_is_main_bulldozer__core__cpp_core__BulldozerFilters;
+int __pyx_module_is_main_bulldozer__core__cpp_core__BulldozerFilters = 0;
 
-/* Implementation of 'BulldozerFilters' */
+/* Implementation of 'bulldozer.core.cpp_core.BulldozerFilters' */
 static PyObject *__pyx_builtin_TypeError;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_MemoryError;
@@ -1925,7 +1926,6 @@ static const char __pyx_k_allocate_buffer[] = "allocate_buffer";
 static const char __pyx_k_dtype_is_object[] = "dtype_is_object";
 static const char __pyx_k_pyx_PickleError[] = "__pyx_PickleError";
 static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
-static const char __pyx_k_BulldozerFilters[] = "BulldozerFilters";
 static const char __pyx_k_ascontiguousarray[] = "ascontiguousarray";
 static const char __pyx_k_pyx_unpickle_Enum[] = "__pyx_unpickle_Enum";
 static const char __pyx_k_PyBulldozerFilters[] = "PyBulldozerFilters";
@@ -1956,9 +1956,9 @@ static const char __pyx_k_bulldozer_core_cpp_core_Bulldoze[] = "bulldozer/core/c
 static const char __pyx_k_got_differing_extents_in_dimensi[] = "got differing extents in dimension %d (got %d and %d)";
 static const char __pyx_k_no_default___reduce___due_to_non[] = "no default __reduce__ due to non-trivial __cinit__";
 static const char __pyx_k_unable_to_allocate_shape_and_str[] = "unable to allocate shape and strides.";
+static const char __pyx_k_bulldozer_core_cpp_core_Bulldoze_2[] = "bulldozer.core.cpp_core.BulldozerFilters";
 static PyObject *__pyx_n_s_ASCII;
 static PyObject *__pyx_kp_s_Buffer_view_does_not_expose_stri;
-static PyObject *__pyx_n_s_BulldozerFilters;
 static PyObject *__pyx_n_s_C_CONTIGUOUS;
 static PyObject *__pyx_kp_s_Can_only_create_a_buffer_that_is;
 static PyObject *__pyx_kp_s_Cannot_assign_to_read_only_memor;
@@ -1989,6 +1989,7 @@ static PyObject *__pyx_n_s_ascontiguousarray;
 static PyObject *__pyx_n_s_astype;
 static PyObject *__pyx_n_s_base;
 static PyObject *__pyx_kp_s_bulldozer_core_cpp_core_Bulldoze;
+static PyObject *__pyx_n_s_bulldozer_core_cpp_core_Bulldoze_2;
 static PyObject *__pyx_n_s_c;
 static PyObject *__pyx_n_u_c;
 static PyObject *__pyx_n_s_class;
@@ -2062,11 +2063,11 @@ static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
 static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_zeros;
-static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_arr); /* proto */
-static int __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, PyObject *__pyx_v_np_dtm, PyObject *__pyx_v_nb_rows, PyObject *__pyx_v_nb_cols, PyObject *__pyx_v_filter_size, PyObject *__pyx_v_no_data); /* proto */
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_arr); /* proto */
+static int __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_2run(struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, PyObject *__pyx_v_np_dtm, PyObject *__pyx_v_nb_rows, PyObject *__pyx_v_nb_cols, PyObject *__pyx_v_filter_size, PyObject *__pyx_v_no_data); /* proto */
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_array___pyx_pf_15View_dot_MemoryView_5array_4__dealloc__(struct __pyx_array_obj *__pyx_v_self); /* proto */
@@ -2109,7 +2110,7 @@ static PyObject *__pyx_pf_15View_dot_MemoryView_16_memoryviewslice_4base___get__
 static PyObject *__pyx_pf___pyx_memoryviewslice___reduce_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf___pyx_memoryviewslice_2__setstate_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_15View_dot_MemoryView___pyx_unpickle_Enum(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_tp_new_16BulldozerFilters_PyBulldozerFilters(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_memoryview(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -2149,7 +2150,7 @@ static PyObject *__pyx_codeobj__22;
 static PyObject *__pyx_codeobj__29;
 /* Late includes */
 
-/* "BulldozerFilters.pyx":6
+/* "bulldozer/core/cpp_core/BulldozerFilters.pyx":6
  * import numpy as np
  * 
  * def npAsContiguousArray(arr):             # <<<<<<<<<<<<<<
@@ -2158,20 +2159,20 @@ static PyObject *__pyx_codeobj__29;
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16BulldozerFilters_1npAsContiguousArray(PyObject *__pyx_self, PyObject *__pyx_v_arr); /*proto*/
-static PyMethodDef __pyx_mdef_16BulldozerFilters_1npAsContiguousArray = {"npAsContiguousArray", (PyCFunction)__pyx_pw_16BulldozerFilters_1npAsContiguousArray, METH_O, 0};
-static PyObject *__pyx_pw_16BulldozerFilters_1npAsContiguousArray(PyObject *__pyx_self, PyObject *__pyx_v_arr) {
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_1npAsContiguousArray(PyObject *__pyx_self, PyObject *__pyx_v_arr); /*proto*/
+static PyMethodDef __pyx_mdef_9bulldozer_4core_8cpp_core_16BulldozerFilters_1npAsContiguousArray = {"npAsContiguousArray", (PyCFunction)__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_1npAsContiguousArray, METH_O, 0};
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_1npAsContiguousArray(PyObject *__pyx_self, PyObject *__pyx_v_arr) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("npAsContiguousArray (wrapper)", 0);
-  __pyx_r = __pyx_pf_16BulldozerFilters_npAsContiguousArray(__pyx_self, ((PyObject *)__pyx_v_arr));
+  __pyx_r = __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_npAsContiguousArray(__pyx_self, ((PyObject *)__pyx_v_arr));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_arr) {
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_arr) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2182,7 +2183,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
   __Pyx_RefNannySetupContext("npAsContiguousArray", 0);
   __Pyx_INCREF(__pyx_v_arr);
 
-  /* "BulldozerFilters.pyx":7
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":7
  * 
  * def npAsContiguousArray(arr):
  *     if not arr.flags['C_CONTIGUOUS']:             # <<<<<<<<<<<<<<
@@ -2199,7 +2200,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
   __pyx_t_4 = ((!__pyx_t_3) != 0);
   if (__pyx_t_4) {
 
-    /* "BulldozerFilters.pyx":8
+    /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":8
  * def npAsContiguousArray(arr):
  *     if not arr.flags['C_CONTIGUOUS']:
  *         arr = np.ascontiguousarray(arr) # Makes a contiguous copy of the numpy array.             # <<<<<<<<<<<<<<
@@ -2229,7 +2230,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
     __Pyx_DECREF_SET(__pyx_v_arr, __pyx_t_2);
     __pyx_t_2 = 0;
 
-    /* "BulldozerFilters.pyx":7
+    /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":7
  * 
  * def npAsContiguousArray(arr):
  *     if not arr.flags['C_CONTIGUOUS']:             # <<<<<<<<<<<<<<
@@ -2238,7 +2239,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
  */
   }
 
-  /* "BulldozerFilters.pyx":9
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":9
  *     if not arr.flags['C_CONTIGUOUS']:
  *         arr = np.ascontiguousarray(arr) # Makes a contiguous copy of the numpy array.
  *     return arr             # <<<<<<<<<<<<<<
@@ -2250,7 +2251,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
   __pyx_r = __pyx_v_arr;
   goto __pyx_L0;
 
-  /* "BulldozerFilters.pyx":6
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":6
  * import numpy as np
  * 
  * def npAsContiguousArray(arr):             # <<<<<<<<<<<<<<
@@ -2263,7 +2264,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
   __Pyx_XDECREF(__pyx_t_1);
   __Pyx_XDECREF(__pyx_t_2);
   __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("BulldozerFilters.npAsContiguousArray", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.npAsContiguousArray", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XDECREF(__pyx_v_arr);
@@ -2272,7 +2273,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
   return __pyx_r;
 }
 
-/* "BulldozerFilters.pyx":18
+/* "bulldozer/core/cpp_core/BulldozerFilters.pyx":18
  *     cdef BulldozerFilters c_bf # Hold a C++ instance wich we're wrapping
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -2281,28 +2282,28 @@ static PyObject *__pyx_pf_16BulldozerFilters_npAsContiguousArray(CYTHON_UNUSED P
  */
 
 /* Python wrapper */
-static int __pyx_pw_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static int __pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
   if (unlikely(PyTuple_GET_SIZE(__pyx_args) > 0)) {
     __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 0, 0, PyTuple_GET_SIZE(__pyx_args)); return -1;}
   if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__cinit__", 0))) return -1;
-  __pyx_r = __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(((struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters___cinit__(((struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self) {
+static int __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   bulldozer::BulldozerFilters __pyx_t_1;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "BulldozerFilters.pyx":19
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":19
  * 
  *     def __cinit__(self):
  *         self.c_bf = BulldozerFilters()             # <<<<<<<<<<<<<<
@@ -2317,7 +2318,7 @@ static int __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __p
   }
   __pyx_v_self->c_bf = __pyx_t_1;
 
-  /* "BulldozerFilters.pyx":18
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":18
  *     cdef BulldozerFilters c_bf # Hold a C++ instance wich we're wrapping
  * 
  *     def __cinit__(self):             # <<<<<<<<<<<<<<
@@ -2329,14 +2330,14 @@ static int __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __p
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("BulldozerFilters.PyBulldozerFilters.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "BulldozerFilters.pyx":21
+/* "bulldozer/core/cpp_core/BulldozerFilters.pyx":21
  *         self.c_bf = BulldozerFilters()
  * 
  *     def run(self, np_dtm, nb_rows, nb_cols, filter_size, no_data):             # <<<<<<<<<<<<<<
@@ -2345,8 +2346,8 @@ static int __pyx_pf_16BulldozerFilters_18PyBulldozerFilters___cinit__(struct __p
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_3run(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_3run(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_3run(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_3run(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_np_dtm = 0;
   PyObject *__pyx_v_nb_rows = 0;
   PyObject *__pyx_v_nb_cols = 0;
@@ -2427,18 +2428,18 @@ static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_3run(PyObject 
   __pyx_L5_argtuple_error:;
   __Pyx_RaiseArgtupleInvalid("run", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 21, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("BulldozerFilters.PyBulldozerFilters.run", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters.run", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(((struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self), __pyx_v_np_dtm, __pyx_v_nb_rows, __pyx_v_nb_cols, __pyx_v_filter_size, __pyx_v_no_data);
+  __pyx_r = __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_2run(((struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self), __pyx_v_np_dtm, __pyx_v_nb_rows, __pyx_v_nb_cols, __pyx_v_filter_size, __pyx_v_no_data);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, PyObject *__pyx_v_np_dtm, PyObject *__pyx_v_nb_rows, PyObject *__pyx_v_nb_cols, PyObject *__pyx_v_filter_size, PyObject *__pyx_v_no_data) {
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_2run(struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, PyObject *__pyx_v_np_dtm, PyObject *__pyx_v_nb_rows, PyObject *__pyx_v_nb_cols, PyObject *__pyx_v_filter_size, PyObject *__pyx_v_no_data) {
   __Pyx_memviewslice __pyx_v_dtm_memview = { 0, 0, { 0 }, { 0 }, { 0 } };
   __Pyx_memviewslice __pyx_v_filtered_dtm_memview = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = NULL;
@@ -2460,7 +2461,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   unsigned int __pyx_t_15;
   __Pyx_RefNannySetupContext("run", 0);
 
-  /* "BulldozerFilters.pyx":22
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":22
  * 
  *     def run(self, np_dtm, nb_rows, nb_cols, filter_size, no_data):
  *         cdef float[::1] dtm_memview = npAsContiguousArray(np_dtm.flatten().astype(np.float32))             # <<<<<<<<<<<<<<
@@ -2532,7 +2533,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "BulldozerFilters.pyx":23
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":23
  *     def run(self, np_dtm, nb_rows, nb_cols, filter_size, no_data):
  *         cdef float[::1] dtm_memview = npAsContiguousArray(np_dtm.flatten().astype(np.float32))
  *         cdef float[::1] filtered_dtm_memview = npAsContiguousArray(np.zeros((nb_rows * nb_cols), dtype=np.float32))             # <<<<<<<<<<<<<<
@@ -2589,7 +2590,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "BulldozerFilters.pyx":24
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":24
  *         cdef float[::1] dtm_memview = npAsContiguousArray(np_dtm.flatten().astype(np.float32))
  *         cdef float[::1] filtered_dtm_memview = npAsContiguousArray(np.zeros((nb_rows * nb_cols), dtype=np.float32))
  *         self.c_bf.applyUniformFilter(&dtm_memview[0], &filtered_dtm_memview[0], nb_rows, nb_cols, no_data, filter_size)             # <<<<<<<<<<<<<<
@@ -2621,7 +2622,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   __pyx_t_15 = __Pyx_PyInt_As_unsigned_int(__pyx_v_filter_size); if (unlikely((__pyx_t_15 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(1, 24, __pyx_L1_error)
   __pyx_v_self->c_bf.applyUniformFilter((&(*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_dtm_memview.data) + __pyx_t_9)) )))), (&(*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_filtered_dtm_memview.data) + __pyx_t_11)) )))), __pyx_t_12, __pyx_t_13, __pyx_t_14, __pyx_t_15);
 
-  /* "BulldozerFilters.pyx":25
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":25
  *         cdef float[::1] filtered_dtm_memview = npAsContiguousArray(np.zeros((nb_rows * nb_cols), dtype=np.float32))
  *         self.c_bf.applyUniformFilter(&dtm_memview[0], &filtered_dtm_memview[0], nb_rows, nb_cols, no_data, filter_size)
  *         return np.asarray(filtered_dtm_memview)             # <<<<<<<<<<<<<<
@@ -2654,7 +2655,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "BulldozerFilters.pyx":21
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":21
  *         self.c_bf = BulldozerFilters()
  * 
  *     def run(self, np_dtm, nb_rows, nb_cols, filter_size, no_data):             # <<<<<<<<<<<<<<
@@ -2672,7 +2673,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
   __Pyx_XDECREF(__pyx_t_6);
   __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_AddTraceback("BulldozerFilters.PyBulldozerFilters.run", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters.run", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __PYX_XDEC_MEMVIEW(&__pyx_v_dtm_memview, 1);
@@ -2689,19 +2690,19 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_2run(struct __
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(((struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(((struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self) {
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2728,7 +2729,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cyth
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("BulldozerFilters.PyBulldozerFilters.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -2743,19 +2744,19 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_4__reduce_cyth
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static PyObject *__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static PyObject *__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(((struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(((struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2782,7 +2783,7 @@ static PyObject *__pyx_pf_16BulldozerFilters_18PyBulldozerFilters_6__setstate_cy
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("BulldozerFilters.PyBulldozerFilters.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -15612,8 +15613,8 @@ static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *__
   return __pyx_r;
 }
 
-static PyObject *__pyx_tp_new_16BulldozerFilters_PyBulldozerFilters(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
-  struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *p;
+static PyObject *__pyx_tp_new_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -15621,17 +15622,17 @@ static PyObject *__pyx_tp_new_16BulldozerFilters_PyBulldozerFilters(PyTypeObject
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)o);
+  p = ((struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)o);
   new((void*)&(p->c_bf)) bulldozer::BulldozerFilters();
-  if (unlikely(__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(o, __pyx_empty_tuple, NULL) < 0)) goto bad;
+  if (unlikely(__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_1__cinit__(o, __pyx_empty_tuple, NULL) < 0)) goto bad;
   return o;
   bad:
   Py_DECREF(o); o = 0;
   return NULL;
 }
 
-static void __pyx_tp_dealloc_16BulldozerFilters_PyBulldozerFilters(PyObject *o) {
-  struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *p = (struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters *)o;
+static void __pyx_tp_dealloc_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters(PyObject *o) {
+  struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *p = (struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && (!PyType_IS_GC(Py_TYPE(o)) || !_PyGC_FINALIZED(o))) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
@@ -15641,19 +15642,19 @@ static void __pyx_tp_dealloc_16BulldozerFilters_PyBulldozerFilters(PyObject *o) 
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static PyMethodDef __pyx_methods_16BulldozerFilters_PyBulldozerFilters[] = {
-  {"run", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_3run, METH_VARARGS|METH_KEYWORDS, 0},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__, METH_NOARGS, 0},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__, METH_O, 0},
+static PyMethodDef __pyx_methods_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters[] = {
+  {"run", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_3run, METH_VARARGS|METH_KEYWORDS, 0},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_5__reduce_cython__, METH_NOARGS, 0},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9bulldozer_4core_8cpp_core_16BulldozerFilters_18PyBulldozerFilters_7__setstate_cython__, METH_O, 0},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_16BulldozerFilters_PyBulldozerFilters = {
+static PyTypeObject __pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters = {
   PyVarObject_HEAD_INIT(0, 0)
-  "BulldozerFilters.PyBulldozerFilters", /*tp_name*/
-  sizeof(struct __pyx_obj_16BulldozerFilters_PyBulldozerFilters), /*tp_basicsize*/
+  "bulldozer.core.cpp_core.BulldozerFilters.PyBulldozerFilters", /*tp_name*/
+  sizeof(struct __pyx_obj_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_16BulldozerFilters_PyBulldozerFilters, /*tp_dealloc*/
+  __pyx_tp_dealloc_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -15686,7 +15687,7 @@ static PyTypeObject __pyx_type_16BulldozerFilters_PyBulldozerFilters = {
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_16BulldozerFilters_PyBulldozerFilters, /*tp_methods*/
+  __pyx_methods_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -15696,7 +15697,7 @@ static PyTypeObject __pyx_type_16BulldozerFilters_PyBulldozerFilters = {
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_16BulldozerFilters_PyBulldozerFilters, /*tp_new*/
+  __pyx_tp_new_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -15839,7 +15840,7 @@ static PyBufferProcs __pyx_tp_as_buffer_array = {
 
 static PyTypeObject __pyx_type___pyx_array = {
   PyVarObject_HEAD_INIT(0, 0)
-  "BulldozerFilters.array", /*tp_name*/
+  "bulldozer.core.cpp_core.BulldozerFilters.array", /*tp_name*/
   sizeof(struct __pyx_array_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_array, /*tp_dealloc*/
@@ -15958,7 +15959,7 @@ static PyMethodDef __pyx_methods_Enum[] = {
 
 static PyTypeObject __pyx_type___pyx_MemviewEnum = {
   PyVarObject_HEAD_INIT(0, 0)
-  "BulldozerFilters.Enum", /*tp_name*/
+  "bulldozer.core.cpp_core.BulldozerFilters.Enum", /*tp_name*/
   sizeof(struct __pyx_MemviewEnum_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_Enum, /*tp_dealloc*/
@@ -16219,7 +16220,7 @@ static PyBufferProcs __pyx_tp_as_buffer_memoryview = {
 
 static PyTypeObject __pyx_type___pyx_memoryview = {
   PyVarObject_HEAD_INIT(0, 0)
-  "BulldozerFilters.memoryview", /*tp_name*/
+  "bulldozer.core.cpp_core.BulldozerFilters.memoryview", /*tp_name*/
   sizeof(struct __pyx_memoryview_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_memoryview, /*tp_dealloc*/
@@ -16357,7 +16358,7 @@ static struct PyGetSetDef __pyx_getsets__memoryviewslice[] = {
 
 static PyTypeObject __pyx_type___pyx_memoryviewslice = {
   PyVarObject_HEAD_INIT(0, 0)
-  "BulldozerFilters._memoryviewslice", /*tp_name*/
+  "bulldozer.core.cpp_core.BulldozerFilters._memoryviewslice", /*tp_name*/
   sizeof(struct __pyx_memoryviewslice_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc__memoryviewslice, /*tp_dealloc*/
@@ -16480,7 +16481,6 @@ static struct PyModuleDef __pyx_moduledef = {
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_ASCII, __pyx_k_ASCII, sizeof(__pyx_k_ASCII), 0, 0, 1, 1},
   {&__pyx_kp_s_Buffer_view_does_not_expose_stri, __pyx_k_Buffer_view_does_not_expose_stri, sizeof(__pyx_k_Buffer_view_does_not_expose_stri), 0, 0, 1, 0},
-  {&__pyx_n_s_BulldozerFilters, __pyx_k_BulldozerFilters, sizeof(__pyx_k_BulldozerFilters), 0, 0, 1, 1},
   {&__pyx_n_s_C_CONTIGUOUS, __pyx_k_C_CONTIGUOUS, sizeof(__pyx_k_C_CONTIGUOUS), 0, 0, 1, 1},
   {&__pyx_kp_s_Can_only_create_a_buffer_that_is, __pyx_k_Can_only_create_a_buffer_that_is, sizeof(__pyx_k_Can_only_create_a_buffer_that_is), 0, 0, 1, 0},
   {&__pyx_kp_s_Cannot_assign_to_read_only_memor, __pyx_k_Cannot_assign_to_read_only_memor, sizeof(__pyx_k_Cannot_assign_to_read_only_memor), 0, 0, 1, 0},
@@ -16511,6 +16511,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_astype, __pyx_k_astype, sizeof(__pyx_k_astype), 0, 0, 1, 1},
   {&__pyx_n_s_base, __pyx_k_base, sizeof(__pyx_k_base), 0, 0, 1, 1},
   {&__pyx_kp_s_bulldozer_core_cpp_core_Bulldoze, __pyx_k_bulldozer_core_cpp_core_Bulldoze, sizeof(__pyx_k_bulldozer_core_cpp_core_Bulldoze), 0, 0, 1, 0},
+  {&__pyx_n_s_bulldozer_core_cpp_core_Bulldoze_2, __pyx_k_bulldozer_core_cpp_core_Bulldoze_2, sizeof(__pyx_k_bulldozer_core_cpp_core_Bulldoze_2), 0, 0, 1, 1},
   {&__pyx_n_s_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 0, 1, 1},
   {&__pyx_n_u_c, __pyx_k_c, sizeof(__pyx_k_c), 0, 1, 0, 1},
   {&__pyx_n_s_class, __pyx_k_class, sizeof(__pyx_k_class), 0, 0, 1, 1},
@@ -16815,7 +16816,7 @@ static CYTHON_SMALL_CODE int __Pyx_InitCachedConstants(void) {
   __Pyx_GOTREF(__pyx_tuple__20);
   __Pyx_GIVEREF(__pyx_tuple__20);
 
-  /* "BulldozerFilters.pyx":6
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":6
  * import numpy as np
  * 
  * def npAsContiguousArray(arr):             # <<<<<<<<<<<<<<
@@ -16950,16 +16951,16 @@ static int __Pyx_modinit_type_init_code(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_init_code", 0);
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_16BulldozerFilters_PyBulldozerFilters.tp_print = 0;
+  __pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_16BulldozerFilters_PyBulldozerFilters.tp_dictoffset && __pyx_type_16BulldozerFilters_PyBulldozerFilters.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_16BulldozerFilters_PyBulldozerFilters.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters.tp_dictoffset && __pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyBulldozerFilters, (PyObject *)&__pyx_type_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
-  __pyx_ptype_16BulldozerFilters_PyBulldozerFilters = &__pyx_type_16BulldozerFilters_PyBulldozerFilters;
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyBulldozerFilters, (PyObject *)&__pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters) < 0) __PYX_ERR(1, 14, __pyx_L1_error)
+  __pyx_ptype_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters = &__pyx_type_9bulldozer_4core_8cpp_core_16BulldozerFilters_PyBulldozerFilters;
   __pyx_vtabptr_array = &__pyx_vtable_array;
   __pyx_vtable_array.get_memview = (PyObject *(*)(struct __pyx_array_obj *))__pyx_array_get_memview;
   if (PyType_Ready(&__pyx_type___pyx_array) < 0) __PYX_ERR(0, 105, __pyx_L1_error)
@@ -17212,14 +17213,14 @@ if (!__Pyx_RefNanny) {
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_BulldozerFilters) {
+  if (__pyx_module_is_main_bulldozer__core__cpp_core__BulldozerFilters) {
     if (PyObject_SetAttr(__pyx_m, __pyx_n_s_name_2, __pyx_n_s_main) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(1, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "BulldozerFilters")) {
-      if (unlikely(PyDict_SetItemString(modules, "BulldozerFilters", __pyx_m) < 0)) __PYX_ERR(1, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "bulldozer.core.cpp_core.BulldozerFilters")) {
+      if (unlikely(PyDict_SetItemString(modules, "bulldozer.core.cpp_core.BulldozerFilters", __pyx_m) < 0)) __PYX_ERR(1, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -17240,7 +17241,7 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   #endif
 
-  /* "BulldozerFilters.pyx":4
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":4
  * 
  * from BulldozerFilters cimport BulldozerFilters
  * import numpy as np             # <<<<<<<<<<<<<<
@@ -17252,19 +17253,19 @@ if (!__Pyx_RefNanny) {
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(1, 4, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "BulldozerFilters.pyx":6
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":6
  * import numpy as np
  * 
  * def npAsContiguousArray(arr):             # <<<<<<<<<<<<<<
  *     if not arr.flags['C_CONTIGUOUS']:
  *         arr = np.ascontiguousarray(arr) # Makes a contiguous copy of the numpy array.
  */
-  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_16BulldozerFilters_1npAsContiguousArray, NULL, __pyx_n_s_BulldozerFilters); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 6, __pyx_L1_error)
+  __pyx_t_1 = PyCFunction_NewEx(&__pyx_mdef_9bulldozer_4core_8cpp_core_16BulldozerFilters_1npAsContiguousArray, NULL, __pyx_n_s_bulldozer_core_cpp_core_Bulldoze_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 6, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_npAsContiguousArray, __pyx_t_1) < 0) __PYX_ERR(1, 6, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "BulldozerFilters.pyx":1
+  /* "bulldozer/core/cpp_core/BulldozerFilters.pyx":1
  * # distutils: language = c++             # <<<<<<<<<<<<<<
  * 
  * from BulldozerFilters cimport BulldozerFilters
@@ -17434,11 +17435,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_1);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init BulldozerFilters", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init bulldozer.core.cpp_core.BulldozerFilters", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_CLEAR(__pyx_m);
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init BulldozerFilters");
+    PyErr_SetString(PyExc_ImportError, "init bulldozer.core.cpp_core.BulldozerFilters");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();

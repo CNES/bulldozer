@@ -45,6 +45,10 @@ class Pipeline(object):
                    cfg['slopeThreshold'], cfg['fourConnexity'])
 
         dsm_path = cfg['outputDir'] + 'filled_DSM.tif'
+        # Warning now it is not possible to be robust to nodata because
+        # of the upsample step.
+        # We will have to use the ancrage drape.
+        #dsm_path = cfg['outputDir'] + 'preprocessed_DSM.tif'
 
         run(dsm_path, cfg['outputDir'], cfg['maxObjectWidth'], 
             cfg['uniformFilterSize'], cfg['preventUnhookIter'],

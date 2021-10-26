@@ -14,12 +14,13 @@ import os.path
 import concurrent.futures
 import numpy as np
 import scipy.ndimage as ndimage
-import DisturbedAreas as da
+from bulldozer.core.cpp_core import DisturbedAreas as da
 from rasterio.windows import Window
 from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
+from bulldozer.core.cpp_core import BulldozerIDW as bi
 
 logger = logging.getLogger(__name__)
 # No data value constant used in bulldozer
@@ -31,6 +32,7 @@ class PreProcess(object):
 
     def __init__(self) -> None:
             pass
+    
         
     def build_inner_nodata_mask(self, dsm : np.ndarray) -> np.ndarray:
         """
@@ -59,12 +61,15 @@ class PreProcess(object):
         # Remove ID = 0 which correspond to background (not nodata areas)
         border_region_ident = border_region_ident[border_region_ident != 0]
 
+        # Retrieve all the border nodata areas and create the corresponding mask 
+        border_nodata_mask = np.isin(labeled_array,border_region_ident)
+        logger.debug("border_nodata_mask generation: Done")
 
         # Retrieve all the nodata areas in the input DSM that aren't border areas and create the corresponding mask 
         inner_nodata_mask = np.logical_and(nodata_area == True, np.isin(labeled_array,border_region_ident) != True)
         logger.debug("inner_nodata_mask generation: Done")
 
-        return inner_nodata_mask
+        return [border_nodata_mask, inner_nodata_mask]
 
 
     def compute_disturbance(self, 
@@ -147,10 +152,107 @@ class PreProcess(object):
 
                     disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
             logger.info("disturbance mask: Done")
-            return disturbance_mask != 0      
+            return disturbance_mask != 0
+
+    def get_anchors(self,
+                    dsm_path: str,
+                    stride: int,
+                    search_radius: int,
+                    start_row: int, # // 2
+                    end_row: int, # // 3
+                    start_stable_row: int, # // 0
+                    end_stable_row: int,
+                    nbcols: int):
+        """ """
+        idwFilter = bi.PyBulldozerIDW()
+        
+        window = Window(0, start_row, nbcols, end_row - start_row)
+        
+        dsm_strip = rasterio.open(dsm_path).read(1, window=window).astype(np.float32)
+        
+        chunk_start_row = start_stable_row - start_row
+        chunk_end_row = end_stable_row - start_row
+ 
+        return start_row, end_row, idwFilter.get_anchors_points(dsm_strip, stride, search_radius, chunk_start_row, chunk_end_row, NO_DATA_VALUE)
+    
+    def compute_idw_chunk_dtm(self,
+                              anchors_heights: np.ndarray,
+                              anchors_indices: np.ndarray,
+                              start_row: int,
+                              end_row: int,
+                              nbcols: int):
+
+        """ """
+        idwFilter = bi.PyBulldozerIDW()
+        return start_row, end_row, idwFilter.build_idw_dtm(start_row, end_row, nbcols, anchors_indices, anchors_heights)
+
+
+
+    def compute_idw_dtm(self,
+                        preprocessed_dsm_path: str,
+                        output_anchors_path: str,
+                        output_idw_path: str):
+        """
+            This methods computes the anchor points and then compute a full DTM using IDW interpolation.
+        """
+        
+
+        dsmDataset = rasterio.open(preprocessed_dsm_path)
+        profile = dsmDataset.profile
+        profile["dtype"] = np.uint32
+        profile["nodata"] = 0
+
+        nb_max_workers: int = 24
+        stride: int = 10
+        search_radius: int = 100
+        
+        # 13 // 4 = 3 (au lieu de 3.25) c'est le floor
+        strip_height = dsmDataset.height // nb_max_workers
+        strips = [ [i*strip_height, (i+1) * strip_height, 0, 0] for i in range(nb_max_workers)]
+        strips[-1][1] = dsmDataset.height
+
+        # Compute the margins for each strip
+        for strip in strips:
+            strip[2] = max(0, strip[0] - search_radius)
+            strip[3] = min(dsmDataset.height, strip[1] + search_radius)
+        
+        anchorsImg = np.zeros((dsmDataset.height, dsmDataset.width), dtype=np.uint32)
+
+        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
+
+            futures = { executor.submit(self.get_anchors, preprocessed_dsm_path, stride, search_radius, strip[2], strip[3], strip[0], strip[1], dsmDataset.width) for strip in strips }
+
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Compute anchor image...") :
+                start_row, end_row, chunk_anchors = future.result()
+                anchorsImg[start_row:end_row, :] = np.add(chunk_anchors, anchorsImg[start_row:end_row, :])
+        
+        write_dataset(buffer_path = output_anchors_path, buffer = anchorsImg, profile = profile)
+
+        anchor_indices = (((anchorsImg.flatten() > 0).nonzero())[0]).astype(np.uint32)
+        anchorsImg = None
+
+        # retrieve altitudes of anchor points
+        heights = ((dsmDataset.read(1).astype(np.float32)).flatten())[anchor_indices]
+
+        idw_dtm = np.zeros((dsmDataset.height, dsmDataset.width), dtype=np.float32)
+        
+        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
+
+            futures = { executor.submit(self.compute_idw_chunk_dtm, heights, anchor_indices, strip[0], strip[1], dsmDataset.width) for strip in strips }
+
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Compute idw dtm...") :
+                start_row, end_row, idw_chunk_dtm = future.result()
+                idw_dtm[start_row:end_row, :] = idw_chunk_dtm
+                
+        
+        profile["dtype"] = np.float32
+        profile["nodata"] = NO_DATA_VALUE
+        write_dataset(buffer_path = output_idw_path, buffer = idw_dtm, profile = profile)
+
         
 
     def write_quality_mask(self,
+                        border_nodata_mask: np.ndarray,
                         inner_nodata_mask : np.ndarray, 
                         disturbed_area_mask : np.ndarray,
                         output_dir : str,
@@ -176,7 +278,9 @@ class PreProcess(object):
         profile['nodata'] = 0
         quality_mask[disturbed_area_mask] = 2
         quality_mask[inner_nodata_mask] = 1
+        quality_mask[border_nodata_mask] = 3
         write_dataset(quality_mask_path, quality_mask, profile)
+
 
 
     def run(self,
@@ -209,6 +313,9 @@ class PreProcess(object):
             if not nodata:
                 # If nodata is not specified in the config file, retrieve the value from the dsm metadata
                 nodata = dsm_dataset.nodata
+                if nodata is None:
+                    # We assume that is nodata is not given then nodata = NODATA_VALUE
+                    nodata = NO_DATA_VALUE
             
             dsm = dsm_dataset.read(1)
 
@@ -216,18 +323,21 @@ class PreProcess(object):
             if np.isnan(nodata):
                 dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
             else:
-                dsm = np.where(dsm == nodata, NO_DATA_VALUE, dsm)
+                if nodata != NO_DATA_VALUE:
+                    dsm = np.where(dsm == nodata, NO_DATA_VALUE, dsm)
 
-            dsm_dataset.profile['nodata'] = NO_DATA_VALUE
+            filledDSMProfile = dsm_dataset.profile
+            filledDSMProfile['nodata'] = NO_DATA_VALUE
             
             # Generates inner nodata mask
-            inner_nodata_mask = self.build_inner_nodata_mask(dsm)
+            border_nodata_mask, inner_nodata_mask = self.build_inner_nodata_mask(dsm)
+            dsm[border_nodata_mask] = np.max(dsm)
                     
             # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
             disturbed_area_mask = self.build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
             
             # Merges and writes the quality mask
-            self.write_quality_mask(inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
+            self.write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
 
             # Generates filled DSM if the user provides a valid filled_dsm_path
             if create_filled_dsm:
@@ -237,13 +347,23 @@ class PreProcess(object):
                 filled_dsm_path = output_dir + 'filled_DSM.tif'
 
                 # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
-                write_dataset(filled_dsm_path, filled_dsm, dsm_dataset.profile)
+                write_dataset(filled_dsm_path, filled_dsm, filledDSMProfile)
             
             dsm[disturbed_area_mask] = nodata
 
+
             # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
             preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
-            write_dataset(preprocessed_dsm_path, dsm, dsm_dataset.profile)
+            write_dataset(preprocessed_dsm_path, dsm, filledDSMProfile)
+
+            # Create the IDW DTM to fill hole by a smooth interpolation
+            #output_anchor_path  = output_dir + "/anchors.tif"
+            # The idea is to do an approximation of the idw, for the computation of idw, i propose to divide into tiles of 500 * 500 or lower and for all the point of the tile, just use
+            # the anchor points 
+            #self.compute_idw_dtm(preprocessed_dsm_path=preprocessed_dsm_path, output_anchors_path= output_dir + "/anchors.tif", output_idw_path=output_dir + "/idw_dtm.tif")
+
+            #anchorBuffer = rasterio.open(output_anchor_path).read(1)
+            #print("Nb anchors ", (anchorBuffer>0).sum())
 
             dsm_dataset.close()
             logger.info("preprocess: Done")

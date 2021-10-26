@@ -90,12 +90,15 @@ class PostProcess(object):
             dtm = dtm_dataset.read(1)
             with rasterio.open(quality_mask_path) as q_mask_dataset:
                 quality_mask = q_mask_dataset.read(1)
-                filled_dtm = fillnodata(dtm, mask=np.invert(quality_mask > 0))
+                border_nodata = (quality_mask == 3)
+                filled_dtm = fillnodata(dtm, mask=np.invert(quality_mask > 0 & quality_mask < 3))
 
                 # Generates the sinks mask and retrieves the low frequency DTM
                 dtm_LF, sinks_mask = self.build_sinks_mask(filled_dtm)
                 # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
                 dtm[sinks_mask] = dtm_LF[sinks_mask]
+                dtm[border_nodata] = dtm_dataset.nodata
+
                 # Overrides the old DTM if run funct is called throught the bulldozer pipeline
                 write_dataset(output_dir + 'DTM.tif', filled_dtm, dtm_dataset.profile)
 

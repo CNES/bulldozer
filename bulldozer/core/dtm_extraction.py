@@ -4,8 +4,12 @@ import concurrent.futures
 import rasterio
 import numpy as np
 from tqdm import tqdm
-import bulldozerfilters as bf 
+from bulldozer.core.cpp_core import BulldozerFilters as bf 
 
+
+# Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer
+# et le remplir (fillnodata, idw)
+# Mais attention à chaque niveau il faudra aussi rajouter le nodata du MNS.
 
 Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 
@@ -172,7 +176,7 @@ def sequential_drape_cloth(dtm: np.ndarray,
 
     bfilters = bf.PyBulldozerFilters()
 
-    valid = dsm != nodata_val
+    valid = dtm != nodata_val
 
     for i in range(num_outer_iterations):
         
@@ -269,6 +273,7 @@ def run(dsm_path: str,
         nb_cols = dtm.shape[1]
         dtm = bfilters.run(dtm, nb_rows, nb_cols, uniform_filter_size, nodata_val)
         dtm = dtm.reshape((nb_rows, nb_cols))
+    
     
     
     # Get min and max valid height from dsm
