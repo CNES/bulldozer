@@ -1,4 +1,10 @@
-# bulldozer
+# Bulldozer
+
+## What does it do ?
+
+DTM extraction from DSM (provided by CARS or MicMac for example) using a modified and scalable drape cloth algorithm.
+
+To compute a DTM from a DSM with a size of 40000 x 40000 pixels, it takes 8 minutes approximately using a full node with 24 cores and 60 GBytes of RAM Memory.
 
 ## Setup
 
