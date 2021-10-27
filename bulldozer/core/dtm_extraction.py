@@ -4,7 +4,7 @@ import concurrent.futures
 import rasterio
 import numpy as np
 from tqdm import tqdm
-from bulldozer.core.cpp_core import BulldozerFilters as bf 
+from bulldozer.core.cpp_core import BulldozerFilters as bf
 
 
 # Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer
@@ -263,7 +263,6 @@ def run(dsm_path: str,
     
     # Initialize the dtm at this current dsm.
     dtm = (dsm_pyramid[nb_levels-1]).copy()
-
     
 
     # Prevent unhook from hills
@@ -273,7 +272,6 @@ def run(dsm_path: str,
         nb_cols = dtm.shape[1]
         dtm = bfilters.run(dtm, nb_rows, nb_cols, uniform_filter_size, nodata_val)
         dtm = dtm.reshape((nb_rows, nb_cols))
-    
     
     
     # Get min and max valid height from dsm
@@ -377,7 +375,7 @@ if __name__ == "__main__":
     #TODO change to standalone call
     # Input parameters
     input_dsm_path = "/work/scratch/lassalp/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
-    max_object_size: float = 100
+    max_object_size: float = 24
     uniform_filter_size: int = 1
     prevent_unhook_iter: int = 10
     num_inner_iterations : int = 10
@@ -389,7 +387,7 @@ if __name__ == "__main__":
     sequential: bool = False
     
     run(dsm_path = input_dsm_path,
-        dtm_path = output_dtm,
+        output_dir=tmp_dir,
         max_object_size = max_object_size,
         uniform_filter_size = uniform_filter_size,
         prevent_unhook_iter = prevent_unhook_iter,

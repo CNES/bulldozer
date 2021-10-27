@@ -2,9 +2,10 @@
 #       Parameters        #
 #-------------------------#
 # Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
-dsmPath : "/work/OT/ai4geo/DATA/ZONES_EC2/Toulouse/mergedMNS.tif"
+# "/work/OT/ai4geo/users/benchmark/DTM/IN_BENCHMARK/MNS_Toulouse.tif"
+dsmPath : "/work/OT/ai4geo/users/benchmark/DTM/IN_BENCHMARK/MNS_Nice.tif"
 # Output directory path
-outputDir : "/work/scratch/lallemd/test_bulldozer_release1/"
+outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/ai4geo_toolbox_output/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
 nbMaxWorkers : 24
 
@@ -44,7 +45,7 @@ fourConnexity : True
 
 # DtmExtraction part
 # max object width in meter
-maxObjectWidth : 100.0
+maxObjectWidth : 24
 uniformFilterSize : 1
 preventUnhookIter : 10
 numOuterIter : 100

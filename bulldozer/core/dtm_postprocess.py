@@ -91,7 +91,12 @@ class PostProcess(object):
             with rasterio.open(quality_mask_path) as q_mask_dataset:
                 quality_mask = q_mask_dataset.read(1)
                 border_nodata = (quality_mask == 3)
-                filled_dtm = fillnodata(dtm, mask=np.invert(quality_mask > 0 & quality_mask < 3))
+                
+                filled_mask = quality_mask.copy()
+                filled_mask = np.where(filled_mask > 2, 0, filled_mask)
+                filled_dtm = fillnodata(dtm, mask=np.invert(filled_mask > 0))
+                del filled_mask
+                filled_mask = None
 
                 # Generates the sinks mask and retrieves the low frequency DTM
                 dtm_LF, sinks_mask = self.build_sinks_mask(filled_dtm)
