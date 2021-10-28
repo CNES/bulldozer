@@ -20,7 +20,6 @@ from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
-from bulldozer.core.cpp_core import BulldozerIDW as bi
 
 logger = logging.getLogger(__name__)
 # No data value constant used in bulldozer
