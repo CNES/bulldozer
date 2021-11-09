@@ -18,7 +18,9 @@ setup(
         "scipy",
         "rasterio",
         "tqdm",
-        "PyYAML"
+        "PyYAML",
+        "GitPython",
+        "psutil"
     ],
     # extras_require={
     #     "dev": [
@@ -35,5 +37,5 @@ setup(
     # entry_points={
     #     "console_scripts": ["bulldozer=bulldozer.bulldozer:main"]
     # },
-    ext_modules=cythonize(["bulldozer/core/cpp_core/*.pyx"], build_dir="bulldozer/core/cpp_core/build/"),
+    ext_modules=cythonize(["bulldozer/core/cpp_core/*.pyx"]) #build_dir="bulldozer/core/cpp_core/build/"),
 )
