@@ -24,7 +24,7 @@ Simply run:
 
 ### On HAL
 
-First you need to load python with a version >=3.7, for eaxmple:
+First you need to load python with a version >=3.7, for example:
 
 `module load python/3.8.4`
 
@@ -35,7 +35,7 @@ An then:
 
 ## Usage
 
-Modify the file configuration_template.yaml in the conf directory and then run
+Modify the file configuration_template.yaml in the conf directory and then run:
 
 `python bulldozer/bulldozer_pipeline.py conf/configuration_template.yaml`
 
