@@ -16,7 +16,7 @@ And go within Bulldozer directory:
 
 `cd bulldozer`
 
-Make sure you have exported $https_proxy and $http_proxy environment variables to install external required dependencies for Bulldozer.
+Make sure you have exported `$https_proxy` and `$http_proxy` environment variables to install external required dependencies for Bulldozer.
 
 ### On AI4GEO VRE
 
