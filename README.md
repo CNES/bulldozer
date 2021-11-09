@@ -8,7 +8,30 @@ To compute a DTM from a DSM with a size of 40000 x 40000 pixels, it takes 8 minu
 
 ## Setup
 
-`pip install .`
+First, you need to clone Bulldozer in the directory of your choice:
+
+`git clone git@gitlab.cnes.fr:ai4geo/lot6/bulldozer.git`
+
+And go within Bulldozer directory:
+
+`cd bulldozer`
+
+### On AI4GEO VRE
+
+Simply run:
+
+`pip install . --user`
+
+### On HAL
+
+First you need to load python with a version >=3.7, for eaxmple:
+
+`module load python/3.8.4`
+
+An then:
+
+`pip install . --user`
+
 
 ## Usage
 
