@@ -26,7 +26,7 @@ Simply run:
 
 ### On HAL
 
-The easiest is to reserve enough resources:
+The easiest is to have reserved enough resources before:
 
 `qsub -I -X -l walltime=05:00:00 -l select=1:ncpus=12:mem=60000MB:os=rh7 -q qdev`
 
