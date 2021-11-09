@@ -26,6 +26,10 @@ Simply run:
 
 ### On HAL
 
+The easiest is to reserve enough resources:
+
+`qsub -I -X -l walltime=05:00:00 -l select=1:ncpus=12:mem=60000MB:os=rh7 -q qdev`
+
 First you need to load python with a version >=3.7, for example:
 
 `module load python/3.8.4`
