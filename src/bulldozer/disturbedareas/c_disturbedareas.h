@@ -1,5 +1,5 @@
-#ifndef DISTURBEDAREAS_H
-#define DISTURBEDAREAS_H
+#ifndef C_DISTURBEDAREAS_H
+#define C_DISTURBEDAREAS_H
 
 /*
     Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).

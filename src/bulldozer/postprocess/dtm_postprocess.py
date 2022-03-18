@@ -6,14 +6,14 @@
 """
     This module is used to postprocess the DTM in order to improve its quality. It required a DTM generated from Bulldozer.
 """
-import logging
+#import logging
 import rasterio
 import numpy as np
 import scipy.ndimage as ndimage
 from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
 
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 
 class PostProcess(object):
     """
@@ -34,7 +34,7 @@ class PostProcess(object):
         Returns:
             low frequency DTM and the mask flagging the sinks area in the input DTM.
         """
-        logger.debug("Starting sinks mask building") 
+        print("Starting sinks mask building") 
         sharp_sinks_mask = np.zeros(np.shape(dtm), dtype=bool)
         # Generates the low frenquency DTM
         # TODO Release 2 : remove the magic number for the filter size (at least size = round(35.5/resolution))
@@ -46,7 +46,7 @@ class PostProcess(object):
         # Tags the sinks
         sharp_sinks_mask[dtm_HF < 0.] = 1
 
-        logger.info("Sinks mask generation: Done")
+        print("Sinks mask generation: Done")
         return dtm_LF, sharp_sinks_mask
 
 
@@ -59,11 +59,11 @@ class PostProcess(object):
             dsm_path : path to the input DSM.
             output_dir : path to the output directory.
         """
-        logger.debug("Starting DHM generation") 
+        print("Starting DHM generation") 
         with rasterio.open(dsm_path) as dsm_dataset:
             dsm = dsm_dataset.read(1)
             write_dataset(output_dir + 'DHM.tif', dsm - dtm, profile)
-        logger.info("DHM generation: Done")
+        print("DHM generation: Done")
 
 
     def run(self,
@@ -84,7 +84,7 @@ class PostProcess(object):
             dsm_path : path to the input DSM. This argument is required for the DHM generation.
 
         """
-        logger.debug("Starting postprocess")
+        print("Starting postprocess")
         with rasterio.open(dtm_path) as dtm_dataset:
             # Read the result DTM from the DTM extraction
             dtm = dtm_dataset.read(1)
@@ -126,4 +126,4 @@ class PostProcess(object):
             #TODO Release2 : add reprojection and dezoom option
             # Check if the output CRS or resolution is different from the input. If it's different, 
             # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
-                logger.info("Postprocess : Done")
+                print("Postprocess : Done")

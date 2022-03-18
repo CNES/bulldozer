@@ -6,7 +6,7 @@
     author:     Pierre Lassalle (DNO/OT/IS)
     contact:    pierre.lassalle@cnes.fr
 */
-#include "BulldozerFilters.h"
+#include "c_springforce.h"
 
 namespace bulldozer {
 

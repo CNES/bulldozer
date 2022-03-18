@@ -1,16 +1,21 @@
 # distutils: language = c++
-
-from BulldozerFilters cimport BulldozerFilters
 import numpy as np
+from bulldozer.utils.helper import npAsContiguousArray
 
-def npAsContiguousArray(arr):
-    if not arr.flags['C_CONTIGUOUS']:
-        arr = np.ascontiguousarray(arr) # Makes a contiguous copy of the numpy array.
-    return arr
+# pxd section
+cdef extern from "c_springforce.cpp":
+    pass
 
-# Create a Cython extension type which holds a C++ instance
-# as an attribute and create a bunch of forwarding methdss
-# Python extention type.
+# Declare the class with cdef
+cdef extern from "c_springforce.h" namespace "bulldozer":
+
+    cdef cppclass BulldozerFilters:
+        
+        BulldozerFilters() except +
+
+        void applyUniformFilter(float *, float *, unsigned int, unsigned int, float, unsigned int)
+# end pxd section
+
 cdef class PyBulldozerFilters:
 
     cdef BulldozerFilters c_bf # Hold a C++ instance wich we're wrapping

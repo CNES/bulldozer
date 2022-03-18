@@ -7,7 +7,7 @@ dsmPath : "/work/OT/ai4geo/users/benchmark/DTM/IN_BENCHMARK/MNS_Nice.tif"
 # Output directory path
 outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/ai4geo_toolbox_output/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
-nbMaxWorkers : 24
+nbMaxWorkers : 16
 
 #-------------------------#
 #         Options         #
@@ -45,10 +45,10 @@ fourConnexity : True
 
 # DtmExtraction part
 # max object width in meter
-maxObjectWidth : 24
+maxObjectWidth : 16
 uniformFilterSize : 1
 preventUnhookIter : 10
-numOuterIter : 100
+numOuterIter : 50
 numInnerIter : 10
 mpTileSize : 1500
 sequential : False

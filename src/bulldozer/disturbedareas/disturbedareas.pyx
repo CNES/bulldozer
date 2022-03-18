@@ -6,23 +6,21 @@
 # All rights reserved.
 
 from libcpp cimport bool
-from DisturbedAreas cimport DisturbedAreas
 import numpy as np
+from bulldozer.utils.helper import npAsContiguousArray
 
-def npAsContiguousArray(arr : np.array) -> np.array:
-    """
-    This method checks that the input array is contiguous. 
-    If not, returns the contiguous version of the input numpy array.
+# pxd section
+cdef extern from "c_disturbedareas.cpp":
+    pass
 
-    Args:
-        arr: input array.
+cdef extern from "c_disturbedareas.h" namespace "bulldozer":
 
-    Returns:
-        contiguous array usable in C++.
-    """
-    if not arr.flags['C_CONTIGUOUS']:
-        arr = np.ascontiguousarray(arr)
-    return arr
+    cdef cppclass DisturbedAreas:
+        
+        DisturbedAreas() except +
+        DisturbedAreas(bool) except +
+        void build_disturbance_mask(float *, unsigned char *, unsigned int, unsigned int, float, float)
+# end pxd section
 
 # Create a Cython extension type which holds a C++ instance
 # as an attribute and create a bunch of forwarding methods
