@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <list>
+#include <cmath>
 
 /*
     This class is used to build a mask that flags the pixels associated to a disturbed area.
