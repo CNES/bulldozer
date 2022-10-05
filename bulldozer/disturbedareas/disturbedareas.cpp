@@ -4,16 +4,16 @@
 {
     "distutils": {
         "depends": [
-            "src/bulldozer/disturbedareas/c_disturbedareas.cpp",
-            "src/bulldozer/disturbedareas/c_disturbedareas.h"
+            "bulldozer/disturbedareas/c_disturbedareas.cpp",
+            "bulldozer/disturbedareas/c_disturbedareas.h"
         ],
         "include_dirs": [
-            "src/bulldozer/disturbedareas"
+            "bulldozer/disturbedareas"
         ],
         "language": "c++",
         "name": "bulldozer.disturbedareas.disturbedareas",
         "sources": [
-            "src/bulldozer/disturbedareas/disturbedareas.pyx"
+            "bulldozer/disturbedareas/disturbedareas.pyx"
         ]
     },
     "module_name": "bulldozer.disturbedareas.disturbedareas"
@@ -996,7 +996,7 @@ static const char *__pyx_filename;
 
 static const char *__pyx_f[] = {
   "stringsource",
-  "src/bulldozer/disturbedareas/disturbedareas.pyx",
+  "bulldozer/disturbedareas/disturbedareas.pyx",
 };
 /* MemviewSliceStruct.proto */
 struct __pyx_memoryview_obj;

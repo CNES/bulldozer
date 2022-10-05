@@ -4,16 +4,16 @@
 {
     "distutils": {
         "depends": [
-            "src/bulldozer/springforce/c_springforce.cpp",
-            "src/bulldozer/springforce/c_springforce.h"
+            "bulldozer/springforce/c_springforce.cpp",
+            "bulldozer/springforce/c_springforce.h"
         ],
         "include_dirs": [
-            "src/bulldozer/springforce"
+            "bulldozer/springforce"
         ],
         "language": "c++",
         "name": "bulldozer.springforce.springforce",
         "sources": [
-            "src/bulldozer/springforce/springforce.pyx"
+            "bulldozer/springforce/springforce.pyx"
         ]
     },
     "module_name": "bulldozer.springforce.springforce"
@@ -996,7 +996,7 @@ static const char *__pyx_filename;
 
 static const char *__pyx_f[] = {
   "stringsource",
-  "src/bulldozer/springforce/springforce.pyx",
+  "bulldozer/springforce/springforce.pyx",
 };
 /* MemviewSliceStruct.proto */
 struct __pyx_memoryview_obj;
