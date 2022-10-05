@@ -8,7 +8,7 @@ dsmPath : "/work/scratch/lassalp/AI4GEO_WORKSPACE/NoSupervisedInputs/mergedDSM.t
 # Output directory path
 outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/NoSupervisedInputs/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
-nbMaxWorkers : 24
+nbMaxWorkers : 16
 
 #-------------------------#
 #         Options         #
@@ -49,7 +49,7 @@ fourConnexity : True
 maxObjectWidth : 16
 uniformFilterSize : 1
 preventUnhookIter : 10
-numOuterIter : 100
+numOuterIter : 50
 numInnerIter : 10
 mpTileSize : 1500
 sequential : False

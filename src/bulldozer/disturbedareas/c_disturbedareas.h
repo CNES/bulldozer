@@ -1,5 +1,5 @@
-#ifndef DISTURBEDAREAS_H
-#define DISTURBEDAREAS_H
+#ifndef C_DISTURBEDAREAS_H
+#define C_DISTURBEDAREAS_H
 
 /*
     Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <list>
+#include <cmath>
 
 /*
     This class is used to build a mask that flags the pixels associated to a disturbed area.

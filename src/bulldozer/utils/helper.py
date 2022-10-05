@@ -71,4 +71,19 @@ def write_dataset(buffer_path : str, buffer : np.ndarray, profile : rasterio.pro
     with rasterio.open(buffer_path, 'w', **profile) as dst_dataset:
         dst_dataset.write(buffer, 1)
         dst_dataset.close()
+
+def npAsContiguousArray(arr : np.array) -> np.array:
+    """
+    This method checks that the input array is contiguous. 
+    If not, returns the contiguous version of the input numpy array.
+
+    Args:
+        arr: input array.
+
+    Returns:
+        contiguous array usable in C++.
+    """
+    if not arr.flags['C_CONTIGUOUS']:
+        arr = np.ascontiguousarray(arr)
+    return arr
         

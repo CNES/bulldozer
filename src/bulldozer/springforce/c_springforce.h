@@ -1,5 +1,5 @@
-#ifndef BULLDOZERFILTERS_H
-#define BULLDOZERFILTERS_H
+#ifndef C_SPRING_FORCE_H
+#define C_SPRING_FORCE_H
 
 /*
     Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
