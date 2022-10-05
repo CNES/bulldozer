@@ -2,10 +2,11 @@
 #       Parameters        #
 #-------------------------#
 # Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
+# "/work/OT/ai4geo/DATA/ZONES_EC2/Strasbourg/NEW_MERGE/DSM_corrected.tif"
 # "/work/OT/ai4geo/users/benchmark/DTM/IN_BENCHMARK/MNS_Toulouse.tif"
-dsmPath : "/work/OT/ai4geo/users/benchmark/DTM/IN_BENCHMARK/MNS_Nice.tif"
+dsmPath : "/work/scratch/lassalp/AI4GEO_WORKSPACE/NoSupervisedInputs/mergedDSM.tif"
 # Output directory path
-outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/ai4geo_toolbox_output/"
+outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/NoSupervisedInputs/"
 # If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
 nbMaxWorkers : 16
 
@@ -30,7 +31,7 @@ outputResolution : null
 # If null, the DSM resolution will be extracted from the input DSM (float value in meter)
 dsmResolution : null
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
-noData : null
+noData : -32769
 
 
 #-------------------------#

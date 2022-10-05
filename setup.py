@@ -20,3 +20,4 @@ setup(
     install_requires=install_requires,
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
 )
+
