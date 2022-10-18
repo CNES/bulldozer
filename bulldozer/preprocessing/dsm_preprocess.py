@@ -122,7 +122,7 @@ def build_disturbance_mask(dsm_path: str,
 
         # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
         with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-            futures = {executor.submit(self.compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
+            futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
             slope_treshold, is_four_connexity) for strip in strips}
             for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
                 mask, window = future.result()
@@ -220,14 +220,14 @@ def run(dsm_path : str,
         filledDSMProfile['nodata'] = NO_DATA_VALUE
         
         # Generates inner nodata mask
-        border_nodata_mask, inner_nodata_mask = self.build_inner_nodata_mask(dsm)
+        border_nodata_mask, inner_nodata_mask = build_inner_nodata_mask(dsm)
         dsm[border_nodata_mask] = np.max(dsm)
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
-        disturbed_area_mask = self.build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
+        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
         
         # Merges and writes the quality mask
-        self.write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
+        write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
 
         # Generates filled DSM if the user provides a valid filled_dsm_path
         if create_filled_dsm:
