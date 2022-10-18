@@ -4,7 +4,7 @@ import concurrent.futures
 import rasterio
 import numpy as np
 from tqdm import tqdm
-from bulldozer.springforce.springforce import PyBulldozerFilters
+from bulldozer.dtm_extraction.springforce.springforce import PyBulldozerFilters
 
 
 # Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer

@@ -15,9 +15,9 @@ from datetime import datetime
 from sys import stdout
 import argparse
 import argcomplete
-from bulldozer.clothsimu.dtm_extraction import ClothSimulation
-from bulldozer.preprocess.dsm_preprocess import PreProcess
-from bulldozer.postprocess.dtm_postprocess import PostProcess
+from bulldozer.dtm_extraction.dtm_extraction import ClothSimulation
+from bulldozer.preprocessing.dsm_preprocess import run as run_preprocessing
+from bulldozer.postprocessing.dtm_postprocess import PostProcess
 from bulldozer.utils.config_parser import ConfigParser
 #from bulldozer.utils.helper import init_logger
 
@@ -42,9 +42,7 @@ class Pipeline(object):
         parser = ConfigParser(False)
         # Retrieves all the settings
         cfg = parser.read(config_path)
-        preprocess = PreProcess()
-
-        preprocess.run(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
+        run_preprocessing(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
                    cfg['createFilledDsm'], cfg['noData'], 
                    cfg['slopeThreshold'], cfg['fourConnexity'])
 

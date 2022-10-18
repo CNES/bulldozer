@@ -100,9 +100,7 @@ namespace bulldozer
                     }
                 }
             }
-        }
-                                                    
+        }                                        
     }
-
 }
 

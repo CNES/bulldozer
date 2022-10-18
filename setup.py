@@ -5,8 +5,8 @@ from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 
 extensions = [
-    Extension("bulldozer.disturbedareas.disturbedareas", ["bulldozer/disturbedareas/disturbedareas.pyx"]),
-    Extension("bulldozer.springforce.springforce", ["bulldozer/springforce/springforce.pyx"])
+    Extension("bulldozer.preprocessing.disturbedareas.disturbedareas", ["bulldozer/preprocessing/disturbedareas/disturbedareas.pyx"]),
+    Extension("bulldozer.dtm_extraction.springforce.springforce", ["bulldozer/dtm_extraction/springforce/springforce.pyx"])
 ]
 
 compiler_directives = { "language_level": 3, "embedsignature": True}

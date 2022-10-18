@@ -25,43 +25,43 @@ License: GNU GPL v3.0 + GCC Runtime Library Exception v3.1
 Python: programming language that lets you work quickly and integrate systems more effectively.
 Copyright (c) 2001-2020 Python Software Foundation. All Rights reserved. 
 Website: http://python.org/
-License: Python Software License.
+License: Python Software License
 
 NumPy: The fundamental package for scientific computing with Python. 
 Copyright (c) 2005-2020, NumPy Developers.
 Website: https://numpy.org/
-License: BSD 3 Clause.
+License: BSD 3 Clause
 
 SciPy: open-source software for mathematics, science, and engineering.
 Copyright (c) 2001, 2002 Enthought, Inc. All rights reserved.
 Copyright (c) 2003-2019 SciPy Developers. All rights reserved.
 Website: https://www.scipy.org/scipylib/
-License: BSD 3 Clause.
+License: BSD 3 Clause
 
 GDAL Python: open source X/MIT licensed translator library for raster and vector geospatial data formats.
 Copyright (c) 1998-2020 Frank Warmerdam, Even Rouault, and others
 Website: https://pypi.org/project/GDAL/
-License: MIT.
+License: MIT
 
 Setuptools: build system
 Copyright (C) 2016 Jason R Coombs <jaraco@jaraco.com>
 Website: https://setuptools.readthedocs.io/
-License: MIT.
+License: MIT
 
 tqdm: A Fast, Extensible Progress Bar for Python and CLI
 Copyright (c) 2013, noamraph.
 Website: https://tqdm.github.io/
-License: MIT.
+License: MIT
    
 GitPython; python library used to interact with Git repositories
 Copyright (c) 2008, 2009 Michael Trier and contributors.
 Website: https://github.com/gitpython-developers/GitPython
-License: BSD 3 Clause.
+License: BSD 3 Clause
 
 psutil: Cross-platform lib for process and system monitoring in Python
 Copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola
 Website: https://github.com/giampaolo/psutil
-License: BSD 3 Clause.
+License: BSD 3 Clause
 
 Python interface to PROJ
 Copyright (c) 2006-2018, Jeffrey Whitaker.
@@ -73,7 +73,7 @@ License: MIT
 Rasterio: access to geospatial raster data
 Copyright (c) 2016, MapBox All rights reserved.
 Website: https://github.com/mapbox/rasterio
-License: BSD 3 Clause.
+License: Copyright MapBox
 
 pytest: helps to write better programs
 Copyright (c) 2004-2020 Holger Krekel and others.
