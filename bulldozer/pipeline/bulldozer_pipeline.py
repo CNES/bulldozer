@@ -27,59 +27,54 @@ __version__ = "0.1.0"
 #                           disable_existing_loggers=False)
 # logger = logging.getLogger(__name__)
 
-class Pipeline(object):
+def dsm_to_dtm(config_path : str) -> None:
     """
-        Bulldozer main pipeline.
+        Pipeline constructor.
     """
+    #init_logger(logger)
+    starting_time = datetime.now()
+    #logger.info("Starting time: " + starting_time.strftime("%Y-%m-%d %H:%M:%S"))
+    parser = ConfigParser(False)
+    # Retrieves all the settings
+    cfg = parser.read(config_path)
+    run_preprocessing(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
+                cfg['createFilledDsm'], cfg['noData'], 
+                cfg['slopeThreshold'], cfg['fourConnexity'])
+
+    dsm_path = cfg['outputDir'] + 'filled_DSM.tif'
+    # Warning now it is not possible to be robust to nodata because
+    # of the upsample step.
+    # We will have to use the ancrage drape.
+    #dsm_path = cfg['outputDir'] + 'preprocessed_DSM.tif'
+    clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
+                                cfg['uniformFilterSize'], 
+                                cfg['preventUnhookIter'],
+                                cfg['numOuterIter'], 
+                                cfg['numInnerIter'], 
+                                cfg['mpTileSize'], 
+                                cfg['sequential'], 
+                                cfg['nbMaxWorkers'])
+
+    clothSimu.run(dsm_path, cfg['outputDir'])
     
-    def __init__(self, config_path : str) -> None:
-        """
-            Pipeline constructor.
-        """
-        #init_logger(logger)
-        starting_time = datetime.now()
-        #logger.info("Starting time: " + starting_time.strftime("%Y-%m-%d %H:%M:%S"))
-        parser = ConfigParser(False)
-        # Retrieves all the settings
-        cfg = parser.read(config_path)
-        run_preprocessing(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
-                   cfg['createFilledDsm'], cfg['noData'], 
-                   cfg['slopeThreshold'], cfg['fourConnexity'])
+    quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
+    dtm_path = cfg['outputDir'] + 'DTM.tif'
+    postprocess = PostProcess()
+    postprocess.run(dtm_path, cfg['outputDir'], quality_mask_path, 
+                cfg['dhm'], cfg['dsmPath'])
 
-        dsm_path = cfg['outputDir'] + 'filled_DSM.tif'
-        # Warning now it is not possible to be robust to nodata because
-        # of the upsample step.
-        # We will have to use the ancrage drape.
-        #dsm_path = cfg['outputDir'] + 'preprocessed_DSM.tif'
-        clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
-                                    cfg['uniformFilterSize'], 
-                                    cfg['preventUnhookIter'],
-                                    cfg['numOuterIter'], 
-                                    cfg['numInnerIter'], 
-                                    cfg['mpTileSize'], 
-                                    cfg['sequential'], 
-                                    cfg['nbMaxWorkers'])
+    # logger.info("Ending time: {} (Runtime: {}s)"
+    #             .format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+    #             datetime.now()-starting_time))
+    
+    # if cfg['keepLog']:
+    #     try:
+    #         copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
+    #             "../logs/bulldozer_logfile.log"),
+    #             os.path.dirname(os.path.abspath(cfg['outputDir'] + "bulldozer_logfile.log")))
+    #     except Exception as e:
 
-        clothSimu.run(dsm_path, cfg['outputDir'])
-        
-        quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
-        dtm_path = cfg['outputDir'] + 'DTM.tif'
-        postprocess = PostProcess()
-        postprocess.run(dtm_path, cfg['outputDir'], quality_mask_path, 
-                    cfg['dhm'], cfg['dsmPath'])
-
-        # logger.info("Ending time: {} (Runtime: {}s)"
-        #             .format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
-        #             datetime.now()-starting_time))
-        
-        # if cfg['keepLog']:
-        #     try:
-        #         copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), 
-        #             "../logs/bulldozer_logfile.log"),
-        #             os.path.dirname(os.path.abspath(cfg['outputDir'] + "bulldozer_logfile.log")))
-        #     except Exception as e:
-
-        #         logger.warning("Error while writting the logfile: " + str(e), exc_info=True)
+    #         logger.warning("Error while writting the logfile: " + str(e), exc_info=True)
 
 
 def get_parser():
@@ -104,7 +99,6 @@ def get_parser():
 
 
 def main():
-
     """
         Call bulldozer main
     """
@@ -126,7 +120,7 @@ def main():
         raise FileNotFoundError('Expected yaml configuration file')
     #logger.debug('Configuration file existence check: Done')
 
-    Pipeline(config_path)
+    dsm_to_dtm(config_path)
 
 if __name__ == "__main__":
     main()

@@ -16,7 +16,7 @@ from bulldozer.utils.helper import write_dataset
 #logger = logging.getLogger(__name__)
 
 
-def build_sinks_mask(self, dtm : np.ndarray) -> (np.ndarray, np.ndarray):
+def build_sinks_mask(dtm : np.ndarray) -> (np.ndarray, np.ndarray):
     """
     This method detects sinks in the input DTM.
     Those sinks are generated during the DTM extraction by remaining artefacts.
@@ -43,7 +43,7 @@ def build_sinks_mask(self, dtm : np.ndarray) -> (np.ndarray, np.ndarray):
     return dtm_LF, sharp_sinks_mask
 
 
-def build_dhm(self, dtm : np.ndarray, dsm_path : str, output_dir : str, profile : rasterio.profiles.Profile) -> None:
+def build_dhm(dtm : np.ndarray, dsm_path : str, output_dir : str, profile : rasterio.profiles.Profile) -> None:
     """
     This method generates a DHM (DTM-DSM) in the directory provided.
 
@@ -59,8 +59,7 @@ def build_dhm(self, dtm : np.ndarray, dsm_path : str, output_dir : str, profile 
     print("DHM generation: Done")
 
 
-def run(self,
-        dtm_path : str, 
+def run(dtm_path : str, 
         output_dir : str,
         quality_mask_path : str = None, 
         dhm : bool = False,

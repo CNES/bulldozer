@@ -25,7 +25,7 @@ from os import remove
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
 
-def build_inner_nodata_mask(self, dsm : np.ndarray) -> np.ndarray:
+def build_inner_nodata_mask(dsm : np.ndarray) -> np.ndarray:
     """
     This method builds a mask corresponding to inner nodata values in a given DSM.
     (mainly correlation issues in the DSM)
@@ -63,8 +63,7 @@ def build_inner_nodata_mask(self, dsm : np.ndarray) -> np.ndarray:
     return [border_nodata_mask, inner_nodata_mask]
 
 
-def compute_disturbance(self, 
-                        dsm_path : rasterio.DatasetReader,
+def compute_disturbance(dsm_path : rasterio.DatasetReader,
                         window : rasterio.windows.Window,
                         slope_treshold : float,
                         is_four_connexity : bool) -> (np.ndarray, rasterio.windows.Window) :
@@ -91,8 +90,7 @@ def compute_disturbance(self,
         return disturbance_mask, window
 
 
-def build_disturbance_mask(self, 
-                            dsm_path: str,
+def build_disturbance_mask(dsm_path: str,
                             nb_max_workers : int,
                             slope_treshold: float = 2.0,
                             is_four_connexity : bool = True) -> np.array:
@@ -145,8 +143,7 @@ def build_disturbance_mask(self,
         print("disturbance mask: Done")
         return disturbance_mask != 0
     
-def write_quality_mask(self,
-                    border_nodata_mask: np.ndarray,
+def write_quality_mask(border_nodata_mask: np.ndarray,
                     inner_nodata_mask : np.ndarray, 
                     disturbed_area_mask : np.ndarray,
                     output_dir : str,
@@ -177,8 +174,7 @@ def write_quality_mask(self,
 
 
 
-def run(self,
-        dsm_path : str, 
+def run(dsm_path : str, 
         output_dir : str,
         nb_max_workers : int,
         create_filled_dsm : bool = False,
