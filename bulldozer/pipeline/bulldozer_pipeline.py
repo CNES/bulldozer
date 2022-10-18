@@ -17,7 +17,7 @@ import argparse
 import argcomplete
 from bulldozer.dtm_extraction.dtm_extraction import ClothSimulation
 from bulldozer.preprocessing.dsm_preprocess import run as run_preprocessing
-from bulldozer.postprocessing.dtm_postprocess import PostProcess
+from bulldozer.postprocessing.dtm_postprocess import run as run_postprocessing
 from bulldozer.utils.config_parser import ConfigParser
 #from bulldozer.utils.helper import init_logger
 
@@ -59,9 +59,9 @@ def dsm_to_dtm(config_path : str) -> None:
     
     quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
     dtm_path = cfg['outputDir'] + 'DTM.tif'
-    postprocess = PostProcess()
-    postprocess.run(dtm_path, cfg['outputDir'], quality_mask_path, 
-                cfg['dhm'], cfg['dsmPath'])
+
+    run_postprocessing(dtm_path, cfg['outputDir'], quality_mask_path, 
+                cfg['createDhm'], cfg['dsmPath'])
 
     # logger.info("Ending time: {} (Runtime: {}s)"
     #             .format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 

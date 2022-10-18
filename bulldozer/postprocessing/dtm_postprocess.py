@@ -91,7 +91,7 @@ def run(dtm_path : str,
             filled_mask = None
 
             # Generates the sinks mask and retrieves the low frequency DTM
-            dtm_LF, sinks_mask = self.build_sinks_mask(filled_dtm)
+            dtm_LF, sinks_mask = build_sinks_mask(filled_dtm)
             # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
             dtm[sinks_mask] = dtm_LF[sinks_mask]
             dtm[border_nodata] = dtm_dataset.nodata
@@ -113,7 +113,7 @@ def run(dtm_path : str,
                 
             # Generates the DHM (DSM - DTM) if the option is activated
             if dhm and dsm_path:
-                self.build_dhm(filled_dtm, dsm_path, output_dir, dtm_dataset.profile)
+                build_dhm(filled_dtm, dsm_path, output_dir, dtm_dataset.profile)
 
         #TODO Release2 : add reprojection and dezoom option
         # Check if the output CRS or resolution is different from the input. If it's different, 
