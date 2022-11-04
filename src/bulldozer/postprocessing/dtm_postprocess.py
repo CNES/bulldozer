@@ -7,6 +7,7 @@
 This module is used to postprocess the DTM in order to improve its quality. It required a DTM generated from Bulldozer.
 """
 #import logging
+import os
 import rasterio
 import numpy as np
 import scipy.ndimage as ndimage
@@ -55,7 +56,7 @@ def build_dhm(dtm : np.ndarray, dsm_path : str, output_dir : str, profile : rast
     print("Starting DHM generation") 
     with rasterio.open(dsm_path) as dsm_dataset:
         dsm = dsm_dataset.read(1)
-        write_dataset(output_dir + 'DHM.tif', dsm - dtm, profile)
+        write_dataset(os.path.join(output_dir, 'DHM.tif'), dsm - dtm, profile)
     print("DHM generation: Done")
 
 
@@ -97,7 +98,7 @@ def run(dtm_path : str,
             dtm[border_nodata] = dtm_dataset.nodata
 
             # Overrides the old DTM if run funct is called throught the bulldozer pipeline
-            write_dataset(output_dir + 'DTM.tif', filled_dtm, dtm_dataset.profile)
+            write_dataset(os.path.join(output_dir, 'DTM.tif'), filled_dtm, dtm_dataset.profile)
 
             # Updates the output quality mask
             # Retrieves the quality masks generated during the DSM preprocess

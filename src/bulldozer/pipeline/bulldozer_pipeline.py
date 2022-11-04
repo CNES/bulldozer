@@ -31,17 +31,23 @@ def dsm_to_dtm(config_path : str) -> None:
     """
         Pipeline constructor.
     """
+
     #init_logger(logger)
     starting_time = datetime.now()
     #logger.info("Starting time: " + starting_time.strftime("%Y-%m-%d %H:%M:%S"))
     parser = ConfigParser(False)
     # Retrieves all the settings
     cfg = parser.read(config_path)
-    run_preprocessing(cfg['dsmPath'], cfg['outputDir'], cfg['nbMaxWorkers'], 
-                cfg['createFilledDsm'], cfg['noData'], 
-                cfg['slopeThreshold'], cfg['fourConnexity'])
+    run_preprocessing(cfg['dsmPath'], 
+                      cfg['outputDir'], 
+                      cfg['nbMaxWorkers'], 
+                      cfg['createFilledDsm'], 
+                      cfg['noData'], 
+                      cfg['slopeThreshold'], 
+                      cfg['fourConnexity'],
+                      cfg['minValidHeight'])
 
-    dsm_path = cfg['outputDir'] + 'filled_DSM.tif'
+    dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
     # Warning now it is not possible to be robust to nodata because
     # of the upsample step.
     # We will have to use the ancrage drape.
@@ -57,8 +63,8 @@ def dsm_to_dtm(config_path : str) -> None:
 
     clothSimu.run(dsm_path, cfg['outputDir'])
     
-    quality_mask_path = cfg['outputDir'] + 'quality_mask.tif'
-    dtm_path = cfg['outputDir'] + 'DTM.tif'
+    quality_mask_path = os.path.join(cfg['outputDir'], 'quality_mask.tif')
+    dtm_path = os.path.join(cfg['outputDir'], 'DTM.tif')
 
     run_postprocessing(dtm_path, cfg['outputDir'], quality_mask_path, 
                 cfg['createDhm'], cfg['dsmPath'])

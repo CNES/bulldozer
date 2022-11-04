@@ -10,11 +10,11 @@
 import sys
 #import logging
 import rasterio
-import os.path
+import os
 import concurrent.futures
 import numpy as np
 import scipy.ndimage as ndimage
-from bulldozer.preprocessing.disturbedareas.disturbedareas import PyDisturbedAreas
+import bulldozer.disturbedareas as da
 from rasterio.windows import Window
 from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
@@ -84,7 +84,7 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
     #logger.debug("Starting disturbed area analysis. Window strip: {}".format(window))
     with rasterio.open(dsm_path, 'r') as dataset:
         dsm_strip = dataset.read(1, window=window).astype(np.float32)
-        disturbed_areas = PyDisturbedAreas(is_four_connexity)
+        disturbed_areas = da.PyDisturbedAreas(is_four_connexity)
         disturbance_mask = disturbed_areas.build_disturbance_mask(dsm_strip, slope_treshold, NO_DATA_VALUE).astype(np.ubyte)
         #logger.debug("Disturbance mask computation: Done (Window strip: {}".format(window))
         return disturbance_mask, window
@@ -160,7 +160,7 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
         profile: DSM profile (TIF metadata).
     """     
     quality_mask = np.zeros(np.shape(inner_nodata_mask), dtype=np.uint8)
-    quality_mask_path = output_dir + "quality_mask.tif"
+    quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
 
     # Metadata update
     profile['dtype'] = np.uint8
@@ -180,7 +180,8 @@ def run(dsm_path : str,
         create_filled_dsm : bool = False,
         nodata : float = None,
         slope_treshold : float = 2.0, 
-        is_four_connexity : bool = True) -> None:
+        is_four_connexity : bool = True,
+        minValidHeight: float = None) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -215,6 +216,10 @@ def run(dsm_path : str,
         else:
             if nodata != NO_DATA_VALUE:
                 dsm = np.where(dsm == nodata, NO_DATA_VALUE, dsm)
+        
+        # handle the case where there are dynamic nodata values (MicMac DSM for example)
+        if minValidHeight is not None:
+            dsm = np.where( dsm < minValidHeight, NO_DATA_VALUE, dsm)
 
         filledDSMProfile = dsm_dataset.profile
         filledDSMProfile['nodata'] = NO_DATA_VALUE
@@ -234,7 +239,7 @@ def run(dsm_path : str,
             filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
             filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
 
-            filled_dsm_path = output_dir + 'filled_DSM.tif'
+            filled_dsm_path = os.path.join(output_dir, 'filled_DSM.tif')
 
             # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
             write_dataset(filled_dsm_path, filled_dsm, filledDSMProfile)
@@ -243,7 +248,7 @@ def run(dsm_path : str,
 
 
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
-        preprocessed_dsm_path = output_dir + 'preprocessed_DSM.tif'
+        preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
         write_dataset(preprocessed_dsm_path, dsm, filledDSMProfile)
 
         # Create the IDW DTM to fill hole by a smooth interpolation

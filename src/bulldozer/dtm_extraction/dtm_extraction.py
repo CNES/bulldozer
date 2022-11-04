@@ -4,7 +4,8 @@ import concurrent.futures
 import rasterio
 import numpy as np
 from tqdm import tqdm
-from bulldozer.dtm_extraction.springforce.springforce import PyBulldozerFilters
+import bulldozer.springforce as sf
+#from bulldozer.dtm_extraction.springforce.springforce import PyBulldozerFilters
 
 
 # Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer
@@ -166,8 +167,8 @@ class ClothSimulation(object):
 
                 tile_dsm_buffer = dsm[tile_start_y:tile_end_y+1, tile_start_x:tile_end_x+1]
                 tile_dtm_buffer = dtm[tile_start_y:tile_end_y+1, tile_start_x:tile_end_x+1]
-                tile_dsm_path = tmp_dir + "/dsm_" + str(ty) + "_" + str(tx) + ".tif"
-                tile_dtm_path = tmp_dir + "/dtm_" + str(ty) + "_" + str(tx) + ".tif"
+                tile_dsm_path = os.path.join(tmp_dir, "dsm_" + str(ty) + "_" + str(tx) + ".tif")
+                tile_dtm_path = os.path.join(tmp_dir, "dtm_" + str(ty) + "_" + str(tx) + ".tif")
 
                 self.write_tiles(tile_buffer = tile_dsm_buffer, 
                                  tile_path=tile_dsm_path, 
@@ -198,7 +199,7 @@ class ClothSimulation(object):
                                step: float,
                                nodata_val: float) -> None:
 
-        bfilters = PyBulldozerFilters()
+        bfilters = sf.PyBulldozerFilters()
 
         valid = dtm != nodata_val
 
@@ -242,7 +243,7 @@ class ClothSimulation(object):
                                           nodata_val = nodata_val)
 
         item = tile_pair[1].path.split("/")[-1]
-        output_tile_dtm_path = tmp_dir + "/" + "output_" + item
+        output_tile_dtm_path = os.path.join(tmp_dir, "output_" + item)
         self.write_tiles(dtm, output_tile_dtm_path, dsm_profile)
 
         return (tile_pair, output_tile_dtm_path)
@@ -254,7 +255,7 @@ class ClothSimulation(object):
         # Open the dsm dataset
         in_dsm_dataset = rasterio.open(dsm_path)
         in_dsm_profile = in_dsm_dataset.profile
-        dtm_path = output_dir + "/DTM.tif"
+        dtm_path = os.path.join(output_dir, "DTM.tif")
         # Initial dsm
         dsm_pyramid = []
         dsm_pyramid.append(in_dsm_dataset.read().astype(np.float32)[0])
@@ -280,7 +281,7 @@ class ClothSimulation(object):
         
 
         # Prevent unhook from hills
-        bfilters = PyBulldozerFilters()
+        bfilters = sf.PyBulldozerFilters()
         for i in tqdm(range(self.prevent_unhook_iter), desc="Prevent unhook from hills..."):
             nb_rows = dtm.shape[0]
             nb_cols = dtm.shape[1]

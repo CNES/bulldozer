@@ -28,6 +28,10 @@ outputCRS : null
 outputResolution : null
 # If null, the DSM resolution will be extracted from the input DSM (float value in meter)
 dsmResolution : null
+
+# Minimum valid height value, None or a float value. If None this parameter is not taken into account
+minValidHeight: 0.0
+
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
 noData : null
 
