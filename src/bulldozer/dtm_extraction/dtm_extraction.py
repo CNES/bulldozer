@@ -5,8 +5,7 @@ import rasterio
 import numpy as np
 from tqdm import tqdm
 import bulldozer.springforce as sf
-#from bulldozer.dtm_extraction.springforce.springforce import PyBulldozerFilters
-
+from bulldozer.utils.logging_helper import BulldozerLogger
 
 # Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer
 # et le remplir (fillnodata, idw)
@@ -302,9 +301,11 @@ class ClothSimulation(object):
         max_level = nb_levels - 1
         current_num_outer_iterations = self.num_outer_iterations
 
+        bulldoLogger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(output_dir, "trace.log"))
+
         while level > -1:
 
-            print("Process level " + str(level) + "...")
+            bulldoLogger.info("Process level " + str(level) + "...")
 
             if level < max_level:
                 # Upsample current dtm to the next level
@@ -364,7 +365,7 @@ class ClothSimulation(object):
                     dtm[start_y:end_y+1, start_x:end_x+1] = tile_dtm[tstart_y: tend_y + 1, tstart_x:tend_x+1]
 
             else:
-                print("sequential")
+                bulldoLogger.info("sequential")
                 dtm = self.sequential_drape_cloth(dtm = dtm,
                                                   dsm = dsm_pyramid[level],
                                                   num_outer_iterations = current_num_outer_iterations,

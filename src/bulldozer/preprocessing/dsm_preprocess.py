@@ -8,7 +8,6 @@
 """
 
 import sys
-#import logging
 import rasterio
 import os
 import concurrent.futures
@@ -20,8 +19,8 @@ from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
+from bulldozer.utils.logging_helper import BulldozerLogger
 
-# logger = logging.getLogger(__name__)
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
 
@@ -36,7 +35,7 @@ def build_inner_nodata_mask(dsm : np.ndarray) -> np.ndarray:
     Returns:
         boolean mask corresponding to the inner nodata areas.
     """
-    print("Starting inner_nodata_mask building")
+    
     # Get the global nodata mask
     nodata_area = (dsm == NO_DATA_VALUE)
 
@@ -54,11 +53,9 @@ def build_inner_nodata_mask(dsm : np.ndarray) -> np.ndarray:
 
     # Retrieve all the border nodata areas and create the corresponding mask 
     border_nodata_mask = np.isin(labeled_array,border_region_ident)
-    print("border_nodata_mask generation: Done")
 
     # Retrieve all the nodata areas in the input DSM that aren't border areas and create the corresponding mask 
     inner_nodata_mask = np.logical_and(nodata_area == True, np.isin(labeled_array,border_region_ident) != True)
-    print("inner_nodata_mask generation: Done")
 
     return [border_nodata_mask, inner_nodata_mask]
 
@@ -108,7 +105,6 @@ def build_disturbance_mask(dsm_path: str,
     Returns:
         masks containing the disturbed areas.
     """
-    print("Compute disturbance mask")
     # Determine the number of strip and their height
     with rasterio.open(dsm_path, 'r') as dataset:
         strip_height = dataset.height // nb_max_workers
@@ -140,14 +136,14 @@ def build_disturbance_mask(dsm_path: str,
                     end_row = end_row - 1
 
                 disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
-        print("disturbance mask: Done")
+
         return disturbance_mask != 0
     
 def write_quality_mask(border_nodata_mask: np.ndarray,
-                    inner_nodata_mask : np.ndarray, 
-                    disturbed_area_mask : np.ndarray,
-                    output_dir : str,
-                    profile : rasterio.profiles.Profile) -> None:
+                       inner_nodata_mask : np.ndarray, 
+                       disturbed_area_mask : np.ndarray,
+                       output_dir : str,
+                       profile : rasterio.profiles.Profile) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -196,10 +192,13 @@ def run(dsm_path : str,
         slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
         is_four_connexity: number of evaluated axis. 
                         Vertical and horizontal if true else vertical, horizontal and diagonals.
-    """   
+    """ 
 
 
-    print("Starting preprocess")
+
+    bulldoLogger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(output_dir, "trace.log"))
+    bulldoLogger.info("Starting preprocess")
+
     with rasterio.open(dsm_path) as dsm_dataset:
         if not nodata:
             # If nodata is not specified in the config file, retrieve the value from the dsm metadata
@@ -225,15 +224,20 @@ def run(dsm_path : str,
         filledDSMProfile['nodata'] = NO_DATA_VALUE
         
         # Generates inner nodata mask
+        bulldoLogger.info("Starting inner_nodata_mask building")
         border_nodata_mask, inner_nodata_mask = build_inner_nodata_mask(dsm)
         dsm[border_nodata_mask] = np.max(dsm)
+        bulldoLogger.info("inner_nodata_mask generation: Done")
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
+        bulldoLogger.info("Compute disturbance mask")
         disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
+        bulldoLogger.info("disturbance mask: Done")
         
         # Merges and writes the quality mask
         write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
 
+        bulldoLogger.info("Filled no data values")
         # Generates filled DSM if the user provides a valid filled_dsm_path
         if create_filled_dsm:
             filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
@@ -243,6 +247,7 @@ def run(dsm_path : str,
 
             # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
             write_dataset(filled_dsm_path, filled_dsm, filledDSMProfile)
+        bulldoLogger.info("Filled no data values: Done")
         
         dsm[disturbed_area_mask] = nodata
 
@@ -251,14 +256,5 @@ def run(dsm_path : str,
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
         write_dataset(preprocessed_dsm_path, dsm, filledDSMProfile)
 
-        # Create the IDW DTM to fill hole by a smooth interpolation
-        #output_anchor_path  = output_dir + "/anchors.tif"
-        # The idea is to do an approximation of the idw, for the computation of idw, i propose to divide into tiles of 500 * 500 or lower and for all the point of the tile, just use
-        # the anchor points 
-        #self.compute_idw_dtm(preprocessed_dsm_path=preprocessed_dsm_path, output_anchors_path= output_dir + "/anchors.tif", output_idw_path=output_dir + "/idw_dtm.tif")
-
-        #anchorBuffer = rasterio.open(output_anchor_path).read(1)
-        #print("Nb anchors ", (anchorBuffer>0).sum())
-
         dsm_dataset.close()
-        print("preprocess: Done")
+        bulldoLogger.info("preprocess: Done")

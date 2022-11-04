@@ -13,6 +13,7 @@ import numpy as np
 import scipy.ndimage as ndimage
 from rasterio.fill import fillnodata
 from bulldozer.utils.helper import write_dataset
+from bulldozer.utils.logging_helper import BulldozerLogger
 
 #logger = logging.getLogger(__name__)
 
@@ -28,7 +29,6 @@ def build_sinks_mask(dtm : np.ndarray) -> (np.ndarray, np.ndarray):
     Returns:
         low frequency DTM and the mask flagging the sinks area in the input DTM.
     """
-    print("Starting sinks mask building") 
     sharp_sinks_mask = np.zeros(np.shape(dtm), dtype=bool)
     # Generates the low frenquency DTM
     # TODO Release 2 : remove the magic number for the filter size (at least size = round(35.5/resolution))
@@ -40,7 +40,6 @@ def build_sinks_mask(dtm : np.ndarray) -> (np.ndarray, np.ndarray):
     # Tags the sinks
     sharp_sinks_mask[dtm_HF < 0.] = 1
 
-    print("Sinks mask generation: Done")
     return dtm_LF, sharp_sinks_mask
 
 
@@ -53,11 +52,9 @@ def build_dhm(dtm : np.ndarray, dsm_path : str, output_dir : str, profile : rast
         dsm_path : path to the input DSM.
         output_dir : path to the output directory.
     """
-    print("Starting DHM generation") 
     with rasterio.open(dsm_path) as dsm_dataset:
         dsm = dsm_dataset.read(1)
         write_dataset(os.path.join(output_dir, 'DHM.tif'), dsm - dtm, profile)
-    print("DHM generation: Done")
 
 
 def run(dtm_path : str, 
@@ -77,7 +74,8 @@ def run(dtm_path : str,
         dsm_path : path to the input DSM. This argument is required for the DHM generation.
 
     """
-    print("Starting postprocess")
+    bulldoLogger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(output_dir, "trace.log"))
+    bulldoLogger.info("Starting postprocess")
     with rasterio.open(dtm_path) as dtm_dataset:
         # Read the result DTM from the DTM extraction
         dtm = dtm_dataset.read(1)
@@ -92,10 +90,12 @@ def run(dtm_path : str,
             filled_mask = None
 
             # Generates the sinks mask and retrieves the low frequency DTM
+            bulldoLogger.info("Starting sinks mask building")
             dtm_LF, sinks_mask = build_sinks_mask(filled_dtm)
             # Interpolates the sinks in the initial DTM with the elevation of the low frequency DTM
             dtm[sinks_mask] = dtm_LF[sinks_mask]
             dtm[border_nodata] = dtm_dataset.nodata
+            bulldoLogger.info("Sinks mask generation: Done")
 
             # Overrides the old DTM if run funct is called throught the bulldozer pipeline
             write_dataset(os.path.join(output_dir, 'DTM.tif'), filled_dtm, dtm_dataset.profile)
@@ -114,9 +114,11 @@ def run(dtm_path : str,
                 
             # Generates the DHM (DSM - DTM) if the option is activated
             if dhm and dsm_path:
+                bulldoLogger.info("Starting DHM generation") 
                 build_dhm(filled_dtm, dsm_path, output_dir, dtm_dataset.profile)
+                bulldoLogger.info("DHM generation: Done")
 
         #TODO Release2 : add reprojection and dezoom option
         # Check if the output CRS or resolution is different from the input. If it's different, 
         # if (output_CRS and output_CRS!=input_CRS) or (output_res and input_resolution!=out_resolution):
-            print("Postprocess : Done")
+        bulldoLogger.info("Postprocess : Done")
