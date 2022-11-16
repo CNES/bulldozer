@@ -90,7 +90,8 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
 def build_disturbance_mask(dsm_path: str,
                             nb_max_workers : int,
                             slope_treshold: float = 2.0,
-                            is_four_connexity : bool = True) -> np.array:
+                            is_four_connexity : bool = True,
+                            sequential: bool = False) -> np.array:
     """
     This method builds a mask corresponding to the disturbed areas in a given DSM.
     Most of those areas correspond to water or correlation issues during the DSM generation (obstruction, etc.).
@@ -116,12 +117,13 @@ def build_disturbance_mask(dsm_path: str,
         # Output binary mask initialization
         disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
 
-        # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
-        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-            futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
-            slope_treshold, is_four_connexity) for strip in strips}
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
-                mask, window = future.result()
+        if sequential:
+            
+            for strip in tqdm(strips, desc="Sequential preprocessing..."):
+                mask, window = compute_disturbance(dsm_path, 
+                                                   Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
+                                                   slope_treshold, 
+                                                   is_four_connexity)
                 window_shape = window.flatten()
                 start_row = window_shape[1]
                 end_row = start_row + window_shape[3] - 1
@@ -136,6 +138,28 @@ def build_disturbance_mask(dsm_path: str,
                     end_row = end_row - 1
 
                 disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
+
+        else:
+            # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
+            with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
+                futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
+                slope_treshold, is_four_connexity) for strip in strips}
+                for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
+                    mask, window = future.result()
+                    window_shape = window.flatten()
+                    start_row = window_shape[1]
+                    end_row = start_row + window_shape[3] - 1
+                    start_row_mask = 0
+                    end_row_mask = mask.shape[0] - 1 
+                    if start_row > 0:
+                        start_row_mask = 1
+                        start_row = start_row + 1
+                    
+                    if end_row < dataset.height - 1:
+                        end_row_mask = end_row_mask - 1
+                        end_row = end_row - 1
+
+                    disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
 
         return disturbance_mask != 0
     
@@ -177,7 +201,8 @@ def run(dsm_path : str,
         nodata : float = None,
         slope_treshold : float = 2.0, 
         is_four_connexity : bool = True,
-        minValidHeight: float = None) -> None:
+        minValidHeight: float = None,
+        sequential: bool = False) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -231,7 +256,7 @@ def run(dsm_path : str,
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         bulldoLogger.info("Compute disturbance mask")
-        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity)
+        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity, sequential)
         bulldoLogger.info("disturbance mask: Done")
         
         # Merges and writes the quality mask

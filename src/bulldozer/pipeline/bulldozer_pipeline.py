@@ -37,7 +37,8 @@ def dsm_to_dtm(cfg: dict) -> None:
                       cfg['noData'], 
                       cfg['slopeThreshold'], 
                       cfg['fourConnexity'],
-                      cfg['minValidHeight'])
+                      cfg['minValidHeight'],
+                      cfg['sequential'])
 
     dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
     clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
