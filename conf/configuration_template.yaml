@@ -5,36 +5,29 @@
 dsmPath : "/work/scratch/lallemd/test_bulldozer_release_0.2.0/Toulouse_cropped_2.tif"
 # Output directory path (if the directory doesn't exist, create it)
 outputDir : "/work/scratch/lallemd/test_bulldozer_release_0.2.0/test_nodata/"
-# If null, bulldozer will use the maximum number of available workers on your system (warning: check the README if you're using bulldozer on cluster) 
-nbMaxWorkers : 16
 
 #-------------------------#
 #         Options         #
 #-------------------------#
 # If True, generates the DHM (DSM - DTM) in the output directory 
-createDhm : True
-# If True, generates the filled MNS : MNS without inner noData or disturbed areas
-createFilledDsm : True
-# If True, generates a logfile in the output directory
-keepLog : True
+generateDhm : True
+# If None, bulldozer will use the maximum number of available CPU on your system
+nbMaxWorkers : 16
 
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
-# If null, the output DTM CRS will be the same as the input CRS. 
+# If None, the output DTM CRS will be the same as the input CRS. 
 # Expected PROJ parameters (e.g: 'epsg:3005') or EPSG codes (e.g: 3005). FYI : WGS84 is analogous to EPSG:4326
-outputCRS : null
-# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-outputResolution : null
-# If null, the DSM resolution will be extracted from the input DSM (float value in meter)
-dsmResolution : null
-
-# Minimum valid height value, None or a float value. If None this parameter is not taken into account
-minValidHeight: 0.0
-
-# If null, the nodata value will be extracted from the input DSM (float value or nan)
-noData : null
-
+outputCRS : None
+# If None, the DSM resolution will be extracted from the input DSM (float value in meter)
+dsmResolution : None
+# Minimum valid height value, None or a float value. If None this parameter is ignored
+minValidHeight: None
+# If None, the nodata value will be extracted from the input DSM (float value or nan)
+noData : None
+# If true, keep the intermediate results
+developperMode : False
 
 #-------------------------#
 # Bulldozer core settings #
@@ -54,4 +47,3 @@ preventUnhookIter : 10
 numOuterIter : 100
 numInnerIter : 10
 mpTileSize : 1500
-sequential : False

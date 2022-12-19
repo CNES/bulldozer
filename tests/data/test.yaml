@@ -1,9 +1,0 @@
-# yaml file used to test the bulldozer config parser
-str_test : test
-int_test : 100
-boolean_test : True
-parent:
-  child: 10.3
-  child2: 13
-nan_test : nan
-none_test : null

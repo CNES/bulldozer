@@ -1,7 +1,22 @@
-# Copyright (c) 2021 Centre National d'Etudes Spatiales (CNES).
-# This file is part of Bulldozer
+#!/usr/bin/env python
+# coding: utf8
 #
-# All rights reserved.
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 """
     This module is used to preprocess the DSM in order to improve the DTM computation.
@@ -186,7 +201,7 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
     profile['dtype'] = np.uint8
     profile['count'] = 1
     # We don't except nodata value in this mask
-    profile['nodata'] = 0
+    profile['nodata'] = None
     quality_mask[disturbed_area_mask] = 2
     quality_mask[inner_nodata_mask] = 1
     quality_mask[border_nodata_mask] = 3
@@ -197,12 +212,10 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
 def run(dsm_path : str, 
         output_dir : str,
         nb_max_workers : int,
-        create_filled_dsm : bool = False,
         nodata : float = None,
         slope_treshold : float = 2.0, 
         is_four_connexity : bool = True,
-        minValidHeight: float = None,
-        sequential: bool = False) -> None:
+        minValidHeight: float = None) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -213,7 +226,6 @@ def run(dsm_path : str,
         output_dir: bulldozer output directory. The quality mask will be written in this folder.
         nb_max_workers: number of availables workers (for multiprocessing purpose).
         nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
-        create_filled_dsm: flag to indicate if bulldozer has to generate a filled DSM (without nodata or disturbed areas).
         slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
         is_four_connexity: number of evaluated axis. 
                         Vertical and horizontal if true else vertical, horizontal and diagonals.

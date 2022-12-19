@@ -1,67 +1,108 @@
-# Bulldozer
+<div align="center">
+    <img src="docs/source/_static/images/bulldozer-logo.svg" width=512>
 
-## What does it do ?
+**Bulldozer, a DTM extraction tool requiring only a DSM as input.**
 
-DTM extraction from DSM (provided by CARS or MicMac for example) using a modified and scalable drape cloth algorithm.
+[![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Documentation](https://readthedocs.org/projects/cars/badge/?version=latest)](https://github.com/CNES/bulldozer)
 
-To compute a DTM from a DSM with a size of 40000 x 40000 pixels, it takes 8 minutes approximately using a full node with 24 cores and 60 GBytes of RAM Memory.
+<p align="center">
+  <a href="#key-features">Key Features</a> •
+  <a href="#installation">Installation</a> •  
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#documentation">Documentation</a> •
+  <a href="#contribute">Contribute</a> •
+  <a href="#licence">Licence</a> •
+  <a href="#reference">Reference</a>
+</p>
 
-## Setup
+</div>
 
-First, you need to clone Bulldozer in the directory of your choice:
+---
 
-`git clone git@gitlab.cnes.fr:ai4geo/lot6/bulldozer.git`
+## Key features
 
-And go within Bulldozer directory:
-
-`cd bulldozer`
-
-Make sure you have exported `$https_proxy` and `$http_proxy` environment variables to install external required dependencies for Bulldozer.
-
-### On AI4GEO VRE
-
-Simply run:
-
-`pip install . --user`
-
-### On HAL
-
-The easiest is to have reserved enough resources before:
-
-`qsub -I -X -l walltime=05:00:00 -l select=1:ncpus=12:mem=60000MB:os=rh7 -q qdev`
-
-First you need to load python with a version >=3.7, for example:
-
-`module load python/3.8.4`
-
-An then:
-
-`pip install . --user`
+<div align="center">
+<img src="docs/source/images/overview_dsm_3d.gif" alt="drawing" width="400"/>
+</div>
 
 
-## Usage
+**Bulldozer** is designed as a pipeline of standalone functions.
+* **DSM preprocessing**
+    * **Nodata extraction:** 
+    * **Disturbed areas detection:**
+* **DTM extraction**
+    * **Nodata extraction:** 
 
-Modify the file configuration_template.yaml in the conf directory and then run:
+* **DTM postprocessing**
+    * **Nodata extraction:** 
 
-`python bulldozer/bulldozer_pipeline.py conf/configuration_template.yaml`
+## Installation
 
-## Contacts
+It is recommended to install **Bullodzer** into a virtual environment, like `conda` or `virtualenv`.
 
+* Installation with `virtualenv`:
+
+```sh
+# Clone the project
+git clone https://github.com/CNES/bullodzer.git
+cd bulldozer/
+
+# Create the environment
+python -m venv bulldozer_venv
+source bulldozer_venv/bin/activate
+
+# Install the library
+pip install .
+```
+## Quick Start
+
+1. First you have to create a configuration file or edit the `configuration_template.yaml` available in the `conf` directory. You have to update at least the following parameters:
+```yaml
+# Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
+dsmPath : "<input_dsm.tif>"
+# Output directory path (if the directory doesn't exist, create it)
+outputDir : "<output_dir>"
+```
+2. Run the pipeline:
+
+```console
+bullodzer --conf conf/configuration_template.yaml
+```
+3. ✅ Done! Your DTM is available in the *<output_dir>*
+## Documentation
+
+**Bullodzer** has some documentation. A high-level overview of how it’s organized will help you know where to look for certain things:
+
+* [Tutorials](docs/tutorials/index.md) take you by the hand through a series of steps to create a DLCooker application. Start here if you’re new to DLCooker.
+* [How-to guides](docs/how-to/index.md) are recipes. They guide you through the steps involved in addressing key problems and use-cases. They are more advanced than tutorials and assume some knowledge of how DLCooker works.
+* [Explanation guides](docs/explanation/index.md) discuss key topics and concepts at a fairly high level and provide useful background information and explanation.
+
+> **_NOTE:_** The documentation is not available online yet, it needs to be built manually.
+
+To do so, please execute the following command at the root:
+
+```console
+mkdocs serve
+```
+
+## Contribute
+
+To do a bug report or a contribution, see the [**Contribution Guide**](CONTRIBUTING.md).  
 for any help or suggestion, feel free to contact the authors:
 
-- Pierre Lassalle : pierre.lassalle@cnes.fr
 - Dimitri Lallement : dimitri.lallement@cnes.fr
+- Pierre Lassalle : pierre.lassalle@cnes.fr
+## Licence
 
-
+**Bullodzer** has a Apache V2.0 license, as found in the [LICENSE](LICENSE) file.
 
 ## Credits
 
-This package was created with Cookiecutter and the [ai4geo/cookiecutter-python](https://gitlab.cnes.fr/ai4geo/lot2/cookiecutter-python) project template.
+Please refer to the [Authors file](AUTHORS.md).
 
-## Contributing
+## Reference
 
-Commit messages follow rules defined by [Conventional Commits](https://www.conventionalcommits.org).  
-Documentation : [Google style Python Docstring](https://google.github.io/styleguide/pyguide.html) used with [PEP 484 type annotations](https://www.python.org/dev/peps/pep-0484/).  
-Style : [PEP 8](https://www.python.org/dev/peps/pep-0008/#other-recommendations) used.
-*Copyright 2021 PIERRE LASSALLE & DIMITRI LALLEMENT  
-All rights reserved*
+ [D. Lallement, P. Lassalle, Y. Ott, R. Demortier, and J. Delvit, 2022. BULLDOZER: AN AUTOMATIC SELF-DRIVEN LARGE SCALE DTM EXTRACTION METHOD FROM DIGITAL SURFACE MODEL. ISPRS - International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences.](https://www.int-arch-photogramm-remote-sens-spatial-inf-sci.net/XLIII-B2-2022/409/2022/)

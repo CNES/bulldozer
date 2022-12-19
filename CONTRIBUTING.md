@@ -2,10 +2,7 @@
 
 1. [Bug report](#bug-report)
 2. [Contributing workflow](#contributing-workflow)
-3. [Contribution license agreement](#contribution-license-agreement)
-4. [Coding guide](#coding-guide)
-5. [Pylint pre-commit validation](#pylint-pre-commit-validation)
-6. [Merge request acceptation process](#merge-request-acceptation-process)
+3. [Merge request acceptation process](#merge-request-acceptation-process)
 
 # Bug report
 
@@ -31,7 +28,6 @@ The Merge Request shall have a short description of the proposed changes. If it 
 Likewise, if you work on a branch (which is recommended), prefix the branch's name by `xx-` in order to link it to the xx issue.
 
 BULLDOZER Classical workflow is :
-* Check Licence and sign [Contributor Licence Agrement](#contribution-license-agreement) (Individual or Corporate)
 * Create an issue (or begin from an existing one)
 * Create a Merge Request from the issue: a MR is created accordingly with "WIP:", "Closes xx" and associated "xx-name-issue" branch
 * BULLDOZER hacking code from a local working directory following the bulldozer development rules

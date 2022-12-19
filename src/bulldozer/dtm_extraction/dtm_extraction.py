@@ -1,7 +1,28 @@
+#!/usr/bin/env python
+# coding: utf8
+#
+# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 from collections import namedtuple
 import concurrent.futures
 import rasterio
+import logging
 import numpy as np
 from tqdm import tqdm
 import bulldozer.springforce as sf
@@ -22,7 +43,6 @@ class ClothSimulation(object):
                  num_outer_iterations: int = 100,
                  num_inner_iterations: int= 10,
                  mp_tile_size: int = 1500,
-                 sequential: bool = False,
                  mp_nb_procs: int = 16):
         """ """
         self.max_object_size: int = max_object_size
@@ -31,7 +51,6 @@ class ClothSimulation(object):
         self.num_outer_iterations: int = num_outer_iterations
         self.num_inner_iterations: int= num_inner_iterations
         self.mp_tile_size: int = mp_tile_size
-        self.sequential: bool = sequential
         self.mp_nb_procs: int = mp_nb_procs
 
 
@@ -249,16 +268,16 @@ class ClothSimulation(object):
 
     def run(self,
             dsm_path: str,
-            output_dir: str):
+            output_dir: str,
+            nodata_val : float):
 
         # Open the dsm dataset
         in_dsm_dataset = rasterio.open(dsm_path)
         in_dsm_profile = in_dsm_dataset.profile
-        dtm_path = os.path.join(output_dir, "DTM.tif")
+        dtm_path = os.path.join(output_dir, "raw_DTM.tif")
         # Initial dsm
         dsm_pyramid = []
         dsm_pyramid.append(in_dsm_dataset.read().astype(np.float32)[0])
-        nodata_val = in_dsm_dataset.nodata
 
         # Retrieve dsm resolution
         dsm_res = self.retrieve_dsm_resolution(dsm_dataset=in_dsm_dataset)
@@ -301,11 +320,9 @@ class ClothSimulation(object):
         max_level = nb_levels - 1
         current_num_outer_iterations = self.num_outer_iterations
 
-        bulldoLogger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(output_dir, "trace.log"))
-
         while level > -1:
 
-            bulldoLogger.info("Process level " + str(level) + "...")
+            BulldozerLogger.log("Process level " + str(level) + "...", logging.INFO)
 
             if level < max_level:
                 # Upsample current dtm to the next level
@@ -314,8 +331,7 @@ class ClothSimulation(object):
             # Check if we need to tile for multi processing execution
             # We tile only if tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1])
             margin = current_num_outer_iterations * self.num_inner_iterations * self.uniform_filter_size
-            #TODO remove sequential mode
-            if not self.sequential and self.mp_tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1]):
+            if self.mp_tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1]):
                 # Build tiles and save them to disk
                 tile_pair_list = self.build_tiles(dtm= dtm,
                                                   dsm=dsm_pyramid[level],
@@ -363,7 +379,7 @@ class ClothSimulation(object):
                     os.remove(input_tile_pair[1].path)
 
                     dtm[start_y:end_y+1, start_x:end_x+1] = tile_dtm[tstart_y: tend_y + 1, tstart_x:tend_x+1]
-
+            
             else:
                 bulldoLogger.info("sequential")
                 dtm = self.sequential_drape_cloth(dtm = dtm,
@@ -382,32 +398,3 @@ class ClothSimulation(object):
         self.write_tiles(tile_buffer= dtm, 
                          tile_path = dtm_path,
                          original_profile = in_dsm_profile)
-
-# if __name__ == "__main__":
-#     #TODO change to standalone call
-#     # Input parameters
-#     input_dsm_path = "/work/scratch/lassalp/AI4GEO_WORKSPACE/PourOlivier/mergedMNS.tif"
-#     max_object_size: float = 24
-#     uniform_filter_size: int = 1
-#     prevent_unhook_iter: int = 10
-#     num_inner_iterations : int = 10
-#     num_outer_iterations : int = 100
-#     mp_tile_size: int = 1500
-#     mp_nb_procs: int = 24
-#     tmp_dir: str = "/work/scratch/lassalp/bulldozer_tmp/"
-#     output_dtm = "/work/scratch/lassalp/bulldozer_tmp/dtm.tif"
-#     sequential: bool = False
-    
-#     run(dsm_path = input_dsm_path,
-#         output_dir=tmp_dir,
-#         max_object_size = max_object_size,
-#         uniform_filter_size = uniform_filter_size,
-#         prevent_unhook_iter = prevent_unhook_iter,
-#         num_outer_iterations = num_outer_iterations,
-#         num_inner_iterations = num_inner_iterations,
-#         mp_tile_size = mp_tile_size,
-#         sequential=sequential,
-#         mp_nb_procs=mp_nb_procs)
-
-
-

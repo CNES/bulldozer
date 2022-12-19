@@ -18,6 +18,7 @@ This file keeps track of authors contributions.
 ## Contributors
 
 * Yannick Ott <yannick.ott@thalesgroup.com>
+* Rémi Demortier
 
 Update here with new contributors.
 
