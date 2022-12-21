@@ -17,25 +17,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-from BorderNodata cimport BorderNodata
 import numpy as np
+from bulldozer.utils.helper import npAsContiguousArray
 
-def npAsContiguousArray(arr : np.array) -> np.array:
-    """
-    This method checks that the input array is contiguous. 
-    If not, returns the contiguous version of the input numpy array.
+# Begin PXD
 
-    Args:
-        arr: input array.
+# Necessary to include the C++ code
+cdef extern from "c_bordernodata.cpp":
+    pass
 
-    Returns:
-        contiguous array usable in C++.
-    """
-    if not arr.flags['C_CONTIGUOUS']:
-        arr = np.ascontiguousarray(arr)
-    return arr
+# Declare the class with cdef
+cdef extern from "c_bordernodata.h" namespace "bulldozer":
+
+    cdef cppclass BorderNodata:
+        
+        BorderNodata() except +
+        void buildBorderNodataMask(float *, unsigned char *, unsigned int, unsigned int, float)
+
+# End PXD
 
 # Create a Cython extension type which holds a C++ instance
 # as an attribute and create a bunch of forwarding methods
@@ -65,10 +64,8 @@ cdef class PyBorderNodata:
         Returns:
             mask of the border nodata areas in the input DSM window.
         """
-        if not no_data_value:
-            np.nan_to_num(dsm_strip, copy=False,nan=-32768)
-            no_data_value = -32768
-            cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
+
+        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
         cdef unsigned char[::1] border_nodata_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
         # Border nodata detection

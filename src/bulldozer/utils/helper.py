@@ -87,8 +87,8 @@ def retrieve_nodata(dsm_path : str, cfg_nodata : float = None) -> float:
     
     # If nodata is not specified in the config file, retrieve the value from the DSM metadata
     with rasterio.open(dsm_path) as dsm_dataset:
-            nodata = dsm_dataset.nodata
-            return nodata
+        nodata = dsm_dataset.nodata
+        return nodata
     
     # By default, if no value is set for nodata, return None
     return None

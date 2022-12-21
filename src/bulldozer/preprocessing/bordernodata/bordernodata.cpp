@@ -4,19 +4,19 @@
 {
     "distutils": {
         "depends": [
-            "src/bulldozer/preprocessing/disturbedareas/c_disturbedareas.cpp",
-            "src/bulldozer/preprocessing/disturbedareas/c_disturbedareas.h"
+            "src/bulldozer/preprocessing/bordernodata/c_bordernodata.cpp",
+            "src/bulldozer/preprocessing/bordernodata/c_bordernodata.h"
         ],
         "include_dirs": [
-            "src/bulldozer/preprocessing/disturbedareas"
+            "src/bulldozer/preprocessing/bordernodata"
         ],
         "language": "c++",
-        "name": "bulldozer.disturbedareas",
+        "name": "bulldozer.bordernodata",
         "sources": [
-            "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx"
+            "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx"
         ]
     },
-    "module_name": "bulldozer.disturbedareas"
+    "module_name": "bulldozer.bordernodata"
 }
 END: Cython Metadata */
 
@@ -772,15 +772,15 @@ static CYTHON_INLINE float __PYX_NAN() {
   #endif
 #endif
 
-#define __PYX_HAVE__bulldozer__disturbedareas
-#define __PYX_HAVE_API__bulldozer__disturbedareas
+#define __PYX_HAVE__bulldozer__bordernodata
+#define __PYX_HAVE_API__bulldozer__bordernodata
 /* Early includes */
-#include "c_disturbedareas.cpp"
+#include "c_bordernodata.cpp"
 #include "ios"
 #include "new"
 #include "stdexcept"
 #include "typeinfo"
-#include "c_disturbedareas.h"
+#include "c_bordernodata.h"
 #include "pythread.h"
 #include <string.h>
 #include <stdlib.h>
@@ -996,7 +996,7 @@ static const char *__pyx_filename;
 
 static const char *__pyx_f[] = {
   "stringsource",
-  "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx",
+  "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx",
 };
 /* MemviewSliceStruct.proto */
 struct __pyx_memoryview_obj;
@@ -1104,22 +1104,22 @@ typedef struct {
 
 
 /*--- Type declarations ---*/
-struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas;
+struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata;
 struct __pyx_array_obj;
 struct __pyx_MemviewEnum_obj;
 struct __pyx_memoryview_obj;
 struct __pyx_memoryviewslice_obj;
 
-/* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":41
+/* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":42
  * # as an attribute and create a bunch of forwarding methods
  * # Python extension type.
- * cdef class PyDisturbedAreas:             # <<<<<<<<<<<<<<
+ * cdef class PyBorderNodata:             # <<<<<<<<<<<<<<
  * 
- *     cdef DisturbedAreas disturbed_areas # Hold a C++ instance wich we're wrapping
+ *     cdef BorderNodata border_nodata # Hold a C++ instance wich we're wrapping
  */
-struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas {
+struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata {
   PyObject_HEAD
-  bulldozer::DisturbedAreas disturbed_areas;
+  bulldozer::BorderNodata border_nodata;
 };
 
 
@@ -1322,6 +1322,13 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 /* GetBuiltinName.proto */
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
+/* RaiseArgTupleInvalid.proto */
+static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
+    Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
+
+/* KeywordStringCheck.proto */
+static int __Pyx_CheckKeywordStrings(PyObject *kwdict, const char* function_name, int kw_allowed);
+
 /* RaiseDoubleKeywords.proto */
 static void __Pyx_RaiseDoubleKeywordsError(const char* func_name, PyObject* kw_name);
 
@@ -1329,10 +1336,6 @@ static void __Pyx_RaiseDoubleKeywordsError(const char* func_name, PyObject* kw_n
 static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
     PyObject *kwds2, PyObject *values[], Py_ssize_t num_pos_args,\
     const char* function_name);
-
-/* RaiseArgTupleInvalid.proto */
-static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
-    Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
 /* PyDictVersioning.proto */
 #if CYTHON_USE_DICT_VERSIONS && CYTHON_USE_TYPE_SLOTS
@@ -1954,10 +1957,8 @@ static PyObject *__pyx_memoryview_assign_item_from_object(struct __pyx_memoryvie
 static PyObject *__pyx_memoryviewslice_convert_item_to_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp); /* proto*/
 static PyObject *__pyx_memoryviewslice_assign_item_from_object(struct __pyx_memoryviewslice_obj *__pyx_v_self, char *__pyx_v_itemp, PyObject *__pyx_v_value); /* proto*/
 
-/* Module declarations from 'libcpp' */
-
-/* Module declarations from 'bulldozer.disturbedareas' */
-static PyTypeObject *__pyx_ptype_9bulldozer_14disturbedareas_PyDisturbedAreas = 0;
+/* Module declarations from 'bulldozer.bordernodata' */
+static PyTypeObject *__pyx_ptype_9bulldozer_12bordernodata_PyBorderNodata = 0;
 static PyTypeObject *__pyx_array_type = 0;
 static PyTypeObject *__pyx_MemviewEnum_type = 0;
 static PyTypeObject *__pyx_memoryview_type = 0;
@@ -2004,11 +2005,11 @@ static void __pyx_memoryview__slice_assign_scalar(char *, Py_ssize_t *, Py_ssize
 static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *, PyObject *); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_float = { "float", NULL, sizeof(float), { 0 }, 0, 'R', 0, 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_unsigned_char = { "unsigned char", NULL, sizeof(unsigned char), { 0 }, 0, IS_UNSIGNED(unsigned char) ? 'U' : 'I', IS_UNSIGNED(unsigned char), 0 };
-#define __Pyx_MODULE_NAME "bulldozer.disturbedareas"
-extern int __pyx_module_is_main_bulldozer__disturbedareas;
-int __pyx_module_is_main_bulldozer__disturbedareas = 0;
+#define __Pyx_MODULE_NAME "bulldozer.bordernodata"
+extern int __pyx_module_is_main_bulldozer__bordernodata;
+int __pyx_module_is_main_bulldozer__bordernodata = 0;
 
-/* Implementation of 'bulldozer.disturbedareas' */
+/* Implementation of 'bulldozer.bordernodata' */
 static PyObject *__pyx_builtin_TypeError;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_MemoryError;
@@ -2083,14 +2084,12 @@ static const char __pyx_k_stringsource[] = "stringsource";
 static const char __pyx_k_no_data_value[] = "no_data_value";
 static const char __pyx_k_pyx_getbuffer[] = "__pyx_getbuffer";
 static const char __pyx_k_reduce_cython[] = "__reduce_cython__";
-static const char __pyx_k_slope_treshold[] = "slope_treshold";
+static const char __pyx_k_PyBorderNodata[] = "PyBorderNodata";
 static const char __pyx_k_View_MemoryView[] = "View.MemoryView";
 static const char __pyx_k_allocate_buffer[] = "allocate_buffer";
 static const char __pyx_k_dtype_is_object[] = "dtype_is_object";
 static const char __pyx_k_pyx_PickleError[] = "__pyx_PickleError";
 static const char __pyx_k_setstate_cython[] = "__setstate_cython__";
-static const char __pyx_k_PyDisturbedAreas[] = "PyDisturbedAreas";
-static const char __pyx_k_is_four_connexity[] = "is_four_connexity";
 static const char __pyx_k_pyx_unpickle_Enum[] = "__pyx_unpickle_Enum";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
 static const char __pyx_k_strided_and_direct[] = "<strided and direct>";
@@ -2138,7 +2137,7 @@ static PyObject *__pyx_kp_s_MemoryView_of_r_object;
 static PyObject *__pyx_n_b_O;
 static PyObject *__pyx_kp_s_Out_of_bounds_on_buffer_access_a;
 static PyObject *__pyx_n_s_PickleError;
-static PyObject *__pyx_n_s_PyDisturbedAreas;
+static PyObject *__pyx_n_s_PyBorderNodata;
 static PyObject *__pyx_n_s_TypeError;
 static PyObject *__pyx_kp_s_Unable_to_convert_item_to_object;
 static PyObject *__pyx_n_s_ValueError;
@@ -2172,7 +2171,6 @@ static PyObject *__pyx_n_s_getstate;
 static PyObject *__pyx_kp_s_got_differing_extents_in_dimensi;
 static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_import;
-static PyObject *__pyx_n_s_is_four_connexity;
 static PyObject *__pyx_n_s_itemsize;
 static PyObject *__pyx_kp_s_itemsize_0_for_cython_array;
 static PyObject *__pyx_n_s_main;
@@ -2207,7 +2205,6 @@ static PyObject *__pyx_n_s_setstate;
 static PyObject *__pyx_n_s_setstate_cython;
 static PyObject *__pyx_n_s_shape;
 static PyObject *__pyx_n_s_size;
-static PyObject *__pyx_n_s_slope_treshold;
 static PyObject *__pyx_n_s_start;
 static PyObject *__pyx_n_s_step;
 static PyObject *__pyx_n_s_stop;
@@ -2223,10 +2220,10 @@ static PyObject *__pyx_kp_s_unable_to_allocate_shape_and_str;
 static PyObject *__pyx_n_s_unpack;
 static PyObject *__pyx_n_s_update;
 static PyObject *__pyx_n_s_zeros;
-static int __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas___cinit__(struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, PyObject *__pyx_v_is_four_connexity); /* proto */
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_disturbance_mask(struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, PyObject *__pyx_v_dsm_strip, double __pyx_v_slope_treshold, double __pyx_v_no_data_value); /* proto */
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
+static int __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata___cinit__(struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_2build_border_nodata_mask(struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self, PyObject *__pyx_v_dsm_strip, double __pyx_v_no_data_value); /* proto */
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array___cinit__(struct __pyx_array_obj *__pyx_v_self, PyObject *__pyx_v_shape, Py_ssize_t __pyx_v_itemsize, PyObject *__pyx_v_format, PyObject *__pyx_v_mode, int __pyx_v_allocate_buffer); /* proto */
 static int __pyx_array___pyx_pf_15View_dot_MemoryView_5array_2__getbuffer__(struct __pyx_array_obj *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_array___pyx_pf_15View_dot_MemoryView_5array_4__dealloc__(struct __pyx_array_obj *__pyx_v_self); /* proto */
@@ -2269,7 +2266,7 @@ static PyObject *__pyx_pf_15View_dot_MemoryView_16_memoryviewslice_4base___get__
 static PyObject *__pyx_pf___pyx_memoryviewslice___reduce_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf___pyx_memoryviewslice_2__setstate_cython__(CYTHON_UNUSED struct __pyx_memoryviewslice_obj *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state); /* proto */
 static PyObject *__pyx_pf_15View_dot_MemoryView___pyx_unpickle_Enum(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v___pyx_type, long __pyx_v___pyx_checksum, PyObject *__pyx_v___pyx_state); /* proto */
-static PyObject *__pyx_tp_new_9bulldozer_14disturbedareas_PyDisturbedAreas(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_9bulldozer_12bordernodata_PyBorderNodata(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_array(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_Enum(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_memoryview(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
@@ -2310,148 +2307,100 @@ static PyObject *__pyx_tuple__27;
 static PyObject *__pyx_codeobj__28;
 /* Late includes */
 
-/* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":45
- *     cdef DisturbedAreas disturbed_areas # Hold a C++ instance wich we're wrapping
+/* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":46
+ *     cdef BorderNodata border_nodata # Hold a C++ instance wich we're wrapping
  * 
- *     def __cinit__(self, is_four_connexity=True):             # <<<<<<<<<<<<<<
- *         self.disturbed_areas = DisturbedAreas(is_four_connexity)
- * 
+ *     def __cinit__(self):             # <<<<<<<<<<<<<<
+ *         """
+ *         Default constructor.
  */
 
 /* Python wrapper */
-static int __pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_is_four_connexity = 0;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
+static int __pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
-  {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_is_four_connexity,0};
-    PyObject* values[1] = {0};
-    values[0] = ((PyObject *)Py_True);
-    if (unlikely(__pyx_kwds)) {
-      Py_ssize_t kw_args;
-      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
-      switch (pos_args) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-      kw_args = PyDict_Size(__pyx_kwds);
-      switch (pos_args) {
-        case  0:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_is_four_connexity);
-          if (value) { values[0] = value; kw_args--; }
-        }
-      }
-      if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) __PYX_ERR(1, 45, __pyx_L3_error)
-      }
-    } else {
-      switch (PyTuple_GET_SIZE(__pyx_args)) {
-        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
-        CYTHON_FALLTHROUGH;
-        case  0: break;
-        default: goto __pyx_L5_argtuple_error;
-      }
-    }
-    __pyx_v_is_four_connexity = values[0];
-  }
-  goto __pyx_L4_argument_unpacking_done;
-  __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 0, 1, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 45, __pyx_L3_error)
-  __pyx_L3_error:;
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __Pyx_RefNannyFinishContext();
-  return -1;
-  __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas___cinit__(((struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)__pyx_v_self), __pyx_v_is_four_connexity);
+  if (unlikely(PyTuple_GET_SIZE(__pyx_args) > 0)) {
+    __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 0, 0, PyTuple_GET_SIZE(__pyx_args)); return -1;}
+  if (unlikely(__pyx_kwds) && unlikely(PyDict_Size(__pyx_kwds) > 0) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "__cinit__", 0))) return -1;
+  __pyx_r = __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata___cinit__(((struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas___cinit__(struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, PyObject *__pyx_v_is_four_connexity) {
+static int __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata___cinit__(struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
-  bool __pyx_t_1;
-  bulldozer::DisturbedAreas __pyx_t_2;
+  bulldozer::BorderNodata __pyx_t_1;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":46
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":50
+ *         Default constructor.
+ *         """
+ *         self.border_nodata = BorderNodata()             # <<<<<<<<<<<<<<
  * 
- *     def __cinit__(self, is_four_connexity=True):
- *         self.disturbed_areas = DisturbedAreas(is_four_connexity)             # <<<<<<<<<<<<<<
  * 
- *     def build_disturbance_mask(self,
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_is_four_connexity); if (unlikely((__pyx_t_1 == ((bool)-1)) && PyErr_Occurred())) __PYX_ERR(1, 46, __pyx_L1_error)
   try {
-    __pyx_t_2 = bulldozer::DisturbedAreas(__pyx_t_1);
+    __pyx_t_1 = bulldozer::BorderNodata();
   } catch(...) {
     __Pyx_CppExn2PyErr();
-    __PYX_ERR(1, 46, __pyx_L1_error)
+    __PYX_ERR(1, 50, __pyx_L1_error)
   }
-  __pyx_v_self->disturbed_areas = __pyx_t_2;
+  __pyx_v_self->border_nodata = __pyx_t_1;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":45
- *     cdef DisturbedAreas disturbed_areas # Hold a C++ instance wich we're wrapping
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":46
+ *     cdef BorderNodata border_nodata # Hold a C++ instance wich we're wrapping
  * 
- *     def __cinit__(self, is_four_connexity=True):             # <<<<<<<<<<<<<<
- *         self.disturbed_areas = DisturbedAreas(is_four_connexity)
- * 
+ *     def __cinit__(self):             # <<<<<<<<<<<<<<
+ *         """
+ *         Default constructor.
  */
 
   /* function exit code */
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.bordernodata.PyBorderNodata.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":48
- *         self.disturbed_areas = DisturbedAreas(is_four_connexity)
+/* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":53
  * 
- *     def build_disturbance_mask(self,             # <<<<<<<<<<<<<<
+ * 
+ *     def build_border_nodata_mask(self,             # <<<<<<<<<<<<<<
  *                                dsm_strip : np.array,
- *                                slope_treshold : float,
+ *                                no_data_value : float):
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_3build_disturbance_mask(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_disturbance_mask[] = "PyDisturbedAreas.build_disturbance_mask(self, dsm_strip: np.array, double slope_treshold: float, double no_data_value: float)\n\n        This method detects the disturbed areas along horizontal axis in the input DSM window.\n        For the disturbed areas along vertical axis, transpose the input DSM window.\n\n        Args:\n            dsm_strip: part of the DSM analyzed.\n            slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.\n            is_four_connexity: number of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.\n            no_data_value: nodata value used in the input DSM.\n        Returns:\n            mask of the disturbed areas in the input DSM window.\n        ";
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_3build_disturbance_mask(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_3build_border_nodata_mask(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_2build_border_nodata_mask[] = "PyBorderNodata.build_border_nodata_mask(self, dsm_strip: np.array, double no_data_value: float)\n\n        This method detects the border nodata areas in the input DSM window.\n        For the border nodata along vertical axis, transpose the input DSM window.\n\n        Args:\n            dsm_strip: part of the DSM analyzed.\n            no_data_value: nodata value used in the input DSM.\n        \n        Returns:\n            mask of the border nodata areas in the input DSM window.\n        ";
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_3build_border_nodata_mask(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_dsm_strip = 0;
-  double __pyx_v_slope_treshold;
   double __pyx_v_no_data_value;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("build_disturbance_mask (wrapper)", 0);
+  __Pyx_RefNannySetupContext("build_border_nodata_mask (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_dsm_strip,&__pyx_n_s_slope_treshold,&__pyx_n_s_no_data_value,0};
-    PyObject* values[3] = {0,0,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_dsm_strip,&__pyx_n_s_no_data_value,0};
+    PyObject* values[2] = {0,0};
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
-        CYTHON_FALLTHROUGH;
         case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
         CYTHON_FALLTHROUGH;
         case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
@@ -2466,49 +2415,41 @@ static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_3build_
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_slope_treshold)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_no_data_value)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("build_disturbance_mask", 1, 3, 3, 1); __PYX_ERR(1, 48, __pyx_L3_error)
-        }
-        CYTHON_FALLTHROUGH;
-        case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_no_data_value)) != 0)) kw_args--;
-        else {
-          __Pyx_RaiseArgtupleInvalid("build_disturbance_mask", 1, 3, 3, 2); __PYX_ERR(1, 48, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("build_border_nodata_mask", 1, 2, 2, 1); __PYX_ERR(1, 53, __pyx_L3_error)
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "build_disturbance_mask") < 0)) __PYX_ERR(1, 48, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "build_border_nodata_mask") < 0)) __PYX_ERR(1, 53, __pyx_L3_error)
       }
-    } else if (PyTuple_GET_SIZE(__pyx_args) != 3) {
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
       goto __pyx_L5_argtuple_error;
     } else {
       values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
       values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
-      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
     }
     __pyx_v_dsm_strip = values[0];
-    __pyx_v_slope_treshold = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_slope_treshold == (double)-1) && PyErr_Occurred())) __PYX_ERR(1, 50, __pyx_L3_error)
-    __pyx_v_no_data_value = __pyx_PyFloat_AsDouble(values[2]); if (unlikely((__pyx_v_no_data_value == (double)-1) && PyErr_Occurred())) __PYX_ERR(1, 51, __pyx_L3_error)
+    __pyx_v_no_data_value = __pyx_PyFloat_AsDouble(values[1]); if (unlikely((__pyx_v_no_data_value == (double)-1) && PyErr_Occurred())) __PYX_ERR(1, 55, __pyx_L3_error)
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("build_disturbance_mask", 1, 3, 3, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 48, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("build_border_nodata_mask", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(1, 53, __pyx_L3_error)
   __pyx_L3_error:;
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.build_disturbance_mask", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.bordernodata.PyBorderNodata.build_border_nodata_mask", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_disturbance_mask(((struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)__pyx_v_self), __pyx_v_dsm_strip, __pyx_v_slope_treshold, __pyx_v_no_data_value);
+  __pyx_r = __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_2build_border_nodata_mask(((struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)__pyx_v_self), __pyx_v_dsm_strip, __pyx_v_no_data_value);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_disturbance_mask(struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, PyObject *__pyx_v_dsm_strip, double __pyx_v_slope_treshold, double __pyx_v_no_data_value) {
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_2build_border_nodata_mask(struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self, PyObject *__pyx_v_dsm_strip, double __pyx_v_no_data_value) {
   __Pyx_memviewslice __pyx_v_dsm_memview = { 0, 0, { 0 }, { 0 }, { 0 } };
-  __Pyx_memviewslice __pyx_v_disturbance_mask_memview = { 0, 0, { 0 }, { 0 }, { 0 } };
+  __Pyx_memviewslice __pyx_v_border_nodata_mask_memview = { 0, 0, { 0 }, { 0 }, { 0 } };
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2528,18 +2469,18 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  __Pyx_RefNannySetupContext("build_disturbance_mask", 0);
+  __Pyx_RefNannySetupContext("build_border_nodata_mask", 0);
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":64
- *             mask of the disturbed areas in the input DSM window.
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":68
  *         """
+ * 
  *         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))             # <<<<<<<<<<<<<<
  *         # Ouput mask that will be filled by the C++ part
- *         cdef unsigned char[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
+ *         cdef unsigned char[::1] border_nodata_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_flatten); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_flatten); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __pyx_t_6 = NULL;
   if (CYTHON_UNPACK_METHODS && likely(PyMethod_Check(__pyx_t_5))) {
@@ -2553,15 +2494,15 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   }
   __pyx_t_4 = (__pyx_t_6) ? __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6) : __Pyx_PyObject_CallNoArg(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 64, __pyx_L1_error)
+  if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_astype); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_astype); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_4, __pyx_n_s_np); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float32); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_4, __pyx_n_s_float32); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_t_4 = NULL;
@@ -2577,7 +2518,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __pyx_t_3 = (__pyx_t_4) ? __Pyx_PyObject_Call2Args(__pyx_t_5, __pyx_t_4, __pyx_t_6) : __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6);
   __Pyx_XDECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 64, __pyx_L1_error)
+  if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __pyx_t_5 = NULL;
@@ -2593,58 +2534,58 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __pyx_t_1 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_5, __pyx_t_3) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 64, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dc_float(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(1, 64, __pyx_L1_error)
+  __pyx_t_7 = __Pyx_PyObject_to_MemoryviewSlice_dc_float(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_7.memview)) __PYX_ERR(1, 68, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __pyx_v_dsm_memview = __pyx_t_7;
   __pyx_t_7.memview = NULL;
   __pyx_t_7.data = NULL;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":66
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":70
  *         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
  *         # Ouput mask that will be filled by the C++ part
- *         cdef unsigned char[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))             # <<<<<<<<<<<<<<
- *         # Disturbance detection
- *         self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_treshold, no_data_value)
+ *         cdef unsigned char[::1] border_nodata_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))             # <<<<<<<<<<<<<<
+ *         # Border nodata detection
+ *         self.border_nodata.buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], no_data_value)
  */
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_zeros); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_GetItemInt(__pyx_t_3, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_3, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_GetItemInt(__pyx_t_3, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = PyNumber_Multiply(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_3 = PyNumber_Multiply(__pyx_t_6, __pyx_t_4); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_4 = PyTuple_New(1); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_GIVEREF(__pyx_t_3);
   PyTuple_SET_ITEM(__pyx_t_4, 0, __pyx_t_3);
   __pyx_t_3 = 0;
-  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyDict_NewPresized(1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_6, __pyx_n_s_np); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_uint8); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_t_6, __pyx_n_s_uint8); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_8) < 0) __PYX_ERR(1, 66, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_t_3, __pyx_n_s_dtype, __pyx_t_8) < 0) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_Call(__pyx_t_5, __pyx_t_4, __pyx_t_3); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -2662,21 +2603,21 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __pyx_t_1 = (__pyx_t_3) ? __Pyx_PyObject_Call2Args(__pyx_t_2, __pyx_t_3, __pyx_t_8) : __Pyx_PyObject_CallOneArg(__pyx_t_2, __pyx_t_8);
   __Pyx_XDECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 66, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_dc_unsigned_char(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(1, 66, __pyx_L1_error)
+  __pyx_t_9 = __Pyx_PyObject_to_MemoryviewSlice_dc_unsigned_char(__pyx_t_1, PyBUF_WRITABLE); if (unlikely(!__pyx_t_9.memview)) __PYX_ERR(1, 70, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_disturbance_mask_memview = __pyx_t_9;
+  __pyx_v_border_nodata_mask_memview = __pyx_t_9;
   __pyx_t_9.memview = NULL;
   __pyx_t_9.data = NULL;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":68
- *         cdef unsigned char[::1] disturbance_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
- *         # Disturbance detection
- *         self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_treshold, no_data_value)             # <<<<<<<<<<<<<<
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":72
+ *         cdef unsigned char[::1] border_nodata_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
+ *         # Border nodata detection
+ *         self.border_nodata.buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], no_data_value)             # <<<<<<<<<<<<<<
  *         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
- *         return np.asarray(disturbance_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool)
+ *         return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool)
  */
   __pyx_t_10 = 0;
   __pyx_t_11 = -1;
@@ -2686,46 +2627,46 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   } else if (unlikely(__pyx_t_10 >= __pyx_v_dsm_memview.shape[0])) __pyx_t_11 = 0;
   if (unlikely(__pyx_t_11 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_11);
-    __PYX_ERR(1, 68, __pyx_L1_error)
+    __PYX_ERR(1, 72, __pyx_L1_error)
   }
   __pyx_t_12 = 0;
   __pyx_t_11 = -1;
   if (__pyx_t_12 < 0) {
-    __pyx_t_12 += __pyx_v_disturbance_mask_memview.shape[0];
+    __pyx_t_12 += __pyx_v_border_nodata_mask_memview.shape[0];
     if (unlikely(__pyx_t_12 < 0)) __pyx_t_11 = 0;
-  } else if (unlikely(__pyx_t_12 >= __pyx_v_disturbance_mask_memview.shape[0])) __pyx_t_11 = 0;
+  } else if (unlikely(__pyx_t_12 >= __pyx_v_border_nodata_mask_memview.shape[0])) __pyx_t_11 = 0;
   if (unlikely(__pyx_t_11 != -1)) {
     __Pyx_RaiseBufferIndexError(__pyx_t_11);
-    __PYX_ERR(1, 68, __pyx_L1_error)
+    __PYX_ERR(1, 72, __pyx_L1_error)
   }
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_GetItemInt(__pyx_t_1, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_13 = __Pyx_PyInt_As_unsigned_int(__pyx_t_2); if (unlikely((__pyx_t_13 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_13 = __Pyx_PyInt_As_unsigned_int(__pyx_t_2); if (unlikely((__pyx_t_13 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_GetItemInt(__pyx_t_2, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_14 = __Pyx_PyInt_As_unsigned_int(__pyx_t_1); if (unlikely((__pyx_t_14 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(1, 68, __pyx_L1_error)
+  __pyx_t_14 = __Pyx_PyInt_As_unsigned_int(__pyx_t_1); if (unlikely((__pyx_t_14 == (unsigned int)-1) && PyErr_Occurred())) __PYX_ERR(1, 72, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_v_self->disturbed_areas.build_disturbance_mask((&(*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_dsm_memview.data) + __pyx_t_10)) )))), (&(*((unsigned char *) ( /* dim=0 */ ((char *) (((unsigned char *) __pyx_v_disturbance_mask_memview.data) + __pyx_t_12)) )))), __pyx_t_13, __pyx_t_14, __pyx_v_slope_treshold, __pyx_v_no_data_value);
+  __pyx_v_self->border_nodata.buildBorderNodataMask((&(*((float *) ( /* dim=0 */ ((char *) (((float *) __pyx_v_dsm_memview.data) + __pyx_t_10)) )))), (&(*((unsigned char *) ( /* dim=0 */ ((char *) (((unsigned char *) __pyx_v_border_nodata_mask_memview.data) + __pyx_t_12)) )))), __pyx_t_13, __pyx_t_14, __pyx_v_no_data_value);
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":70
- *         self.disturbed_areas.build_disturbance_mask(&dsm_memview[0], &disturbance_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_treshold, no_data_value)
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":74
+ *         self.border_nodata.buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], no_data_value)
  *         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
- *         return np.asarray(disturbance_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool)             # <<<<<<<<<<<<<<
+ *         return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool)             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_3, __pyx_n_s_np); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_asarray); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_3, __pyx_n_s_asarray); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_disturbance_mask_memview, 1, (PyObject *(*)(char *)) __pyx_memview_get_unsigned_char, (int (*)(char *, PyObject *)) __pyx_memview_set_unsigned_char, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_3 = __pyx_memoryview_fromslice(__pyx_v_border_nodata_mask_memview, 1, (PyObject *(*)(char *)) __pyx_memview_get_unsigned_char, (int (*)(char *, PyObject *)) __pyx_memview_set_unsigned_char, 0);; if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __pyx_t_5 = NULL;
   if (CYTHON_UNPACK_METHODS && unlikely(PyMethod_Check(__pyx_t_4))) {
@@ -2740,20 +2681,20 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __pyx_t_8 = (__pyx_t_5) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_5, __pyx_t_3) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_3);
   __Pyx_XDECREF(__pyx_t_5); __pyx_t_5 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 70, __pyx_L1_error)
+  if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_8, __pyx_n_s_reshape); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_8, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_t_8, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_3);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_8 = __Pyx_PyObject_GetAttrStr(__pyx_v_dsm_strip, __pyx_n_s_shape); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_8);
-  __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_5 = __Pyx_GetItemInt(__pyx_t_8, 1, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(!__pyx_t_5)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_5);
   __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
   __pyx_t_8 = NULL;
@@ -2771,7 +2712,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   #if CYTHON_FAST_PYCALL
   if (PyFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_8, __pyx_t_3, __pyx_t_5};
-    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_11, 2+__pyx_t_11); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 70, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_11, 2+__pyx_t_11); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 74, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -2781,7 +2722,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   #if CYTHON_FAST_PYCCALL
   if (__Pyx_PyFastCFunction_Check(__pyx_t_4)) {
     PyObject *__pyx_temp[3] = {__pyx_t_8, __pyx_t_3, __pyx_t_5};
-    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_11, 2+__pyx_t_11); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 70, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyCFunction_FastCall(__pyx_t_4, __pyx_temp+1-__pyx_t_11, 2+__pyx_t_11); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 74, __pyx_L1_error)
     __Pyx_XDECREF(__pyx_t_8); __pyx_t_8 = 0;
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -2789,7 +2730,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   } else
   #endif
   {
-    __pyx_t_6 = PyTuple_New(2+__pyx_t_11); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 70, __pyx_L1_error)
+    __pyx_t_6 = PyTuple_New(2+__pyx_t_11); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 74, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_6);
     if (__pyx_t_8) {
       __Pyx_GIVEREF(__pyx_t_8); PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_8); __pyx_t_8 = NULL;
@@ -2800,17 +2741,17 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
     PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_11, __pyx_t_5);
     __pyx_t_3 = 0;
     __pyx_t_5 = 0;
-    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 70, __pyx_L1_error)
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 74, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_2);
     __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
   }
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_astype); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_4 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_astype); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_4);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __Pyx_GetModuleGlobalName(__pyx_t_2, __pyx_n_s_np); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_bool); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 70, __pyx_L1_error)
+  __pyx_t_6 = __Pyx_PyObject_GetAttrStr(__pyx_t_2, __pyx_n_s_bool); if (unlikely(!__pyx_t_6)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_6);
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_t_2 = NULL;
@@ -2826,19 +2767,19 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __pyx_t_1 = (__pyx_t_2) ? __Pyx_PyObject_Call2Args(__pyx_t_4, __pyx_t_2, __pyx_t_6) : __Pyx_PyObject_CallOneArg(__pyx_t_4, __pyx_t_6);
   __Pyx_XDECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 70, __pyx_L1_error)
+  if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 74, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":48
- *         self.disturbed_areas = DisturbedAreas(is_four_connexity)
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":53
  * 
- *     def build_disturbance_mask(self,             # <<<<<<<<<<<<<<
+ * 
+ *     def build_border_nodata_mask(self,             # <<<<<<<<<<<<<<
  *                                dsm_strip : np.array,
- *                                slope_treshold : float,
+ *                                no_data_value : float):
  */
 
   /* function exit code */
@@ -2852,11 +2793,11 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
   __PYX_XDEC_MEMVIEW(&__pyx_t_7, 1);
   __Pyx_XDECREF(__pyx_t_8);
   __PYX_XDEC_MEMVIEW(&__pyx_t_9, 1);
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.build_disturbance_mask", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.bordernodata.PyBorderNodata.build_border_nodata_mask", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __PYX_XDEC_MEMVIEW(&__pyx_v_dsm_memview, 1);
-  __PYX_XDEC_MEMVIEW(&__pyx_v_disturbance_mask_memview, 1);
+  __PYX_XDEC_MEMVIEW(&__pyx_v_border_nodata_mask_memview, 1);
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
@@ -2869,20 +2810,20 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static char __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__reduce_cython__[] = "PyDisturbedAreas.__reduce_cython__(self)";
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static char __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_4__reduce_cython__[] = "PyBorderNodata.__reduce_cython__(self)";
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_5__reduce_cython__(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__reduce_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__reduce_cython__(((struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)__pyx_v_self));
+  __pyx_r = __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_4__reduce_cython__(((struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self) {
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_4__reduce_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2912,7 +2853,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__redu
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.bordernodata.PyBorderNodata.__reduce_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -2927,20 +2868,20 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__redu
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
-static char __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__setstate_cython__[] = "PyDisturbedAreas.__setstate_cython__(self, __pyx_state)";
-static PyObject *__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state); /*proto*/
+static char __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_6__setstate_cython__[] = "PyBorderNodata.__setstate_cython__(self, __pyx_state)";
+static PyObject *__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_7__setstate_cython__(PyObject *__pyx_v_self, PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__setstate_cython__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__setstate_cython__(((struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
+  __pyx_r = __pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_6__setstate_cython__(((struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)__pyx_v_self), ((PyObject *)__pyx_v___pyx_state));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
+static PyObject *__pyx_pf_9bulldozer_12bordernodata_14PyBorderNodata_6__setstate_cython__(CYTHON_UNUSED struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *__pyx_v_self, CYTHON_UNUSED PyObject *__pyx_v___pyx_state) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2970,7 +2911,7 @@ static PyObject *__pyx_pf_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__sets
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("bulldozer.disturbedareas.PyDisturbedAreas.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("bulldozer.bordernodata.PyBorderNodata.__setstate_cython__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -16018,8 +15959,8 @@ static PyObject *__pyx_unpickle_Enum__set_state(struct __pyx_MemviewEnum_obj *__
   return __pyx_r;
 }
 
-static PyObject *__pyx_tp_new_9bulldozer_14disturbedareas_PyDisturbedAreas(PyTypeObject *t, PyObject *a, PyObject *k) {
-  struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *p;
+static PyObject *__pyx_tp_new_9bulldozer_12bordernodata_PyBorderNodata(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -16027,39 +15968,39 @@ static PyObject *__pyx_tp_new_9bulldozer_14disturbedareas_PyDisturbedAreas(PyTyp
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)o);
-  new((void*)&(p->disturbed_areas)) bulldozer::DisturbedAreas();
-  if (unlikely(__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_1__cinit__(o, a, k) < 0)) goto bad;
+  p = ((struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)o);
+  new((void*)&(p->border_nodata)) bulldozer::BorderNodata();
+  if (unlikely(__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_1__cinit__(o, __pyx_empty_tuple, NULL) < 0)) goto bad;
   return o;
   bad:
   Py_DECREF(o); o = 0;
   return NULL;
 }
 
-static void __pyx_tp_dealloc_9bulldozer_14disturbedareas_PyDisturbedAreas(PyObject *o) {
-  struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *p = (struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas *)o;
+static void __pyx_tp_dealloc_9bulldozer_12bordernodata_PyBorderNodata(PyObject *o) {
+  struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *p = (struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata *)o;
   #if CYTHON_USE_TP_FINALIZE
   if (unlikely(PyType_HasFeature(Py_TYPE(o), Py_TPFLAGS_HAVE_FINALIZE) && Py_TYPE(o)->tp_finalize) && (!PyType_IS_GC(Py_TYPE(o)) || !_PyGC_FINALIZED(o))) {
     if (PyObject_CallFinalizerFromDealloc(o)) return;
   }
   #endif
-  __Pyx_call_destructor(p->disturbed_areas);
+  __Pyx_call_destructor(p->border_nodata);
   (*Py_TYPE(o)->tp_free)(o);
 }
 
-static PyMethodDef __pyx_methods_9bulldozer_14disturbedareas_PyDisturbedAreas[] = {
-  {"build_disturbance_mask", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_3build_disturbance_mask, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_2build_disturbance_mask},
-  {"__reduce_cython__", (PyCFunction)__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_5__reduce_cython__, METH_NOARGS, __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_4__reduce_cython__},
-  {"__setstate_cython__", (PyCFunction)__pyx_pw_9bulldozer_14disturbedareas_16PyDisturbedAreas_7__setstate_cython__, METH_O, __pyx_doc_9bulldozer_14disturbedareas_16PyDisturbedAreas_6__setstate_cython__},
+static PyMethodDef __pyx_methods_9bulldozer_12bordernodata_PyBorderNodata[] = {
+  {"build_border_nodata_mask", (PyCFunction)(void*)(PyCFunctionWithKeywords)__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_3build_border_nodata_mask, METH_VARARGS|METH_KEYWORDS, __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_2build_border_nodata_mask},
+  {"__reduce_cython__", (PyCFunction)__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_5__reduce_cython__, METH_NOARGS, __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_4__reduce_cython__},
+  {"__setstate_cython__", (PyCFunction)__pyx_pw_9bulldozer_12bordernodata_14PyBorderNodata_7__setstate_cython__, METH_O, __pyx_doc_9bulldozer_12bordernodata_14PyBorderNodata_6__setstate_cython__},
   {0, 0, 0, 0}
 };
 
-static PyTypeObject __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas = {
+static PyTypeObject __pyx_type_9bulldozer_12bordernodata_PyBorderNodata = {
   PyVarObject_HEAD_INIT(0, 0)
-  "bulldozer.disturbedareas.PyDisturbedAreas", /*tp_name*/
-  sizeof(struct __pyx_obj_9bulldozer_14disturbedareas_PyDisturbedAreas), /*tp_basicsize*/
+  "bulldozer.bordernodata.PyBorderNodata", /*tp_name*/
+  sizeof(struct __pyx_obj_9bulldozer_12bordernodata_PyBorderNodata), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  __pyx_tp_dealloc_9bulldozer_14disturbedareas_PyDisturbedAreas, /*tp_dealloc*/
+  __pyx_tp_dealloc_9bulldozer_12bordernodata_PyBorderNodata, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -16092,7 +16033,7 @@ static PyTypeObject __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas = {
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  __pyx_methods_9bulldozer_14disturbedareas_PyDisturbedAreas, /*tp_methods*/
+  __pyx_methods_9bulldozer_12bordernodata_PyBorderNodata, /*tp_methods*/
   0, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
@@ -16102,7 +16043,7 @@ static PyTypeObject __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas = {
   0, /*tp_dictoffset*/
   0, /*tp_init*/
   0, /*tp_alloc*/
-  __pyx_tp_new_9bulldozer_14disturbedareas_PyDisturbedAreas, /*tp_new*/
+  __pyx_tp_new_9bulldozer_12bordernodata_PyBorderNodata, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -16248,7 +16189,7 @@ static PyBufferProcs __pyx_tp_as_buffer_array = {
 
 static PyTypeObject __pyx_type___pyx_array = {
   PyVarObject_HEAD_INIT(0, 0)
-  "bulldozer.disturbedareas.array", /*tp_name*/
+  "bulldozer.bordernodata.array", /*tp_name*/
   sizeof(struct __pyx_array_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_array, /*tp_dealloc*/
@@ -16370,7 +16311,7 @@ static PyMethodDef __pyx_methods_Enum[] = {
 
 static PyTypeObject __pyx_type___pyx_MemviewEnum = {
   PyVarObject_HEAD_INIT(0, 0)
-  "bulldozer.disturbedareas.Enum", /*tp_name*/
+  "bulldozer.bordernodata.Enum", /*tp_name*/
   sizeof(struct __pyx_MemviewEnum_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_Enum, /*tp_dealloc*/
@@ -16634,7 +16575,7 @@ static PyBufferProcs __pyx_tp_as_buffer_memoryview = {
 
 static PyTypeObject __pyx_type___pyx_memoryview = {
   PyVarObject_HEAD_INIT(0, 0)
-  "bulldozer.disturbedareas.memoryview", /*tp_name*/
+  "bulldozer.bordernodata.memoryview", /*tp_name*/
   sizeof(struct __pyx_memoryview_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc_memoryview, /*tp_dealloc*/
@@ -16775,7 +16716,7 @@ static struct PyGetSetDef __pyx_getsets__memoryviewslice[] = {
 
 static PyTypeObject __pyx_type___pyx_memoryviewslice = {
   PyVarObject_HEAD_INIT(0, 0)
-  "bulldozer.disturbedareas._memoryviewslice", /*tp_name*/
+  "bulldozer.bordernodata._memoryviewslice", /*tp_name*/
   sizeof(struct __pyx_memoryviewslice_obj), /*tp_basicsize*/
   0, /*tp_itemsize*/
   __pyx_tp_dealloc__memoryviewslice, /*tp_dealloc*/
@@ -16860,17 +16801,17 @@ static PyMethodDef __pyx_methods[] = {
 #if PY_MAJOR_VERSION >= 3
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 static PyObject* __pyx_pymod_create(PyObject *spec, PyModuleDef *def); /*proto*/
-static int __pyx_pymod_exec_disturbedareas(PyObject* module); /*proto*/
+static int __pyx_pymod_exec_bordernodata(PyObject* module); /*proto*/
 static PyModuleDef_Slot __pyx_moduledef_slots[] = {
   {Py_mod_create, (void*)__pyx_pymod_create},
-  {Py_mod_exec, (void*)__pyx_pymod_exec_disturbedareas},
+  {Py_mod_exec, (void*)__pyx_pymod_exec_bordernodata},
   {0, NULL}
 };
 #endif
 
 static struct PyModuleDef __pyx_moduledef = {
     PyModuleDef_HEAD_INIT,
-    "disturbedareas",
+    "bordernodata",
     0, /* m_doc */
   #if CYTHON_PEP489_MULTI_PHASE_INIT
     0, /* m_size */
@@ -16918,7 +16859,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_b_O, __pyx_k_O, sizeof(__pyx_k_O), 0, 0, 0, 1},
   {&__pyx_kp_s_Out_of_bounds_on_buffer_access_a, __pyx_k_Out_of_bounds_on_buffer_access_a, sizeof(__pyx_k_Out_of_bounds_on_buffer_access_a), 0, 0, 1, 0},
   {&__pyx_n_s_PickleError, __pyx_k_PickleError, sizeof(__pyx_k_PickleError), 0, 0, 1, 1},
-  {&__pyx_n_s_PyDisturbedAreas, __pyx_k_PyDisturbedAreas, sizeof(__pyx_k_PyDisturbedAreas), 0, 0, 1, 1},
+  {&__pyx_n_s_PyBorderNodata, __pyx_k_PyBorderNodata, sizeof(__pyx_k_PyBorderNodata), 0, 0, 1, 1},
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
   {&__pyx_kp_s_Unable_to_convert_item_to_object, __pyx_k_Unable_to_convert_item_to_object, sizeof(__pyx_k_Unable_to_convert_item_to_object), 0, 0, 1, 0},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
@@ -16952,7 +16893,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_got_differing_extents_in_dimensi, __pyx_k_got_differing_extents_in_dimensi, sizeof(__pyx_k_got_differing_extents_in_dimensi), 0, 0, 1, 0},
   {&__pyx_n_s_id, __pyx_k_id, sizeof(__pyx_k_id), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
-  {&__pyx_n_s_is_four_connexity, __pyx_k_is_four_connexity, sizeof(__pyx_k_is_four_connexity), 0, 0, 1, 1},
   {&__pyx_n_s_itemsize, __pyx_k_itemsize, sizeof(__pyx_k_itemsize), 0, 0, 1, 1},
   {&__pyx_kp_s_itemsize_0_for_cython_array, __pyx_k_itemsize_0_for_cython_array, sizeof(__pyx_k_itemsize_0_for_cython_array), 0, 0, 1, 0},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
@@ -16987,7 +16927,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_setstate_cython, __pyx_k_setstate_cython, sizeof(__pyx_k_setstate_cython), 0, 0, 1, 1},
   {&__pyx_n_s_shape, __pyx_k_shape, sizeof(__pyx_k_shape), 0, 0, 1, 1},
   {&__pyx_n_s_size, __pyx_k_size, sizeof(__pyx_k_size), 0, 0, 1, 1},
-  {&__pyx_n_s_slope_treshold, __pyx_k_slope_treshold, sizeof(__pyx_k_slope_treshold), 0, 0, 1, 1},
   {&__pyx_n_s_start, __pyx_k_start, sizeof(__pyx_k_start), 0, 0, 1, 1},
   {&__pyx_n_s_step, __pyx_k_step, sizeof(__pyx_k_step), 0, 0, 1, 1},
   {&__pyx_n_s_stop, __pyx_k_stop, sizeof(__pyx_k_stop), 0, 0, 1, 1},
@@ -17365,16 +17304,16 @@ static int __Pyx_modinit_type_init_code(void) {
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__Pyx_modinit_type_init_code", 0);
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas) < 0) __PYX_ERR(1, 41, __pyx_L1_error)
+  if (PyType_Ready(&__pyx_type_9bulldozer_12bordernodata_PyBorderNodata) < 0) __PYX_ERR(1, 42, __pyx_L1_error)
   #if PY_VERSION_HEX < 0x030800B1
-  __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas.tp_print = 0;
+  __pyx_type_9bulldozer_12bordernodata_PyBorderNodata.tp_print = 0;
   #endif
-  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas.tp_dictoffset && __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas.tp_getattro == PyObject_GenericGetAttr)) {
-    __pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas.tp_getattro = __Pyx_PyObject_GenericGetAttr;
+  if ((CYTHON_USE_TYPE_SLOTS && CYTHON_USE_PYTYPE_LOOKUP) && likely(!__pyx_type_9bulldozer_12bordernodata_PyBorderNodata.tp_dictoffset && __pyx_type_9bulldozer_12bordernodata_PyBorderNodata.tp_getattro == PyObject_GenericGetAttr)) {
+    __pyx_type_9bulldozer_12bordernodata_PyBorderNodata.tp_getattro = __Pyx_PyObject_GenericGetAttr;
   }
-  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyDisturbedAreas, (PyObject *)&__pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas) < 0) __PYX_ERR(1, 41, __pyx_L1_error)
-  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas) < 0) __PYX_ERR(1, 41, __pyx_L1_error)
-  __pyx_ptype_9bulldozer_14disturbedareas_PyDisturbedAreas = &__pyx_type_9bulldozer_14disturbedareas_PyDisturbedAreas;
+  if (PyObject_SetAttr(__pyx_m, __pyx_n_s_PyBorderNodata, (PyObject *)&__pyx_type_9bulldozer_12bordernodata_PyBorderNodata) < 0) __PYX_ERR(1, 42, __pyx_L1_error)
+  if (__Pyx_setup_reduce((PyObject*)&__pyx_type_9bulldozer_12bordernodata_PyBorderNodata) < 0) __PYX_ERR(1, 42, __pyx_L1_error)
+  __pyx_ptype_9bulldozer_12bordernodata_PyBorderNodata = &__pyx_type_9bulldozer_12bordernodata_PyBorderNodata;
   __pyx_vtabptr_array = &__pyx_vtable_array;
   __pyx_vtable_array.get_memview = (PyObject *(*)(struct __pyx_array_obj *))__pyx_array_get_memview;
   if (PyType_Ready(&__pyx_type___pyx_array) < 0) __PYX_ERR(0, 106, __pyx_L1_error)
@@ -17476,11 +17415,11 @@ static int __Pyx_modinit_function_import_code(void) {
 
 
 #if PY_MAJOR_VERSION < 3
-__Pyx_PyMODINIT_FUNC initdisturbedareas(void) CYTHON_SMALL_CODE; /*proto*/
-__Pyx_PyMODINIT_FUNC initdisturbedareas(void)
+__Pyx_PyMODINIT_FUNC initbordernodata(void) CYTHON_SMALL_CODE; /*proto*/
+__Pyx_PyMODINIT_FUNC initbordernodata(void)
 #else
-__Pyx_PyMODINIT_FUNC PyInit_disturbedareas(void) CYTHON_SMALL_CODE; /*proto*/
-__Pyx_PyMODINIT_FUNC PyInit_disturbedareas(void)
+__Pyx_PyMODINIT_FUNC PyInit_bordernodata(void) CYTHON_SMALL_CODE; /*proto*/
+__Pyx_PyMODINIT_FUNC PyInit_bordernodata(void)
 #if CYTHON_PEP489_MULTI_PHASE_INIT
 {
   return PyModuleDef_Init(&__pyx_moduledef);
@@ -17547,7 +17486,7 @@ bad:
 }
 
 
-static CYTHON_SMALL_CODE int __pyx_pymod_exec_disturbedareas(PyObject *__pyx_pyinit_module)
+static CYTHON_SMALL_CODE int __pyx_pymod_exec_bordernodata(PyObject *__pyx_pyinit_module)
 #endif
 #endif
 {
@@ -17561,7 +17500,7 @@ static CYTHON_SMALL_CODE int __pyx_pymod_exec_disturbedareas(PyObject *__pyx_pyi
   #if CYTHON_PEP489_MULTI_PHASE_INIT
   if (__pyx_m) {
     if (__pyx_m == __pyx_pyinit_module) return 0;
-    PyErr_SetString(PyExc_RuntimeError, "Module 'disturbedareas' has already been imported. Re-initialisation is not supported.");
+    PyErr_SetString(PyExc_RuntimeError, "Module 'bordernodata' has already been imported. Re-initialisation is not supported.");
     return -1;
   }
   #elif PY_MAJOR_VERSION >= 3
@@ -17576,7 +17515,7 @@ if (!__Pyx_RefNanny) {
       Py_FatalError("failed to import 'refnanny' module");
 }
 #endif
-  __Pyx_RefNannySetupContext("__Pyx_PyMODINIT_FUNC PyInit_disturbedareas(void)", 0);
+  __Pyx_RefNannySetupContext("__Pyx_PyMODINIT_FUNC PyInit_bordernodata(void)", 0);
   if (__Pyx_check_binary_version() < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   #ifdef __Pxy_PyFrame_Initialize_Offsets
   __Pxy_PyFrame_Initialize_Offsets();
@@ -17613,7 +17552,7 @@ if (!__Pyx_RefNanny) {
   Py_INCREF(__pyx_m);
   #else
   #if PY_MAJOR_VERSION < 3
-  __pyx_m = Py_InitModule4("disturbedareas", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
+  __pyx_m = Py_InitModule4("bordernodata", __pyx_methods, 0, 0, PYTHON_API_VERSION); Py_XINCREF(__pyx_m);
   #else
   __pyx_m = PyModule_Create(&__pyx_moduledef);
   #endif
@@ -17631,14 +17570,14 @@ if (!__Pyx_RefNanny) {
   #if PY_MAJOR_VERSION < 3 && (__PYX_DEFAULT_STRING_ENCODING_IS_ASCII || __PYX_DEFAULT_STRING_ENCODING_IS_DEFAULT)
   if (__Pyx_init_sys_getdefaultencoding_params() < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   #endif
-  if (__pyx_module_is_main_bulldozer__disturbedareas) {
+  if (__pyx_module_is_main_bulldozer__bordernodata) {
     if (PyObject_SetAttr(__pyx_m, __pyx_n_s_name_2, __pyx_n_s_main) < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   }
   #if PY_MAJOR_VERSION >= 3
   {
     PyObject *modules = PyImport_GetModuleDict(); if (unlikely(!modules)) __PYX_ERR(1, 1, __pyx_L1_error)
-    if (!PyDict_GetItemString(modules, "bulldozer.disturbedareas")) {
-      if (unlikely(PyDict_SetItemString(modules, "bulldozer.disturbedareas", __pyx_m) < 0)) __PYX_ERR(1, 1, __pyx_L1_error)
+    if (!PyDict_GetItemString(modules, "bulldozer.bordernodata")) {
+      if (unlikely(PyDict_SetItemString(modules, "bulldozer.bordernodata", __pyx_m) < 0)) __PYX_ERR(1, 1, __pyx_L1_error)
     }
   }
   #endif
@@ -17659,40 +17598,40 @@ if (!__Pyx_RefNanny) {
   if (__Pyx_patch_abc() < 0) __PYX_ERR(1, 1, __pyx_L1_error)
   #endif
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":22
- * 
- * from libcpp cimport bool
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":20
+ * # See the License for the specific language governing permissions and
+ * # limitations under the License.
  * import numpy as np             # <<<<<<<<<<<<<<
  * from bulldozer.utils.helper import npAsContiguousArray
  * 
  */
-  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 22, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_Import(__pyx_n_s_numpy, 0, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 20, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(1, 22, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_np, __pyx_t_1) < 0) __PYX_ERR(1, 20, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":23
- * from libcpp cimport bool
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":21
+ * # limitations under the License.
  * import numpy as np
  * from bulldozer.utils.helper import npAsContiguousArray             # <<<<<<<<<<<<<<
  * 
- * # pxd section
+ * # Begin PXD
  */
-  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 23, __pyx_L1_error)
+  __pyx_t_1 = PyList_New(1); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 21, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_n_s_npAsContiguousArray);
   __Pyx_GIVEREF(__pyx_n_s_npAsContiguousArray);
   PyList_SET_ITEM(__pyx_t_1, 0, __pyx_n_s_npAsContiguousArray);
-  __pyx_t_2 = __Pyx_Import(__pyx_n_s_bulldozer_utils_helper, __pyx_t_1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 23, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_Import(__pyx_n_s_bulldozer_utils_helper, __pyx_t_1, 0); if (unlikely(!__pyx_t_2)) __PYX_ERR(1, 21, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 23, __pyx_L1_error)
+  __pyx_t_1 = __Pyx_ImportFrom(__pyx_t_2, __pyx_n_s_npAsContiguousArray); if (unlikely(!__pyx_t_1)) __PYX_ERR(1, 21, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_npAsContiguousArray, __pyx_t_1) < 0) __PYX_ERR(1, 23, __pyx_L1_error)
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_npAsContiguousArray, __pyx_t_1) < 0) __PYX_ERR(1, 21, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
-  /* "src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx":1
+  /* "src/bulldozer/preprocessing/bordernodata/bordernodata.pyx":1
  * # distutils: language = c++             # <<<<<<<<<<<<<<
  * # coding: utf8
  * #
@@ -17863,11 +17802,11 @@ if (!__Pyx_RefNanny) {
   __Pyx_XDECREF(__pyx_t_2);
   if (__pyx_m) {
     if (__pyx_d) {
-      __Pyx_AddTraceback("init bulldozer.disturbedareas", __pyx_clineno, __pyx_lineno, __pyx_filename);
+      __Pyx_AddTraceback("init bulldozer.bordernodata", __pyx_clineno, __pyx_lineno, __pyx_filename);
     }
     Py_CLEAR(__pyx_m);
   } else if (!PyErr_Occurred()) {
-    PyErr_SetString(PyExc_ImportError, "init bulldozer.disturbedareas");
+    PyErr_SetString(PyExc_ImportError, "init bulldozer.bordernodata");
   }
   __pyx_L0:;
   __Pyx_RefNannyFinishContext();
@@ -17924,6 +17863,72 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
 #endif
     }
     return result;
+}
+
+/* RaiseArgTupleInvalid */
+static void __Pyx_RaiseArgtupleInvalid(
+    const char* func_name,
+    int exact,
+    Py_ssize_t num_min,
+    Py_ssize_t num_max,
+    Py_ssize_t num_found)
+{
+    Py_ssize_t num_expected;
+    const char *more_or_less;
+    if (num_found < num_min) {
+        num_expected = num_min;
+        more_or_less = "at least";
+    } else {
+        num_expected = num_max;
+        more_or_less = "at most";
+    }
+    if (exact) {
+        more_or_less = "exactly";
+    }
+    PyErr_Format(PyExc_TypeError,
+                 "%.200s() takes %.8s %" CYTHON_FORMAT_SSIZE_T "d positional argument%.1s (%" CYTHON_FORMAT_SSIZE_T "d given)",
+                 func_name, more_or_less, num_expected,
+                 (num_expected == 1) ? "" : "s", num_found);
+}
+
+/* KeywordStringCheck */
+static int __Pyx_CheckKeywordStrings(
+    PyObject *kwdict,
+    const char* function_name,
+    int kw_allowed)
+{
+    PyObject* key = 0;
+    Py_ssize_t pos = 0;
+#if CYTHON_COMPILING_IN_PYPY
+    if (!kw_allowed && PyDict_Next(kwdict, &pos, &key, 0))
+        goto invalid_keyword;
+    return 1;
+#else
+    while (PyDict_Next(kwdict, &pos, &key, 0)) {
+        #if PY_MAJOR_VERSION < 3
+        if (unlikely(!PyString_Check(key)))
+        #endif
+            if (unlikely(!PyUnicode_Check(key)))
+                goto invalid_keyword_type;
+    }
+    if ((!kw_allowed) && unlikely(key))
+        goto invalid_keyword;
+    return 1;
+invalid_keyword_type:
+    PyErr_Format(PyExc_TypeError,
+        "%.200s() keywords must be strings", function_name);
+    return 0;
+#endif
+invalid_keyword:
+    PyErr_Format(PyExc_TypeError,
+    #if PY_MAJOR_VERSION < 3
+        "%.200s() got an unexpected keyword argument '%.200s'",
+        function_name, PyString_AsString(key));
+    #else
+        "%s() got an unexpected keyword argument '%U'",
+        function_name, key);
+    #endif
+    return 0;
 }
 
 /* RaiseDoubleKeywords */
@@ -18040,32 +18045,6 @@ invalid_keyword:
     #endif
 bad:
     return -1;
-}
-
-/* RaiseArgTupleInvalid */
-static void __Pyx_RaiseArgtupleInvalid(
-    const char* func_name,
-    int exact,
-    Py_ssize_t num_min,
-    Py_ssize_t num_max,
-    Py_ssize_t num_found)
-{
-    Py_ssize_t num_expected;
-    const char *more_or_less;
-    if (num_found < num_min) {
-        num_expected = num_min;
-        more_or_less = "at least";
-    } else {
-        num_expected = num_max;
-        more_or_less = "at most";
-    }
-    if (exact) {
-        more_or_less = "exactly";
-    }
-    PyErr_Format(PyExc_TypeError,
-                 "%.200s() takes %.8s %" CYTHON_FORMAT_SSIZE_T "d positional argument%.1s (%" CYTHON_FORMAT_SSIZE_T "d given)",
-                 func_name, more_or_less, num_expected,
-                 (num_expected == 1) ? "" : "s", num_found);
 }
 
 /* PyDictVersioning */

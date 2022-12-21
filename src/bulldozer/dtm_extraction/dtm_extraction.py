@@ -271,6 +271,8 @@ class ClothSimulation(object):
             output_dir: str,
             nodata_val : float):
 
+        BulldozerLogger.log("Starting dtm extraction by Cloth simulation", logging.INFO)
+
         # Open the dsm dataset
         in_dsm_dataset = rasterio.open(dsm_path)
         in_dsm_profile = in_dsm_dataset.profile
@@ -381,7 +383,6 @@ class ClothSimulation(object):
                     dtm[start_y:end_y+1, start_x:end_x+1] = tile_dtm[tstart_y: tend_y + 1, tstart_x:tend_x+1]
             
             else:
-                bulldoLogger.info("sequential")
                 dtm = self.sequential_drape_cloth(dtm = dtm,
                                                   dsm = dsm_pyramid[level],
                                                   num_outer_iterations = current_num_outer_iterations,
@@ -398,3 +399,7 @@ class ClothSimulation(object):
         self.write_tiles(tile_buffer= dtm, 
                          tile_path = dtm_path,
                          original_profile = in_dsm_profile)
+        
+        BulldozerLogger.log("Dtm extraction done", logging.INFO)
+
+        return dtm_path

@@ -21,6 +21,7 @@
 """
 This module aims to centralize the use of the logger in Bullodzer.
 """
+import sys
 import os
 import logging
 import logging.config
@@ -32,7 +33,7 @@ class BulldozerLogger:
     __instance = None
 
     @staticmethod
-    def getInstance(logger_file_path: str = None) -> BulldozerLogger:
+    def getInstance(logger_file_path: str = None):
         """
             Return the logger or create it if the instance does not exist.
 
@@ -70,7 +71,8 @@ class BulldozerLogger:
             logger.addHandler(sh)
             BulldozerLogger.__instance = logger
 
-            self.init_logger()
+            BulldozerLogger.init_logger()
+
         return BulldozerLogger.__instance
 
 
@@ -87,15 +89,16 @@ class BulldozerLogger:
                 msg: log message.
                 level: crticity level.
         """
-        if self.__instance is not None :
+        if BulldozerLogger.__instance is not None :
            if level == logging.DEBUG:
-                self.__instance.debug(msg)
+                BulldozerLogger.__instance.debug(msg)
            if level == logging.INFO:
-                self.__instance.info(msg)
+                BulldozerLogger.__instance.info(msg)
            if level == logging.WARNING:
-                self.__instance.warning(msg)
+                BulldozerLogger.__instance.warning(msg)
     
-    def init_logger(self) -> None:
+    @staticmethod
+    def init_logger() -> None:
         """
             This method store the environment state in the logfile.
         """
@@ -130,4 +133,4 @@ class BulldozerLogger:
             BulldozerLogger.log(init, logging.DEBUG)
 
         except Exception as e:
-            BulldozerLogger.log("Error occured during logger init: \n" + e, logging.DEBUG)
+            BulldozerLogger.log("Error occured during logger init: \n" + str(e), logging.DEBUG)

@@ -47,47 +47,52 @@ def dsm_to_dtm(cfg: dict) -> None:
             cfg: values of the config file.
 
     """
-    logger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(cfg['outputDir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
+    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(cfg['outputDir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
 
     # Retrieves the nodata value from the config file or the DSM metadata
-    cfg['noData'] = retrieve_nodata(cfg['dsmPath'], cfg['noData'])
+    cfg['noData'] = retrieve_nodata(cfg['dsmPath'], float(cfg['noData']))
     
     # Retrieves the number of CPU if the number of available workers is not set
     if not cfg['nbMaxWorkers']:
         cfg['nbMaxWorkers'] = multiprocessing.cpu_count()
     
-    run_preprocessing(cfg['dsmPath'], 
-                      cfg['outputDir'], 
-                      cfg['nbMaxWorkers'], 
-                      cfg['noData'], 
-                      cfg['slopeThreshold'], 
-                      cfg['fourConnexity'],
-                      cfg['minValidHeight'])
+    # preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(cfg['dsmPath'], 
+    #                                                                cfg['outputDir'], 
+    #                                                                cfg['nbMaxWorkers'], 
+    #                                                                cfg['noData'], 
+    #                                                                cfg['slopeThreshold'], 
+    #                                                                cfg['fourConnexity'],
+    #                                                                cfg['minValidHeight'])
 
-    dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
-    clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
-                                cfg['uniformFilterSize'], 
-                                cfg['preventUnhookIter'],
-                                cfg['numOuterIter'], 
-                                cfg['numInnerIter'], 
-                                cfg['mpTileSize'], 
-                                cfg['nbMaxWorkers'])
+    # # dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
+    # clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
+    #                             cfg['uniformFilterSize'], 
+    #                             cfg['preventUnhookIter'],
+    #                             cfg['numOuterIter'], 
+    #                             cfg['numInnerIter'], 
+    #                             cfg['mpTileSize'], 
+    #                             cfg['nbMaxWorkers'])
 
-    clothSimu.run(dsm_path, cfg['outputDir'], cfg['noData'])
-    
-    quality_mask_path = os.path.join(cfg['outputDir'], 'quality_mask.tif')
-    
-    raw_dtm_path = os.path.join(cfg['outputDir'], 'raw_DTM.tif')
+    # raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
+    #                                   cfg['outputDir'], 
+    #                                   cfg['noData'])
 
-    postprocess_pipeline(raw_dtm_path, cfg['outputDir'], quality_mask_path, 
-                        cfg['nbMaxWorkers'], cfg['generateDhm'], cfg['dsmPath'],
-                        cfg['outputCRS'])
+    raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
+    quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
+
+    postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
+                         output_dir = cfg['outputDir'],
+                         nb_max_workers = cfg['nbMaxWorkers'], 
+                         quality_mask_path =  quality_mask_path, 
+                         generate_dhm = cfg['generateDhm'], 
+                         dsm_path = cfg['dsmPath'],
+                         nodata = cfg['noData'])
     
-    if not cfg['developperMode']:
-        # Remove the raw DTM since the postprocess pipeline generates a refined DTM
-        preprocessed_dsm_path = os.path.join(cfg['outputDir'], 'preprocessed_DSM.tif')
-        os.remove(raw_dtm_path)
-        os.remove(preprocessed_dsm_path)
+    # if not cfg['developperMode']:
+    #     # Remove the raw DTM since the postprocess pipeline generates a refined DTM
+    #     preprocessed_dsm_path = os.path.join(cfg['outputDir'], 'preprocessed_DSM.tif')
+    #     os.remove(raw_dtm_path)
+    #     os.remove(preprocessed_dsm_path)
 
 def get_parser():
     """

@@ -27,6 +27,7 @@ import rasterio
 import os
 import concurrent.futures
 import numpy as np
+import logging
 import scipy.ndimage as ndimage
 import bulldozer.disturbedareas as da
 from rasterio.windows import Window
@@ -35,6 +36,7 @@ from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
 from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.scale.tools import computeTiles, scaleRun
 
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
@@ -102,11 +104,29 @@ def compute_disturbance(dsm_path : rasterio.DatasetReader,
         return disturbance_mask, window
 
 
+def generateOuputProfileForDisturbedAreas(inputProfile: rasterio.DatasetReader.profile):
+    """
+        Only the dtype change 
+    """
+    outputProfile = inputProfile
+    outputProfile["dtype"] = np.ubyte
+    return outputProfile
+
+def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
+    """
+    """
+    disturbed_areas = da.PyDisturbedAreas(params["is_four_connexity"])
+    disturbance_mask = disturbed_areas.build_disturbance_mask(inputBuffers[0], 
+                                                              params["slope_threshold"],
+                                                              params["nodata"]).astype(np.ubyte)
+    return disturbance_mask
+
+
 def build_disturbance_mask(dsm_path: str,
-                            nb_max_workers : int,
-                            slope_treshold: float = 2.0,
-                            is_four_connexity : bool = True,
-                            sequential: bool = False) -> np.array:
+                           nb_max_workers : int,
+                           slope_treshold: float = 2.0,
+                           is_four_connexity : bool = True,
+                           nodata: float = NO_DATA_VALUE) -> np.array:
     """
     This method builds a mask corresponding to the disturbed areas in a given DSM.
     Most of those areas correspond to water or correlation issues during the DSM generation (obstruction, etc.).
@@ -121,67 +141,60 @@ def build_disturbance_mask(dsm_path: str,
     Returns:
         masks containing the disturbed areas.
     """
-    # Determine the number of strip and their height
-    with rasterio.open(dsm_path, 'r') as dataset:
-        strip_height = dataset.height // nb_max_workers
-        strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
-        # Borders handling
-        strips[0][0] = 0
-        strips[-1][1] = dataset.height - 1
 
-        # Output binary mask initialization
-        disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
+    disturbanceParams = {
+        "is_four_connexity": is_four_connexity,
+        "slope_threshold": slope_treshold,
+        "nodata": nodata,
+        "desc": "Build Disturbance Mask"
+    }
 
-        if sequential:
-            
-            for strip in tqdm(strips, desc="Sequential preprocessing..."):
-                mask, window = compute_disturbance(dsm_path, 
-                                                   Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
-                                                   slope_treshold, 
-                                                   is_four_connexity)
-                window_shape = window.flatten()
-                start_row = window_shape[1]
-                end_row = start_row + window_shape[3] - 1
-                start_row_mask = 0
-                end_row_mask = mask.shape[0] - 1 
-                if start_row > 0:
-                    start_row_mask = 1
-                    start_row = start_row + 1
+    disturbance_mask = scaleRun(inputImagePaths = [dsm_path], 
+                                outputImagePath = None,
+                                algoComputer= disturbedAreasComputer, 
+                                algoParams = disturbanceParams, 
+                                generateOutputProfileComputer =generateOuputProfileForDisturbedAreas, 
+                                nbWorkers = nb_max_workers, 
+                                stableMargin = 1,
+                                inMemory=True)
+
+    # # Determine the number of strip and their height
+    # with rasterio.open(dsm_path, 'r') as dataset:
+    #     strip_height = dataset.height // nb_max_workers
+    #     strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
+    #     # Borders handling
+    #     strips[0][0] = 0
+    #     strips[-1][1] = dataset.height - 1
+
+    #     # Output binary mask initialization
+    #     disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
+
+    #     # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
+    #     with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
+    #         futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
+    #         slope_treshold, is_four_connexity) for strip in strips}
+    #         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
+    #             mask, window = future.result()
+    #             window_shape = window.flatten()
+    #             start_row = window_shape[1]
+    #             end_row = start_row + window_shape[3] - 1
+    #             start_row_mask = 0
+    #             end_row_mask = mask.shape[0] - 1 
+    #             if start_row > 0:
+    #                 start_row_mask = 1
+    #                 start_row = start_row + 1
                 
-                if end_row < dataset.height - 1:
-                    end_row_mask = end_row_mask - 1
-                    end_row = end_row - 1
+    #             if end_row < dataset.height - 1:
+    #                 end_row_mask = end_row_mask - 1
+    #                 end_row = end_row - 1
 
-                disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
-
-        else:
-            # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
-            with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-                futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
-                slope_treshold, is_four_connexity) for strip in strips}
-                for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
-                    mask, window = future.result()
-                    window_shape = window.flatten()
-                    start_row = window_shape[1]
-                    end_row = start_row + window_shape[3] - 1
-                    start_row_mask = 0
-                    end_row_mask = mask.shape[0] - 1 
-                    if start_row > 0:
-                        start_row_mask = 1
-                        start_row = start_row + 1
-                    
-                    if end_row < dataset.height - 1:
-                        end_row_mask = end_row_mask - 1
-                        end_row = end_row - 1
-
-                    disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
-
-        return disturbance_mask != 0
+    #             disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
+    return disturbance_mask != 0
     
 def write_quality_mask(border_nodata_mask: np.ndarray,
                        inner_nodata_mask : np.ndarray, 
                        disturbed_area_mask : np.ndarray,
-                       output_dir : str,
+                       quality_mask_path: str,
                        profile : rasterio.profiles.Profile) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
@@ -195,7 +208,6 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
         profile: DSM profile (TIF metadata).
     """     
     quality_mask = np.zeros(np.shape(inner_nodata_mask), dtype=np.uint8)
-    quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
 
     # Metadata update
     profile['dtype'] = np.uint8
@@ -209,13 +221,13 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
 
 
 
-def run(dsm_path : str, 
-        output_dir : str,
-        nb_max_workers : int,
-        nodata : float = None,
-        slope_treshold : float = 2.0, 
-        is_four_connexity : bool = True,
-        minValidHeight: float = None) -> None:
+def preprocess_pipeline(dsm_path : str, 
+                        output_dir : str,
+                        nb_max_workers : int,
+                        nodata : float = None,
+                        slope_treshold : float = 2.0, 
+                        is_four_connexity : bool = True,
+                        minValidHeight: float = None) -> None:
     """
     This method merges the nodata masks generated during the DSM preprocessing into a single quality mask.
     There is a priority order: inner_nodata > disturbance
@@ -231,67 +243,63 @@ def run(dsm_path : str,
                         Vertical and horizontal if true else vertical, horizontal and diagonals.
     """ 
 
+    BulldozerLogger.log("Starting preprocess", logging.INFO)
 
-
-    bulldoLogger = BulldozerLogger.getInstance(loggerFilePath=os.path.join(output_dir, "trace.log"))
-    bulldoLogger.info("Starting preprocess")
+    # The value is already retrieved before calling the preprocess method
+    # If it is none, it is set automatically to -32768
+    if nodata is None:
+        BulldozerLogger.log("No data value is set to " + str(NO_DATA_VALUE), logging.INFO)
+        nodata = NO_DATA_VALUE
 
     with rasterio.open(dsm_path) as dsm_dataset:
-        if not nodata:
-            # If nodata is not specified in the config file, retrieve the value from the dsm metadata
-            nodata = dsm_dataset.nodata
-            if nodata is None:
-                # We assume that is nodata is not given then nodata = NODATA_VALUE
-                nodata = NO_DATA_VALUE
         
+        # Read the buffer in memory
         dsm = dsm_dataset.read(1)
-
-        # Converts no data
-        if np.isnan(nodata):
-            dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
-        else:
-            if nodata != NO_DATA_VALUE:
-                dsm = np.where(dsm == nodata, NO_DATA_VALUE, dsm)
         
         # handle the case where there are dynamic nodata values (MicMac DSM for example)
-        if minValidHeight is not None:
-            dsm = np.where( dsm < minValidHeight, NO_DATA_VALUE, dsm)
+        if minValidHeight:
+            BulldozerLogger.log("Min valid height set by the user" + str(minValidHeight), logging.INFO)
+            dsm = np.where( dsm < minValidHeight, nodata, dsm)
 
-        filledDSMProfile = dsm_dataset.profile
-        filledDSMProfile['nodata'] = NO_DATA_VALUE
+        preprocessedDsmProfile = dsm_dataset.profile
+        preprocessedDsmProfile['nodata'] = nodata
         
         # Generates inner nodata mask
-        bulldoLogger.info("Starting inner_nodata_mask building")
+        BulldozerLogger.log("Starting inner_nodata_mask building", logging.INFO)
         border_nodata_mask, inner_nodata_mask = build_inner_nodata_mask(dsm)
         dsm[border_nodata_mask] = np.max(dsm)
-        bulldoLogger.info("inner_nodata_mask generation: Done")
+        BulldozerLogger.log("inner_nodata_mask generation: Done", logging.INFO)
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
-        bulldoLogger.info("Compute disturbance mask")
-        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity, sequential)
-        bulldoLogger.info("disturbance mask: Done")
+        BulldozerLogger.log("Compute disturbance mask", logging.INFO)
+        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity, nodata)
+        BulldozerLogger.log("disturbance mask: Done", logging.INFO)
         
         # Merges and writes the quality mask
-        write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, output_dir, dsm_dataset.profile)
+        quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
+        write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, quality_mask_path, dsm_dataset.profile)
 
-        bulldoLogger.info("Filled no data values")
-        # Generates filled DSM if the user provides a valid filled_dsm_path
-        if create_filled_dsm:
-            filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
-            filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
+    #     bulldoLogger.info("Filled no data values")
+    #     # Generates filled DSM if the user provides a valid filled_dsm_path
+    #     if create_filled_dsm:
+    #         filled_dsm = fillnodata(dsm, mask=np.invert(inner_nodata_mask))
+    #         filled_dsm = fillnodata(filled_dsm, mask=np.invert(disturbed_area_mask))
 
-            filled_dsm_path = os.path.join(output_dir, 'filled_DSM.tif')
+    #         filled_dsm_path = os.path.join(output_dir, 'filled_DSM.tif')
 
-            # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
-            write_dataset(filled_dsm_path, filled_dsm, filledDSMProfile)
-        bulldoLogger.info("Filled no data values: Done")
+    #         # Generates the filled DSM file (DSM without inner nodata nor disturbed areas)
+    #         write_dataset(filled_dsm_path, filled_dsm, filledDSMProfile)
+    #     bulldoLogger.info("Filled no data values: Done")
         
         dsm[disturbed_area_mask] = nodata
 
 
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
+        BulldozerLogger.log("Write preprocessed dsm", logging.INFO)
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
-        write_dataset(preprocessed_dsm_path, dsm, filledDSMProfile)
+        write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
 
         dsm_dataset.close()
-        bulldoLogger.info("preprocess: Done")
+        BulldozerLogger.log("Preprocess done", logging.INFO)
+
+        return preprocessed_dsm_path, quality_mask_path

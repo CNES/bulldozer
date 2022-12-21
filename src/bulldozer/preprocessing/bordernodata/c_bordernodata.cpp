@@ -3,7 +3,7 @@
     This file is part of Bulldozer library
     All rights reserved.
 */
-#include "BorderNodata.h"
+#include "c_bordernodata.h"
 
 namespace bulldozer 
 {
