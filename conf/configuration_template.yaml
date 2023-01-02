@@ -12,7 +12,7 @@ outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/OpenSourceBulldovalid/"
 # If True, generates the DHM (DSM - DTM) in the output directory 
 generateDhm : True
 # If null, bulldozer will use the maximum number of available CPU on your system
-nbMaxWorkers : 8
+nbMaxWorkers : 16
 
 #-------------------------#
 #    Advanced settings    #

@@ -56,29 +56,29 @@ def dsm_to_dtm(cfg: dict) -> None:
     if not cfg['nbMaxWorkers']:
         cfg['nbMaxWorkers'] = multiprocessing.cpu_count()
     
-    # preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(cfg['dsmPath'], 
-    #                                                                cfg['outputDir'], 
-    #                                                                cfg['nbMaxWorkers'], 
-    #                                                                cfg['noData'], 
-    #                                                                cfg['slopeThreshold'], 
-    #                                                                cfg['fourConnexity'],
-    #                                                                cfg['minValidHeight'])
+    preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(cfg['dsmPath'], 
+                                                                   cfg['outputDir'], 
+                                                                   cfg['nbMaxWorkers'], 
+                                                                   cfg['noData'], 
+                                                                   cfg['slopeThreshold'], 
+                                                                   cfg['fourConnexity'],
+                                                                   cfg['minValidHeight'])
 
-    # # dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
-    # clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
-    #                             cfg['uniformFilterSize'], 
-    #                             cfg['preventUnhookIter'],
-    #                             cfg['numOuterIter'], 
-    #                             cfg['numInnerIter'], 
-    #                             cfg['mpTileSize'], 
-    #                             cfg['nbMaxWorkers'])
+    # dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
+    clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
+                                cfg['uniformFilterSize'], 
+                                cfg['preventUnhookIter'],
+                                cfg['numOuterIter'], 
+                                cfg['numInnerIter'], 
+                                cfg['mpTileSize'], 
+                                cfg['nbMaxWorkers'])
 
-    # raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
-    #                                   cfg['outputDir'], 
-    #                                   cfg['noData'])
+    raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
+                                      cfg['outputDir'], 
+                                      cfg['noData'])
 
-    raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
-    quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
+    # raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
+    # quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
 
     postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
                          output_dir = cfg['outputDir'],
