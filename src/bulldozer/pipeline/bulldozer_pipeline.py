@@ -64,21 +64,21 @@ def dsm_to_dtm(cfg: dict) -> None:
                                                                    cfg['fourConnexity'],
                                                                    cfg['minValidHeight'])
 
-    # dsm_path = os.path.join(cfg['outputDir'], 'filled_DSM.tif')
     clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
                                 cfg['uniformFilterSize'], 
                                 cfg['preventUnhookIter'],
                                 cfg['numOuterIter'], 
                                 cfg['numInnerIter'], 
-                                cfg['mpTileSize'], 
+                                cfg['mpTileSize'],
+                                cfg['outputResolution'], 
                                 cfg['nbMaxWorkers'])
 
     raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
                                       cfg['outputDir'], 
                                       cfg['noData'])
 
-    # raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
-    # quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
+    raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
+    quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
 
     postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
                          output_dir = cfg['outputDir'],

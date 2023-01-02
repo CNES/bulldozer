@@ -21,6 +21,8 @@ nbMaxWorkers : 16
 minValidHeight: null
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
 noData : -1e+09
+# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
+outputResolution : 4.0
 # If true, keep the intermediate results
 developperMode : False
 

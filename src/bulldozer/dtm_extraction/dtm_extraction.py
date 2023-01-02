@@ -19,18 +19,16 @@
 # limitations under the License.
 
 import os
-from collections import namedtuple
-import concurrent.futures
-import rasterio
+import math
 import logging
+import rasterio
 import numpy as np
 from tqdm import tqdm
+import concurrent.futures
+from collections import namedtuple
 import bulldozer.springforce as sf
 from bulldozer.utils.logging_helper import BulldozerLogger
-
-# Lorsqu'on upsample on a potentiellement upsamplé du nodata et il faut faire l'intersection avec le DSM au niveau donné pour le retirer
-# et le remplir (fillnodata, idw)
-# Mais attention à chaque niveau il faudra aussi rajouter le nodata du MNS.
+from bulldozer.utils.helper import downsample_profile, retrieve_raster_resolution, Pyramid, write_tiles
 
 Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 
@@ -43,6 +41,7 @@ class ClothSimulation(object):
                  num_outer_iterations: int = 100,
                  num_inner_iterations: int= 10,
                  mp_tile_size: int = 1500,
+                 output_resolution : float = -1.,
                  mp_nb_procs: int = 16):
         """ """
         self.max_object_size: int = max_object_size
@@ -51,18 +50,8 @@ class ClothSimulation(object):
         self.num_outer_iterations: int = num_outer_iterations
         self.num_inner_iterations: int= num_inner_iterations
         self.mp_tile_size: int = mp_tile_size
+        self.output_resolution = output_resolution
         self.mp_nb_procs: int = mp_nb_procs
-
-
-    def retrieve_dsm_resolution(self,
-                                dsm_dataset: rasterio.DatasetReader) -> float:
-        """ """
-        # We assume that resolution is the same wrt to both image axis
-        res_x: float =  dsm_dataset.transform[0]
-        res_y: float = dsm_dataset.transform[4]
-        if abs(res_x) != abs(res_y):
-            raise ValueError("DSM GSD must be the same wrt to the rows and columns.")
-        return abs(res_x)
 
     def next_power_of_2(self, x : int) -> int:
         """
@@ -89,12 +78,17 @@ class ClothSimulation(object):
             power -= 1
 
         return power
-        
-    def downsample(self, buffer: np.ndarray) -> np.ndarray:
+    
+    def get_pyramid_min_level(self, dsm_res : float) -> int :
         """
-            Simple factor X downsample
+            When an output resolution is specified, 
+            can we stop before level 0 ?
         """
-        return buffer[::2, ::2]
+        min_level = 0
+        if self.output_resolution != None and self.output_resolution > dsm_res :
+            min_level = math.floor(math.log2(self.output_resolution/dsm_res)) 
+             
+        return min_level
 
     def upsample(self,
                  buffer: np.ndarray, 
@@ -130,20 +124,6 @@ class ClothSimulation(object):
         next_dtm[1::2, 1::2] = buffer[s0, s1]
 
         return next_dtm
-
-    def write_tiles(self,
-                    tile_buffer: np.ndarray, 
-                    tile_path: str,
-                    original_profile: dict) -> None:
-        """
-        """
-        tile_profile = original_profile
-        tile_profile["count"] = 1
-        tile_profile["width"] = tile_buffer.shape[1]
-        tile_profile["height"] = tile_buffer.shape[0]
-        tile_profile["dtype"] = np.float32
-        with rasterio.open(tile_path, 'w', **tile_profile) as dst:
-            dst.write(tile_buffer, 1)
 
     def build_tiles(self,
                     dtm: np.ndarray,
@@ -188,13 +168,13 @@ class ClothSimulation(object):
                 tile_dsm_path = os.path.join(tmp_dir, "dsm_" + str(ty) + "_" + str(tx) + ".tif")
                 tile_dtm_path = os.path.join(tmp_dir, "dtm_" + str(ty) + "_" + str(tx) + ".tif")
 
-                self.write_tiles(tile_buffer = tile_dsm_buffer, 
-                                 tile_path=tile_dsm_path, 
-                                 original_profile=dsm_profile)
+                write_tiles(tile_buffer = tile_dsm_buffer, 
+                            tile_path=tile_dsm_path, 
+                            original_profile=dsm_profile)
                 
-                self.write_tiles(tile_buffer = tile_dtm_buffer, 
-                                 tile_path=tile_dtm_path, 
-                                 original_profile=dsm_profile)
+                write_tiles(tile_buffer = tile_dtm_buffer, 
+                            tile_path=tile_dtm_path, 
+                            original_profile=dsm_profile)
 
                 tile_dsm = Tile(start_y, start_x, end_y, end_x, 
                                 margin_top, margin_right, margin_bottom, margin_left, 
@@ -262,7 +242,7 @@ class ClothSimulation(object):
 
         item = tile_pair[1].path.split("/")[-1]
         output_tile_dtm_path = os.path.join(tmp_dir, "output_" + item)
-        self.write_tiles(dtm, output_tile_dtm_path, dsm_profile)
+        write_tiles(dtm, output_tile_dtm_path, dsm_profile)
 
         return (tile_pair, output_tile_dtm_path)
 
@@ -277,12 +257,12 @@ class ClothSimulation(object):
         in_dsm_dataset = rasterio.open(dsm_path)
         in_dsm_profile = in_dsm_dataset.profile
         dtm_path = os.path.join(output_dir, "raw_DTM.tif")
-        # Initial dsm
-        dsm_pyramid = []
-        dsm_pyramid.append(in_dsm_dataset.read().astype(np.float32)[0])
+
+        # Initialize Dsm Pyramid
+        dsm_pyramid = Pyramid(raster_path = dsm_path)
 
         # Retrieve dsm resolution
-        dsm_res = self.retrieve_dsm_resolution(dsm_dataset=in_dsm_dataset)
+        dsm_res = retrieve_raster_resolution(raster_dataset=in_dsm_dataset)
 
         # Determine max object size in pixels
         max_object_size_pixels = self.max_object_size / dsm_res
@@ -291,14 +271,13 @@ class ClothSimulation(object):
         # on the ground.
         nb_levels = self.get_max_pyramid_level(max_object_size_pixels/2) + 1
 
-        # Build the pyramid
-        for j in tqdm(range(1, nb_levels), desc="Building dsm pyramid..."):
-            dsm_pyramid.append(self.downsample(dsm_pyramid[j-1]))
-        
+        # Determine the minimum level to reach in the case where
+        # the user does not want the dtm at full resolution
+        min_level: int = self.get_pyramid_min_level(dsm_res = dsm_res)
         
         # Initialize the dtm at this current dsm.
-        dtm = (dsm_pyramid[nb_levels-1]).copy()
-        
+        dsm = dsm_pyramid.getArrayAtLevel(level=nb_levels-1)
+        dtm = dsm.copy()
 
         # Prevent unhook from hills
         bfilters = sf.PyBulldozerFilters()
@@ -310,7 +289,8 @@ class ClothSimulation(object):
         
         
         # Get min and max valid height from dsm
-        valid_data = dsm_pyramid[0][dsm_pyramid[0] != nodata_val]
+        
+        valid_data = dsm[dsm != nodata_val]
         min_alt = np.min(valid_data)
         max_alt = np.max(valid_data)
 
@@ -322,21 +302,25 @@ class ClothSimulation(object):
         max_level = nb_levels - 1
         current_num_outer_iterations = self.num_outer_iterations
 
-        while level > -1:
+        while level >= min_level:
 
             BulldozerLogger.log("Process level " + str(level) + "...", logging.INFO)
 
             if level < max_level:
+                
+                next_shape : tuple = dsm_pyramid.shape(level=level)
+                dsm = dsm_pyramid.getArrayAtLevel(level=level)
+                
                 # Upsample current dtm to the next level
-                dtm = self.upsample(dtm, dsm_pyramid[level].shape)
+                dtm = self.upsample(dtm, shape = next_shape)
 
             # Check if we need to tile for multi processing execution
-            # We tile only if tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1])
             margin = current_num_outer_iterations * self.num_inner_iterations * self.uniform_filter_size
-            if self.mp_tile_size + 2 * margin < max(dsm_pyramid[level].shape[0], dsm_pyramid[level].shape[1]):
+            
+            if self.mp_tile_size + 2 * margin < max(dsm.shape[0], dsm.shape[1]):
                 # Build tiles and save them to disk
                 tile_pair_list = self.build_tiles(dtm= dtm,
-                                                  dsm=dsm_pyramid[level],
+                                                  dsm = dsm,
                                                   margin=margin,
                                                   tmp_dir=output_dir,
                                                   dsm_profile=in_dsm_profile)
@@ -384,7 +368,7 @@ class ClothSimulation(object):
             
             else:
                 dtm = self.sequential_drape_cloth(dtm = dtm,
-                                                  dsm = dsm_pyramid[level],
+                                                  dsm = dsm,
                                                   num_outer_iterations = current_num_outer_iterations,
                                                   step = step,
                                                   nodata_val = nodata_val)
@@ -395,11 +379,16 @@ class ClothSimulation(object):
             # Decrease step and number of outer iterations
             step = step / (2 * 2 ** (max_level - level))
             current_num_outer_iterations = max(1, int(self.num_outer_iterations / 2**(max_level - level)))
-
-        self.write_tiles(tile_buffer= dtm, 
-                         tile_path = dtm_path,
-                         original_profile = in_dsm_profile)
+        
+        dtm_profile = downsample_profile(in_dsm_profile, 2**min_level)
+        dtm_profile['nodata'] = nodata_val
+        write_tiles(tile_buffer= dtm, 
+                    tile_path = dtm_path,
+                    original_profile = dtm_profile,
+                    tagLevel=min_level)
         
         BulldozerLogger.log("Dtm extraction done", logging.INFO)
+
+        in_dsm_dataset.close()
 
         return dtm_path

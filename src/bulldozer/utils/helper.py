@@ -30,6 +30,7 @@ import rasterio
 import logging
 import numpy as np
 from git import Repo
+from rasterio import Affine
 from git.exc import InvalidGitRepositoryError
 from bulldozer.utils.logging_helper import BulldozerLogger
 
@@ -92,6 +93,90 @@ def retrieve_nodata(dsm_path : str, cfg_nodata : float = None) -> float:
     
     # By default, if no value is set for nodata, return None
     return None
+
+def downsample_profile(profile, factor : float) :
+    
+    transform= profile['transform']
+
+    newprofile = profile.copy()
+    dst_transform = Affine.translation(transform[2], transform[5]) * Affine.scale(transform[0]*factor, transform[4]*factor)
+    
+    newprofile.update({
+    'transform': dst_transform,
+    })
+    
+    return newprofile
+
+def retrieve_raster_resolution(raster_dataset: rasterio.DatasetReader) -> float:
+    """ """
+    # We assume that resolution is the same wrt to both image axis
+    res_x: float =  raster_dataset.transform[0]
+    res_y: float = raster_dataset.transform[4]
+    if abs(res_x) != abs(res_y):
+        raise ValueError("Raster GSD must be the same wrt to the rows and columns.")
+    return abs(res_x)
+
+def write_tiles(tile_buffer: np.ndarray, 
+                tile_path: str,
+                original_profile: dict,
+                tagLevel: int = None) -> None:
+    """
+    """
+    tile_profile = original_profile
+    tile_profile["count"] = 1
+    tile_profile["width"] = tile_buffer.shape[1]
+    tile_profile["height"] = tile_buffer.shape[0]
+    tile_profile["dtype"] = np.float32
+    with rasterio.open(tile_path, 'w', **tile_profile) as dst:
+        if tagLevel is not None:
+            dst.update_tags(minLevel = tagLevel)
+        dst.write(tile_buffer, 1)
+
+class Pyramid(object):
+
+    def __init__(self, raster_path: str):
+        self.raster_path = raster_path
+
+        with rasterio.open(self.raster_path) as rasterDataset:
+            self.initial_shape = (rasterDataset.height, rasterDataset.width)
+
+    def shape(self, level:int = 0 ) -> tuple:
+        """
+            Compute downsampled shape
+            @params:
+                in_shape: shape to downsample
+                level: pyramide level (0 = full resolution)
+            @return:
+                tuple containing the downsampled shape
+        """
+        
+        factor=2**level
+
+        height = self.initial_shape[0] // factor 
+        width  = self.initial_shape[1] // factor
+        
+        if(self.initial_shape[0] % factor != 0):
+            height = height + 1
+
+        if(self.initial_shape[1] % factor != 0):
+            width = width + 1
+        
+        return (height, width)
+    
+    def getArrayAtLevel(self, level: int = 0):
+        """
+            Compute the decimated shape and then
+            use rasterio decimated method to get
+            the output array
+            https://rasterio.readthedocs.io/en/latest/api/rasterio.io.html#rasterio.io.BufferedDatasetWriter.read
+        """
+
+        with rasterio.open(self.raster_path) as raster_dataset:
+            if level == 0:
+                    return raster_dataset.read(indexes=1)
+            else:
+                decimated_shape: tuple = self.shape(level = level)
+                return raster_dataset.read(out_shape=decimated_shape, indexes=1)
         
 class Runtime:
     """

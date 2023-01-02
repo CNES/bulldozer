@@ -25,14 +25,14 @@ import os
 import time
 import logging
 import rasterio
-from rasterio.fill import fillnodata
 import numpy as np
 import scipy.ndimage as ndimage
 import bulldozer.springforce as sf
 from rasterio.fill import fillnodata
-from bulldozer.utils.helper import write_dataset, Runtime
-from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.scale.tools import scaleRun
+from rasterio.warp import reproject, Resampling
+from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.helper import write_dataset, Runtime, retrieve_raster_resolution, Pyramid, write_tiles, downsample_profile
 
 def generateOutputProfileForPitsDetection(inputProfile: rasterio.DatasetReader.profile):
     """
@@ -262,6 +262,60 @@ def buildIntermediateFilledDtm(dtm_path: str,
              inMemory = False)
 
 @Runtime
+def adaptToTargetResolution(raw_dtm_path: str,
+                            dsm_path: str,
+                            output_dir: str,
+                            quality_mask_path: str):
+
+    BulldozerLogger().log("Adapt to user resolution ", logging.INFO)
+
+    with rasterio.open(raw_dtm_path) as raw_dtm_dataset:
+        if "minLevel" in raw_dtm_dataset.tags():
+            decimated_level: int = int(raw_dtm_dataset.tags()["minLevel"])
+            if decimated_level > 0:
+                with rasterio.open(dsm_path) as dsm_dataset:
+                    # Need to decimate the dsm
+                    dsm_pyramid = Pyramid(raster_path = dsm_path)
+                    decimated_dsm = dsm_pyramid.getArrayAtLevel(level=decimated_level)
+                    # Flush the decimated dsm to disk
+                    decimated_dsm_path = os.path.join(output_dir, "decimated_dsm.tif")
+                    write_tiles(tile_buffer = decimated_dsm, 
+                                tile_path = decimated_dsm_path, 
+                                original_profile = downsample_profile(dsm_dataset.profile, 2**decimated_level))
+                    
+                # Need to reproject quality the mask
+                with rasterio.open(quality_mask_path) as full_mask_dataset:
+
+                    dest_profile = full_mask_dataset.profile.copy()
+                    dest_profile.update({
+                    'transform': raw_dtm_dataset.transform,
+                    'width': raw_dtm_dataset.width,
+                    'height': raw_dtm_dataset.height
+                    })
+
+                    decimated_quality_mask_path = os.path.join(output_dir, "decimated_quality_mask.tif")
+
+                    # apply with rasterio
+                    with rasterio.open(decimated_quality_mask_path, 'w', **dest_profile) as dst:
+
+                        reproject(
+                            source=rasterio.band(full_mask_dataset, 1),
+                            destination=rasterio.band(dst, 1),
+                            dst_transform=raw_dtm_dataset.transform,
+                            src_transform=full_mask_dataset.transform,
+                            resampling= Resampling.min,
+                            src_nodata=full_mask_dataset.nodata,
+                            dst_nodata=full_mask_dataset.nodata,
+                        )
+                    
+                    os.rename(src=decimated_quality_mask_path, 
+                              dst=quality_mask_path)
+
+                    return decimated_dsm_path
+        else:
+            return dsm_path
+
+@Runtime
 def postprocess_pipeline(raw_dtm_path : str, 
                          output_dir : str,
                          nb_max_workers : int = 1,
@@ -283,6 +337,15 @@ def postprocess_pipeline(raw_dtm_path : str,
         output_CRS: if a CRS (different from the input DSM) is provided, reproject the DTM to the new CRS.
     """
     BulldozerLogger.log("Starting postprocess", logging.INFO)
+
+    # We need to retrieve the resolution factor from the dtm
+    # in the case the user gives an output resolution greater than the full
+    # resolution
+    dsm_path: str = adaptToTargetResolution(raw_dtm_path = raw_dtm_path,
+                                            dsm_path = dsm_path,
+                                            output_dir = output_dir,
+                                            quality_mask_path = quality_mask_path)
+
 
     # Fill DTM nodata for future pits detection
     # To apply uniform filter you need to fill nodata value of the raw dtm
