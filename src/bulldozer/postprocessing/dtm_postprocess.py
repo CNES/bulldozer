@@ -282,36 +282,37 @@ def adaptToTargetResolution(raw_dtm_path: str,
                     write_tiles(tile_buffer = decimated_dsm, 
                                 tile_path = decimated_dsm_path, 
                                 original_profile = downsample_profile(dsm_dataset.profile, 2**decimated_level))
-                    
-                # Need to reproject quality the mask
-                with rasterio.open(quality_mask_path) as full_mask_dataset:
 
-                    dest_profile = full_mask_dataset.profile.copy()
-                    dest_profile.update({
-                    'transform': raw_dtm_dataset.transform,
-                    'width': raw_dtm_dataset.width,
-                    'height': raw_dtm_dataset.height
-                    })
+                if quality_mask_path:
+                    # Need to reproject quality the mask
+                    with rasterio.open(quality_mask_path) as full_mask_dataset:
 
-                    decimated_quality_mask_path = os.path.join(output_dir, "decimated_quality_mask.tif")
+                        dest_profile = full_mask_dataset.profile.copy()
+                        dest_profile.update({
+                        'transform': raw_dtm_dataset.transform,
+                        'width': raw_dtm_dataset.width,
+                        'height': raw_dtm_dataset.height
+                        })
 
-                    # apply with rasterio
-                    with rasterio.open(decimated_quality_mask_path, 'w', **dest_profile) as dst:
+                        decimated_quality_mask_path = os.path.join(output_dir, "decimated_quality_mask.tif")
 
-                        reproject(
-                            source=rasterio.band(full_mask_dataset, 1),
-                            destination=rasterio.band(dst, 1),
-                            dst_transform=raw_dtm_dataset.transform,
-                            src_transform=full_mask_dataset.transform,
-                            resampling= Resampling.min,
-                            src_nodata=full_mask_dataset.nodata,
-                            dst_nodata=full_mask_dataset.nodata,
-                        )
-                    
-                    os.rename(src=decimated_quality_mask_path, 
-                              dst=quality_mask_path)
+                        # apply with rasterio
+                        with rasterio.open(decimated_quality_mask_path, 'w', **dest_profile) as dst:
 
-                    return decimated_dsm_path
+                            reproject(
+                                source=rasterio.band(full_mask_dataset, 1),
+                                destination=rasterio.band(dst, 1),
+                                dst_transform=raw_dtm_dataset.transform,
+                                src_transform=full_mask_dataset.transform,
+                                resampling= Resampling.min,
+                                src_nodata=full_mask_dataset.nodata,
+                                dst_nodata=full_mask_dataset.nodata,
+                            )
+                        
+                        os.rename(src=decimated_quality_mask_path, 
+                                dst=quality_mask_path)
+
+                return decimated_dsm_path
         else:
             return dsm_path
 

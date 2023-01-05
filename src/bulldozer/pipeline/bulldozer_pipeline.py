@@ -77,8 +77,8 @@ def dsm_to_dtm(cfg: dict) -> None:
                                       cfg['outputDir'], 
                                       cfg['noData'])
 
-    raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
-    quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
+    # raw_dtm_path = os.path.join(cfg['outputDir'], "raw_DTM.tif")
+    # quality_mask_path = os.path.join(cfg['outputDir'], "quality_mask.tif")
 
     postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
                          output_dir = cfg['outputDir'],

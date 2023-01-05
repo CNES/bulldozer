@@ -314,6 +314,10 @@ class ClothSimulation(object):
                 # Upsample current dtm to the next level
                 dtm = self.upsample(dtm, shape = next_shape)
 
+                # New valid values has to replaced upsampled nodata in dtm
+                invalid_data = dtm == nodata_val
+                dtm[invalid_data] = dsm[invalid_data]
+
             # Check if we need to tile for multi processing execution
             margin = current_num_outer_iterations * self.num_inner_iterations * self.uniform_filter_size
             
