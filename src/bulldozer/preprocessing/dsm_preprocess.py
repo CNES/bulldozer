@@ -43,44 +43,40 @@ from bulldozer.utils.helper import Runtime
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
 
-def compute_border_nodata(dsm_path : str,
-                          window : rasterio.windows.Window, 
-                          axis : int,
-                          nodata : float = None) -> (np.ndarray, rasterio.windows.Window) :
-    """
+def generate_output_profile_for_mask(input_profile: rasterio.DatasetReader.profile) -> dict:
+    output_profile = input_profile
+    output_profile['dtype'] = np.ubyte
+    return output_profile
+
+def border_nodata_computer( inputBuffers: list,
+                            params: dict) -> np.ndarray:
+    """ 
     This method computes the border nodata mask in a given window of the input DSM.
 
     Args:
-        dsm_path: path to the input DSM.
-        window: coordinates of the concerned window.
-        axis: analyzed axis (0: horizontal window / 1: vertical window)
-        nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
-
+        inputBuffers: contain just one DSM buffer.
+        params:  dictionnary containing:
+            nodata value: DSM potentially custom nodata 
+            doTranspose: boolean flag to computer either horizontally or vertically the border no data.
     Returns:
-        mask flagging the border nodata areas and its associated window location in the input DSM.
+        mask flagging the border nodata areas
     """
-    with rasterio.open(dsm_path, 'r') as dataset:
-        dsm_strip = dataset.read(1, window=window).astype(np.float32)
+    dsm = inputBuffers[0]
+    nodata = params['nodata']
 
-        # If the user doesn't provide a specific nodata value in the config file, retrieve it from the DSM
-        if not nodata:
-            nodata = dataset.nodata
-            # If the nodata value is nan, overrides it by the bulldozer NO_DATA_VALUE constant 
-            if np.isnan(nodata):
-                dsm_strip = np.nan_to_num(dsm_strip, False, nan=NO_DATA_VALUE)
-                nodata = NO_DATA_VALUE
+    if np.isnan(nodata):
+        dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
+        nodata = NO_DATA_VALUE
+    
+    # We're using our C++ implementation to perform this computation
+    border_nodata = bn.PyBorderNodata()
 
-        # We're using our C++ implementation to perform this computation
-        border_nodata = bn.PyBorderNodata()
-
-        if axis == 0:
-            # Horizontal border nodata detection case (axis = 0)
-            border_nodata_mask = border_nodata.build_border_nodata_mask(dsm_strip, nodata).astype(np.ubyte)
-            return border_nodata_mask, window
-        else:
-            # Vertical border nodata detection case (axis = 1)
-            border_nodata_mask = border_nodata.build_border_nodata_mask(dsm_strip.T, nodata).astype(np.ubyte)
-            return border_nodata_mask.T, window
+    if params["doTranspose"]:
+        return border_nodata.build_border_nodata_mask(dsm, nodata).astype(np.ubyte)
+    else:
+        # Vertical border nodata detection case (axis = 1)
+        border_nodata_mask = border_nodata.build_border_nodata_mask(dsm.T, nodata).astype(np.ubyte)
+        return border_nodata_mask.T
     
 @Runtime
 def build_border_nodata_mask(dsm_path : str, 
@@ -98,141 +94,56 @@ def build_border_nodata_mask(dsm_path : str,
     Returns:
         border nodata boolean masks.
     """
-    with rasterio.open(dsm_path, 'r') as dataset:
-        # Vertical and horizontal border nodata mask initialization
-        horizontal_border_nodata = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
-        vertical_border_nodata = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
 
-        # Horizontal border nodata computation
-        strip_height = dataset.height // nb_max_workers
-        strips = [[i*strip_height, (i+1)*strip_height-1] for i in range(nb_max_workers)]
-        strips[-1][1] = dataset.height - 1
-        # Launching parallel processing: each worker computes the border nodata mask for a given DSM strip
-        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-            futures = {executor.submit(self.compute_border_nodata, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 0, nodata) for strip in strips}
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Horizontal Border Nodata Mask") :
-                mask, window = future.result()
-                window_shape = window.flatten()
-                start_row = window_shape[1]
-                end_row = start_row + window_shape[3] - 1
-                horizontal_border_nodata[start_row:end_row+1,:] = mask
+    borderNoDataParams: dict = {
+        'doTranspose': False,
+        'nodata': nodata
+    }
 
-        # Vertical border nodata computation
-        strip_width = dataset.width // nb_max_workers
-        strips = [[i*strip_width, (i+1)*strip_width-1] for i in range(nb_max_workers)]
-        strips[-1][1] = dataset.width - 1
-        # Launching parallel processing: each worker computes the border nodata mask for a given DSM strip
-        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-            futures = {executor.submit(self.compute_border_nodata, dsm_path, Window(strip[0],0,strip[1],dataset.height), 1, nodata) for strip in strips}
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Vertical Border Nodata Mask") :
-                mask, window = future.result()
-                window_shape = window.flatten()
-                start_col = window_shape[0]
-                end_col = start_col + window_shape[2] - 1
-                vertical_border_nodata[:,start_col:end_col+1] = mask        
-        
-        # Merges the two masks
-        border_nodata_mask = np.logical_and(horizontal_border_nodata, vertical_border_nodata)
+    horizontal_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
+                                        outputImagePath = None, 
+                                        algoComputer = border_nodata_computer, 
+                                        algoParams = borderNoDataParams, 
+                                        generateOutputProfileComputer = generate_output_profile_for_mask, 
+                                        nbWorkers = nb_max_workers, 
+                                        stableMargin = 0, 
+                                        inMemory=True)
+    
+    borderNoDataParams['doTranspose'] = True
+    vertical_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
+                                        outputImagePath = None, 
+                                        algoComputer = border_nodata_computer, 
+                                        algoParams = borderNoDataParams, 
+                                        generateOutputProfileComputer = generate_output_profile_for_mask, 
+                                        nbWorkers = nb_max_workers, 
+                                        stableMargin = 0, 
+                                        inMemory=True)     
+    
+    # Merges the two masks
+    return np.logical_and(horizontal_border_nodata, vertical_border_nodata)
 
-        return border_nodata_mask
-
-
-def compute_disturbance(dsm_path : rasterio.DatasetReader,
-                        window : rasterio.windows.Window,
-                        slope_treshold : float,
-                        is_four_connexity : bool) -> (np.ndarray, rasterio.windows.Window) :
-    """
-    This method computes the disturbance in a DSM window through the horizontal axis.
-    It returns the corresping disturbance mask.
-
-    Args:
-        dsm_path: path to the input DSM.
-        window: coordinates of the concerned window.
-        slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-        is_four_connexity: number of evaluated axis. 
-                        Vertical and horizontal if true else vertical, horizontal and diagonals.
-
-    Returns:
-        mask flagging the disturbed areas and its associated window location in the input DSM.
-    """
-    with rasterio.open(dsm_path, 'r') as dataset:
-        dsm_strip = dataset.read(1, window=window).astype(np.float32)
-
-        # Retrieves input DSM nodata and overides it by the bulldozer NO_DATA_VALUE constant 
-        nodata = dataset.nodata
-        if np.isnan(nodata):
-            dsm_strip = np.nan_to_num(dsm_strip, False, nan=NO_DATA_VALUE)
-        else:
-            if nodata != NO_DATA_VALUE:
-                dsm_strip = np.where(dsm_strip == nodata, NO_DATA_VALUE, dsm_strip)
-
-        disturbed_areas = da.PyDisturbedAreas(is_four_connexity)
-        disturbance_mask = disturbed_areas.build_disturbance_mask(dsm_strip, slope_treshold, NO_DATA_VALUE).astype(np.ubyte)
-        return disturbance_mask, window
-
-@Runtime
-def build_disturbance_mask(dsm_path: str,
-                           nb_max_workers : int,
-                           slope_treshold: float = 2.0,
-                           is_four_connexity : bool = True) -> np.array:
-    """
-    This method builds a mask corresponding to the disturbed areas in a given DSM.
-    Most of those areas correspond to water or correlation issues during the DSM generation (obstruction, etc.).
-
-    Args:
-        dsm_path: path to the input DSM.
-        nb_max_workers: number of availables workers (multiprocessing).
-        slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
-        is_four_connexity: number of evaluated axis. 
-                        Vertical and horizontal if true else vertical, horizontal and diagonals.
-
-    Returns:
-        masks containing the disturbed areas.
-    """
-    # Determine the number of strip and their height
-    with rasterio.open(dsm_path, 'r') as dataset:
-        strip_height = dataset.height // nb_max_workers
-        strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
-        # Borders handling
-        strips[0][0] = 0
-        strips[-1][1] = dataset.height - 1
-
-        # Output binary mask initialization
-        disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
-
-        # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
-        with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-            futures = {executor.submit(self.compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
-            slope_treshold, is_four_connexity) for strip in strips}
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
-                mask, window = future.result()
-                window_shape = window.flatten()
-                start_row = window_shape[1]
-                end_row = start_row + window_shape[3] - 1
-                start_row_mask = 0
-                end_row_mask = mask.shape[0] - 1 
-                if start_row > 0:
-                    start_row_mask = 1
-                    start_row = start_row + 1
-                
-                if end_row < dataset.height - 1:
-                    end_row_mask = end_row_mask - 1
-                    end_row = end_row - 1
-
-                disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
-        return disturbance_mask != 0
-
-def generateOuputProfileForDisturbedAreas(inputProfile: rasterio.DatasetReader.profile):
-    """
-        Only the dtype change 
-    """
-    outputProfile = inputProfile
-    outputProfile["dtype"] = np.ubyte
-    return outputProfile
 
 def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
     """
+        This method computes the disturbance in a DSM window through the horizontal axis.
+        It returns the corresping disturbance mask.
+
+        Args:
+            inputBuffers: contain just one DSM buffer.
+            params:  dictionnary containing:
+                nodata value: DSM potentially custom nodata 
+                slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
+                is_four_connexity: number of evaluated axis.
+        Returns:
+            mask flagging the disturbed areas. 
     """
+
+    nodata = params["nodata"]
+
+    if np.isnan(nodata):
+        dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
+        nodata = NO_DATA_VALUE
+
     disturbed_areas = da.PyDisturbedAreas(params["is_four_connexity"])
     disturbance_mask = disturbed_areas.build_disturbance_mask(inputBuffers[0], 
                                                               params["slope_threshold"],
@@ -242,7 +153,7 @@ def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
 
 def build_disturbance_mask(dsm_path: str,
                            nb_max_workers : int,
-                           slope_treshold: float = 2.0,
+                           slope_threshold: float = 2.0,
                            is_four_connexity : bool = True,
                            nodata: float = NO_DATA_VALUE) -> np.array:
     """
@@ -262,7 +173,7 @@ def build_disturbance_mask(dsm_path: str,
 
     disturbanceParams = {
         "is_four_connexity": is_four_connexity,
-        "slope_threshold": slope_treshold,
+        "slope_threshold": slope_threshold,
         "nodata": nodata,
         "desc": "Build Disturbance Mask"
     }
@@ -271,42 +182,10 @@ def build_disturbance_mask(dsm_path: str,
                                 outputImagePath = None,
                                 algoComputer= disturbedAreasComputer, 
                                 algoParams = disturbanceParams, 
-                                generateOutputProfileComputer =generateOuputProfileForDisturbedAreas, 
+                                generateOutputProfileComputer =generate_output_profile_for_mask, 
                                 nbWorkers = nb_max_workers, 
                                 stableMargin = 1,
                                 inMemory=True)
-
-    # # Determine the number of strip and their height
-    # with rasterio.open(dsm_path, 'r') as dataset:
-    #     strip_height = dataset.height // nb_max_workers
-    #     strips = [[i*strip_height-1, (i+1)*strip_height] for i in range(nb_max_workers)]
-    #     # Borders handling
-    #     strips[0][0] = 0
-    #     strips[-1][1] = dataset.height - 1
-
-    #     # Output binary mask initialization
-    #     disturbance_mask = np.zeros((dataset.height, dataset.width), dtype = np.ubyte)
-
-    #     # Launching parallel processing: each worker computes the disturbance mask for a given DSM strip
-    #     with concurrent.futures.ProcessPoolExecutor(max_workers=nb_max_workers) as executor :
-    #         futures = {executor.submit(compute_disturbance, dsm_path, Window(0,strip[0],dataset.width,strip[1]-strip[0]+1), 
-    #         slope_treshold, is_four_connexity) for strip in strips}
-    #         for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Build Disturbance Mask") :
-    #             mask, window = future.result()
-    #             window_shape = window.flatten()
-    #             start_row = window_shape[1]
-    #             end_row = start_row + window_shape[3] - 1
-    #             start_row_mask = 0
-    #             end_row_mask = mask.shape[0] - 1 
-    #             if start_row > 0:
-    #                 start_row_mask = 1
-    #                 start_row = start_row + 1
-                
-    #             if end_row < dataset.height - 1:
-    #                 end_row_mask = end_row_mask - 1
-    #                 end_row = end_row - 1
-
-    #             disturbance_mask[start_row:end_row+1,:] = mask[start_row_mask:end_row_mask+1, :]
     return disturbance_mask != 0
     
 def write_quality_mask(border_nodata_mask: np.ndarray,
@@ -343,7 +222,7 @@ def preprocess_pipeline(dsm_path : str,
                         output_dir : str,
                         nb_max_workers : int,
                         nodata : float = None,
-                        slope_treshold : float = 2.0, 
+                        slope_threshold : float = 2.0, 
                         is_four_connexity : bool = True,
                         minValidHeight: float = None) -> None:
     """
@@ -390,7 +269,7 @@ def preprocess_pipeline(dsm_path : str,
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         BulldozerLogger.log("Compute disturbance mask", logging.INFO)
-        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_treshold, is_four_connexity, nodata)
+        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_threshold, is_four_connexity, nodata)
         BulldozerLogger.log("disturbance mask: Done", logging.INFO)
         
         # Merges and writes the quality mask
