@@ -32,7 +32,7 @@ from rasterio.fill import fillnodata
 from bulldozer.scale.tools import scaleRun
 from rasterio.warp import reproject, Resampling
 from bulldozer.utils.logging_helper import BulldozerLogger
-from bulldozer.utils.helper import write_dataset, Runtime, retrieve_raster_resolution, Pyramid, write_tiles, downsample_profile
+from bulldozer.utils.helper import write_dataset, Runtime, retrieve_raster_resolution, Pyramid, write_tiles, downsample_profile, retrieve_nodata
 
 def generateOutputProfileForPitsDetection(inputProfile: rasterio.DatasetReader.profile):
     """
@@ -103,6 +103,52 @@ def generateOuputProfileForFillPits(inputProfile: rasterio.DatasetReader.profile
         Only the dtype change 
     """
     return inputProfile
+
+def checkIntersectionComputer(inputBuffers : list, params : dict) -> np.ndarray:
+    """
+    """
+    dtm = inputBuffers[0]
+    dsm = inputBuffers[1]
+    # Check intersection
+    dtm = np.where((dsm !=  params["dsm_nodata"]) & (dtm != params["dtm_nodata"]) & dsm < dtm, dsm, dtm)
+    return dtm
+
+@Runtime
+def checkIntersection(dtm_path : str,
+                      dsm_path : str, 
+                      out_dtm_path : str, 
+                      nb_max_workers : int,
+                      nodata: float) -> None:
+    """
+    This method will check that the new DTM is under the raw DSM and writes the result in out_dtm_path.
+
+    Args:
+        dtm_path: path to the input DTM.
+        dsm_path: path to the input raw DSM.
+        out_dtm_path: path to the output filled DTM. If None, overrides the dtm_path raster.
+        nb_max_workers: number of availables workers (multiprocessing requirement).
+    """
+
+    with rasterio.open(dtm_path, 'r') as dataset:
+
+        resolution = dataset.profile['transform'][0]
+        dsm_nodata = retrieve_nodata(dsm_path, nodata)
+        intersectionParams = {
+            "desc": "Intersection check",
+            "dtm_nodata": nodata,
+            "dsm_nodata": dsm_nodata
+        }
+        
+        # We use the same profile as pits 
+        scaleRun(inputImagePaths = [dtm_path, dsm_path], 
+                 outputImagePath = out_dtm_path, 
+                 algoComputer = checkIntersectionComputer, 
+                 algoParams = intersectionParams, 
+                 generateOutputProfileComputer = generateOuputProfileForFillPits, 
+                 nbWorkers = nb_max_workers, 
+                 stableMargin = 0,
+                 inMemory=False)
+
 
 def fillPitsComputer(inputBuffers: list, params: dict) -> np.ndarray:
     """
@@ -365,7 +411,16 @@ def postprocess_pipeline(raw_dtm_path : str,
     # Fills the detected pits
     #fill_pits(raw_dtm_path, pits_mask_path, dtm_path, nb_max_workers, nodata)
     fill_pits(filled_dtm_path, pits_mask_path, dtm_path, nb_max_workers, nodata)
-            
+
+
+    if dsm_path:
+        # check the interstion after the filling
+        checkIntersection(dtm_path = filled_dtm_path,
+                        dsm_path = dsm_path, 
+                        out_dtm_path = dtm_path, 
+                        nb_max_workers = nb_max_workers,
+                        nodata = nodata)
+
     with rasterio.open(dtm_path, 'r') as dtm_dataset:
         # Updates the quality mask if it's provided
         if quality_mask_path:

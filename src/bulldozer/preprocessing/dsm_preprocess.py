@@ -31,8 +31,8 @@ import logging
 import scipy.ndimage as ndimage
 from rasterio.windows import Window
 from rasterio.fill import fillnodata
-from bulldozer.preprocessing.bordernodata import bordernodata as bn
-from bulldozer.preprocessing.disturbedareas import disturbedareas as da
+import bulldozer.bordernodata as bn
+import bulldozer.disturbedareas as da
 from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
