@@ -37,7 +37,7 @@ from bulldozer.utils.helper import write_dataset
 from tqdm import tqdm
 from os import remove
 from bulldozer.utils.logging_helper import BulldozerLogger
-from bulldozer.scale.tools import computeTiles, scaleRun
+from bulldozer.scale.tools import computeTiles, scaleRun, scaleRunDebug
 from bulldozer.utils.helper import Runtime
 
 # No data value constant used in bulldozer
@@ -97,7 +97,8 @@ def build_border_nodata_mask(dsm_path : str,
 
     borderNoDataParams: dict = {
         'doTranspose': False,
-        'nodata': nodata
+        'nodata': nodata,
+        'desc': "Build Border NoData Mask"
     }
 
     horizontal_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
@@ -178,11 +179,11 @@ def build_disturbance_mask(dsm_path: str,
         "desc": "Build Disturbance Mask"
     }
 
-    disturbance_mask = scaleRun(inputImagePaths = [dsm_path], 
+    disturbance_mask = scaleRunDebug(inputImagePaths = [dsm_path], 
                                 outputImagePath = None,
                                 algoComputer= disturbedAreasComputer, 
                                 algoParams = disturbanceParams, 
-                                generateOutputProfileComputer =generate_output_profile_for_mask, 
+                                generateOutputProfileComputer = generate_output_profile_for_mask, 
                                 nbWorkers = nb_max_workers, 
                                 stableMargin = 1,
                                 inMemory=True)

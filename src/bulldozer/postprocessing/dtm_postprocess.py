@@ -110,7 +110,10 @@ def checkIntersectionComputer(inputBuffers : list, params : dict) -> np.ndarray:
     dtm = inputBuffers[0]
     dsm = inputBuffers[1]
     # Check intersection
-    dtm = np.where((dsm !=  params["dsm_nodata"]) & (dtm != params["dtm_nodata"]) & dsm < dtm, dsm, dtm)
+    dsm_valid = dsm != params["dsm_nodata"]
+    dtm_valid = dtm != params["dtm_nodata"]
+    valid = np.logical_and(dsm_valid, dtm_valid)
+    np.minimum(dtm, dsm, out=dtm, where=valid)
     return dtm
 
 @Runtime

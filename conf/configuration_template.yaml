@@ -2,9 +2,9 @@
 #       Parameters        #
 #-------------------------#
 # Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
-dsmPath : "/work/OT/ai4geo/DATA/ZONES_EC3/Toulouse/MNS_MICMAC/MNS_MICMAC_TOULOUSE.tif"
+dsmPath : "/work/OT/ai4usr/BULLDOZER/INPUT_DSM/LIDAR/ASS_LidarHD_Montpellier_idw.tif"
 # Output directory path (if the directory doesn't exist, create it)
-outputDir : "/work/scratch/lassalp/AI4GEO_WORKSPACE/OpenSourceBulldovalid/"
+outputDir : "/work/OT/ai4usr/BULLDOZER/RESULTS/v_1.0.0/LIDAR/"
 
 #-------------------------#
 #         Options         #
@@ -20,9 +20,9 @@ nbMaxWorkers : 16
 # Minimum valid height value, None or a float value. If null this parameter is ignored
 minValidHeight: null
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
-noData : -1e+09
+noData : -9999.0
 # If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-outputResolution : 4.0
+outputResolution : 4
 # If true, keep the intermediate results
 developperMode : False
 

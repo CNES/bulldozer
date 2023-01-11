@@ -88,7 +88,39 @@ def runNImgToImgAlgo(algoComputer: Callable,
     # send to master for writing
     return outputBuffer, outputWindow
 
+def scaleRunDebug(inputImagePaths: list,
+                 outputImagePath: str,
+                 algoComputer: Callable,
+                 algoParams: dict,
+                 generateOutputProfileComputer: Callable,
+                 nbWorkers: int,
+                 stableMargin: int,
+                 inMemory: bool = True) -> np.ndarray:
+    
+    """
+        Memory aware multiprocessing execution
+    """
+    
+    with rasterio.open(inputImagePaths[0], "r") as inputImgDataset:
 
+        # Generate the tiles
+        tiles = computeTiles(rasterHeight = inputImgDataset.height,
+                            rasterWidth = inputImgDataset.width,
+                            stableMargin = stableMargin,
+                            nbProcs = nbWorkers)
+
+        # Generate the output profile
+        outputProfile = generateOutputProfileComputer(inputImgDataset.profile)
+
+        wholeOutputArray = np.zeros((outputProfile["height"], 
+                                        outputProfile["width"]), dtype=outputProfile["dtype"])
+
+        for tile in tqdm(tiles, desc=algoParams['desc']):
+
+            outputImgBuffer, outputWindow = runNImgToImgAlgo(algoComputer, algoParams, inputImagePaths, tile)
+            wholeOutputArray[outputWindow.row_off: outputWindow.row_off + outputWindow.height, outputWindow.col_off: outputWindow.col_off + outputWindow.width] = outputImgBuffer[:]
+        
+        return wholeOutputArray
 
 def scaleRun(inputImagePaths: list,
              outputImagePath: str,
