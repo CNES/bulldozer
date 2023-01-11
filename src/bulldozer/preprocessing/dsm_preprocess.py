@@ -179,7 +179,7 @@ def build_disturbance_mask(dsm_path: str,
         "desc": "Build Disturbance Mask"
     }
 
-    disturbance_mask = scaleRunDebug(inputImagePaths = [dsm_path], 
+    disturbance_mask = scaleRun(inputImagePaths = [dsm_path], 
                                 outputImagePath = None,
                                 algoComputer= disturbedAreasComputer, 
                                 algoParams = disturbanceParams, 
