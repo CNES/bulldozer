@@ -50,7 +50,7 @@ def dsm_to_dtm(cfg: dict) -> None:
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(cfg['outputDir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
 
     # Retrieves the nodata value from the config file or the DSM metadata
-    cfg['noData'] = retrieve_nodata(cfg['dsmPath'], float(cfg['noData']))
+    cfg['noData'] = retrieve_nodata(cfg['dsmPath'], cfg['noData'])
     
     # Retrieves the number of CPU if the number of available workers is not set
     if not cfg['nbMaxWorkers']:

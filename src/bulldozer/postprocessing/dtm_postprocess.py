@@ -271,7 +271,7 @@ def buildIntermediateFilledDtm(dtm_path: str,
                                nodata: float,
                                nb_max_workers: int):
 
-    BulldozerLogger().log("Fill intermediate DTM", logging.INFO, __LINE__)
+    BulldozerLogger().log("Fill intermediate DTM", logging.INFO)
 
     fillParams = {
         "nodata": nodata,

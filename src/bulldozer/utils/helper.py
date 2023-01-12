@@ -71,7 +71,7 @@ def npAsContiguousArray(arr : np.array) -> np.array:
         arr = np.ascontiguousarray(arr)
     return arr
 
-def retrieve_nodata(dsm_path : str, cfg_nodata : float = None) -> float:
+def retrieve_nodata(dsm_path : str, cfg_nodata : str = None) -> float:
     """
     This method return the nodata value corresponding to the input DSM.
     The user can overrides the value existing in the metadata by providing a cfg_nodata value.
@@ -84,7 +84,7 @@ def retrieve_nodata(dsm_path : str, cfg_nodata : float = None) -> float:
         nodata value used in Bulldozer.
     """
     if cfg_nodata :
-        return cfg_nodata
+        return float(cfg_nodata)
     
     # If nodata is not specified in the config file, retrieve the value from the DSM metadata
     with rasterio.open(dsm_path) as dsm_dataset:
