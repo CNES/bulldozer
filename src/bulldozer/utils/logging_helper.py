@@ -55,8 +55,8 @@ class BulldozerLogger:
             fh = logging.FileHandler(filename=logger_file_path, mode='w')
             fh.setLevel(logging.DEBUG)
 
-            LOG_FORMAT = '%(asctime)s [%(levelname)s] %(module)s - %(funcName)s (line %(lineno)d): %(message)s'
-            logger_formatter = logging.Formatter(LOG_FORMAT)
+            LOG_FORMAT = '%(asctime)s [%(levelname)s]: %(message)s'
+            logger_formatter = logging.Formatter(LOG_FORMAT, datefmt="%Y-%m-%d,%H:%M:%S")
             fh.setFormatter(logger_formatter)
 
             logger.addHandler(fh)
@@ -65,7 +65,7 @@ class BulldozerLogger:
             sh.setLevel(logging.INFO)
 
             STREAM_FORMAT = '=%(asctime)s [%(levelname)s] %(module)s - %(message)s'
-            logger_formatter = logging.Formatter(STREAM_FORMAT)
+            logger_formatter = logging.Formatter(STREAM_FORMAT, datefmt="%H:%M:%S")
             sh.setFormatter(logger_formatter)
 
             logger.addHandler(sh)

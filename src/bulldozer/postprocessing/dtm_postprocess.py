@@ -112,7 +112,7 @@ def checkIntersectionComputer(inputBuffers : list, params : dict) -> np.ndarray:
     # Check intersection
     dsm_valid = dsm != params["dsm_nodata"]
     dtm_valid = dtm != params["dtm_nodata"]
-    valid = np.logical_and(dsm_valid, dtm_valid)
+    valid = np.logical_or(dsm_valid, dtm_valid)
     np.minimum(dtm, dsm, out=dtm, where=valid)
     return dtm
 
@@ -216,7 +216,7 @@ def buildDhmComputer(inputBuffers: list, params: dict) -> np.ndarray:
     dtm = inputBuffers[0]
     dsm = inputBuffers[1]
     dhm = dsm - dtm
-    dhm[dtm == params["nodata"]] == params["nodata"]
+    dhm = np.where(dsm == params['dsm_nodata'], params['dtm_nodata'], dhm)
     return dhm
 
 @Runtime
@@ -235,10 +235,13 @@ def build_dhm(dsm_path : str,
         output_dir: path to the output DHM file.
         nb_max_workers: number of availables workers (multiprocessing requirement).
     """
-    BulldozerLogger.log("DHM generation: Start", logging.INFO)
+    BulldozerLogger.log("DHM generation: Start", logging.DEBUG)
+
+    dsm_nodata = retrieve_nodata(dsm_path, nodata)
 
     dhmParams = {
-        "nodata": nodata,
+        "dtm_nodata": nodata,
+        "dsm_nodata": dsm_nodata,
         "desc": "Build Dhm"
     }
 
@@ -250,31 +253,6 @@ def build_dhm(dsm_path : str,
              nbWorkers = nb_max_workers, 
              stableMargin = 0,
              inMemory = False)
-
-def compute_dhm(dsm_path : str, 
-                dtm_path : str, 
-                dhm_path : str, 
-                window : rasterio.windows.Window,
-                nodata : float = None) -> (np.ndarray, rasterio.windows.Window)  :
-    """
-    This method computes the Digital Height Model DHM (DSM-DTM) for a given window.
-
-    Args:
-        dsm_path: path to the input DSM.
-        dtm_path: path to the input DTM.
-        dhm_path: path to the output DHM.
-        window: coordinates of the concerned window.
-
-    Returns:
-        the DHM values and the corresponding window.
-    """
-    with rasterio.open(dsm_path, 'r') as dsm_dataset:
-        dsm_strip = dsm_dataset.read(1, window=window).astype(np.float32)
-        with rasterio.open(dtm_path, 'r') as dtm_dataset:
-            dtm_strip = dtm_dataset.read(1, window=window).astype(np.float32)
-            dhm_strip = dsm_strip - dtm_strip
-            dhm_strip[dsm_strip == nodata] == nodata
-            return(dhm_strip, window)
 
 
 
@@ -293,7 +271,7 @@ def buildIntermediateFilledDtm(dtm_path: str,
                                nodata: float,
                                nb_max_workers: int):
 
-    BulldozerLogger().log("Fill intermediate DTM", logging.INFO)
+    BulldozerLogger().log("Fill intermediate DTM", logging.INFO, __LINE__)
 
     fillParams = {
         "nodata": nodata,
@@ -386,7 +364,7 @@ def postprocess_pipeline(raw_dtm_path : str,
         dsm_path: path to the input DSM. This argument is required for the DHM generation.
         output_CRS: if a CRS (different from the input DSM) is provided, reproject the DTM to the new CRS.
     """
-    BulldozerLogger.log("Starting postprocess", logging.INFO)
+    BulldozerLogger.log("Starting postprocess", logging.DEBUG)
 
     # We need to retrieve the resolution factor from the dtm
     # in the case the user gives an output resolution greater than the full

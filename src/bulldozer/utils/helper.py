@@ -190,5 +190,6 @@ class Runtime:
         func_start = time.perf_counter()
         result = self.function(*args, **kwargs)
         func_end = time.perf_counter()
-        BulldozerLogger.log("{}: Done (Runtime: {}s)".format(self.function.__name__, round(func_end-func_start,2)), logging.INFO)
+        # %(module)s - %(funcName)s
+        BulldozerLogger.log("{}-{}: Done (Runtime: {}s)".format(self.function.__module__, self.function.__name__, round(func_end-func_start,2)), logging.INFO)
         return result

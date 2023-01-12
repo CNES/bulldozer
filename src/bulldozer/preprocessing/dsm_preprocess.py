@@ -241,7 +241,7 @@ def preprocess_pipeline(dsm_path : str,
                         Vertical and horizontal if true else vertical, horizontal and diagonals.
     """ 
 
-    BulldozerLogger.log("Starting preprocess", logging.INFO)
+    BulldozerLogger.log("Starting preprocess", logging.DEBUG)
 
     # The value is already retrieved before calling the preprocess method
     # If it is none, it is set automatically to -32768
@@ -263,13 +263,13 @@ def preprocess_pipeline(dsm_path : str,
         preprocessedDsmProfile['nodata'] = nodata
         
         # Generates inner nodata mask
-        BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.INFO)
+        BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
         border_nodata_mask = build_border_nodata_mask(dsm_path, nb_max_workers, nodata)
         inner_nodata_mask = np.logical_and(np.logical_not(border_nodata_mask), dsm == nodata)
         BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
                 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
-        BulldozerLogger.log("Compute disturbance mask", logging.INFO)
+        BulldozerLogger.log("Compute disturbance mask", logging.DEBUG)
         disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_threshold, is_four_connexity, nodata)
         BulldozerLogger.log("disturbance mask: Done", logging.INFO)
         
@@ -279,9 +279,8 @@ def preprocess_pipeline(dsm_path : str,
         
         dsm[disturbed_area_mask] = nodata
 
-
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
-        BulldozerLogger.log("Write preprocessed dsm", logging.INFO)
+        BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
         write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
 

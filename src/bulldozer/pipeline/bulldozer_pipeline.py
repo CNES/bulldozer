@@ -88,11 +88,11 @@ def dsm_to_dtm(cfg: dict) -> None:
                          dsm_path = cfg['dsmPath'],
                          nodata = cfg['noData'])
     
-    # if not cfg['developperMode']:
-    #     # Remove the raw DTM since the postprocess pipeline generates a refined DTM
-    #     preprocessed_dsm_path = os.path.join(cfg['outputDir'], 'preprocessed_DSM.tif')
-    #     os.remove(raw_dtm_path)
-    #     os.remove(preprocessed_dsm_path)
+    if not cfg['developperMode']:
+        # Remove the raw DTM since the postprocess pipeline generates a refined DTM
+        preprocessed_dsm_path = os.path.join(cfg['outputDir'], 'preprocessed_DSM.tif')
+        os.remove(raw_dtm_path)
+        os.remove(preprocessed_dsm_path)
 
 def get_parser():
     """
