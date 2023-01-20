@@ -32,6 +32,12 @@ from bulldozer.utils.helper import downsample_profile, retrieve_raster_resolutio
 
 Tile = namedtuple('Tile', ['start_y', 'start_x', 'end_y', 'end_x', 'margin_top', 'margin_right', 'margin_bottom', 'margin_left', 'path'])
 
+import psutil
+def memory() :
+    process = psutil.Process(os.getpid())
+    mem = process.memory_info()
+    return mem.rss / 1024 / 1024
+
 class ClothSimulation(object):
 
     def __init__(self,            
@@ -218,7 +224,7 @@ class ClothSimulation(object):
                 
         # One final intersection check
         np.minimum(dtm, dsm, out=dtm, where=valid)
-
+        valid = None
         return dtm
 
     def tiled_drape_cloth(self,
@@ -243,6 +249,7 @@ class ClothSimulation(object):
         item = tile_pair[1].path.split("/")[-1]
         output_tile_dtm_path = os.path.join(tmp_dir, "output_" + item)
         write_tiles(dtm, output_tile_dtm_path, dsm_profile)
+        dtm = None
 
         return (tile_pair, output_tile_dtm_path)
 
@@ -253,14 +260,19 @@ class ClothSimulation(object):
 
         BulldozerLogger.log("Starting dtm extraction by Cloth simulation", logging.INFO)
 
+        print('   ##', 'in', memory())
+
         # Open the dsm dataset
         in_dsm_dataset = rasterio.open(dsm_path)
         in_dsm_profile = in_dsm_dataset.profile
         dtm_path = os.path.join(output_dir, "raw_DTM.tif")
 
+        print('   ##', 'opening', memory())
+
         # Initialize Dsm Pyramid
         dsm_pyramid = Pyramid(raster_path = dsm_path)
 
+        print('   ##', 'pyramid', memory())
         # Retrieve dsm resolution
         dsm_res = retrieve_raster_resolution(raster_dataset=in_dsm_dataset)
 
@@ -279,6 +291,8 @@ class ClothSimulation(object):
         dsm = dsm_pyramid.getArrayAtLevel(level=nb_levels-1)
         dtm = dsm.copy()
 
+        print('   ##', 'loading', memory())
+
         # Prevent unhook from hills
         bfilters = sf.PyBulldozerFilters()
         for i in tqdm(range(self.prevent_unhook_iter), desc="Prevent unhook from hills..."):
@@ -287,12 +301,15 @@ class ClothSimulation(object):
             dtm = bfilters.run(dtm, nb_rows, nb_cols, self.uniform_filter_size, nodata_val)
             dtm = dtm.reshape((nb_rows, nb_cols))
         
+               
+        print('   ##', 'unhook', memory())
         
         # Get min and max valid height from dsm
         
         valid_data = dsm[dsm != nodata_val]
         min_alt = np.min(valid_data)
         max_alt = np.max(valid_data)
+        valid_data = None
 
         # We deduce the initial step
         step = (max_alt - min_alt) / self.num_outer_iterations
@@ -302,8 +319,10 @@ class ClothSimulation(object):
         max_level = nb_levels - 1
         current_num_outer_iterations = self.num_outer_iterations
 
-        while level >= min_level:
 
+        print('   ##', 'out-while', memory())
+        while level >= min_level:
+            print('   ##', 'in-while'+ str(level), memory())
             BulldozerLogger.log("Process level " + str(level) + "...", logging.INFO)
 
             if level < max_level:
@@ -313,15 +332,17 @@ class ClothSimulation(object):
                 
                 # Upsample current dtm to the next level
                 dtm = self.upsample(dtm, shape = next_shape)
-
                 # New valid values has to replaced upsampled nodata in dtm
                 invalid_data = dtm == nodata_val
                 dtm[invalid_data] = dsm[invalid_data]
+                invalid_data = None
+
 
             # Check if we need to tile for multi processing execution
             margin = current_num_outer_iterations * self.num_inner_iterations * self.uniform_filter_size
             
             if self.mp_tile_size + 2 * margin < max(dsm.shape[0], dsm.shape[1]):
+                print('   ##', 'in-mpro', memory())
                 # Build tiles and save them to disk
                 tile_pair_list = self.build_tiles(dtm= dtm,
                                                   dsm = dsm,
@@ -329,6 +350,13 @@ class ClothSimulation(object):
                                                   tmp_dir=output_dir,
                                                   dsm_profile=in_dsm_profile)
 
+                
+                dtm_shape = dtm.shape
+                dsm = None
+                dtm = None
+                
+                
+                print('   ##', 'in-mpro-fork', memory())
                 output_tiles = []
 
                 # process each tile independently (results are flushed on disk, today disk accees is fast (SSD))
@@ -340,11 +368,12 @@ class ClothSimulation(object):
                                                nodata_val,
                                                output_dir) for tile_pair in tile_pair_list}
                     
-                for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Parallel Drape Cloth execution..."):
+                for future in concurrent.futures.as_completed(futures):
                     tile_pair, output_path = future.result()
                     output_tiles.append((tile_pair, output_path))
 
 
+                dtm = np.empty(dtm_shape, dtype=np.float32)
                 # concatenate in the output dtm
                 for res in output_tiles:
                     input_tile_pair = res[0]
@@ -369,21 +398,24 @@ class ClothSimulation(object):
                     os.remove(input_tile_pair[1].path)
 
                     dtm[start_y:end_y+1, start_x:end_x+1] = tile_dtm[tstart_y: tend_y + 1, tstart_x:tend_x+1]
-            
+                print('   ##', 'out-mpro', memory())
             else:
+                print('   ##', 'in-seq', memory())
                 dtm = self.sequential_drape_cloth(dtm = dtm,
                                                   dsm = dsm,
                                                   num_outer_iterations = current_num_outer_iterations,
                                                   step = step,
                                                   nodata_val = nodata_val)
-
+                print('   ##', 'out-seq', memory())
             # Decrease level
             level -= 1
+            dsm = None
 
             # Decrease step and number of outer iterations
             step = step / (2 * 2 ** (max_level - level))
             current_num_outer_iterations = max(1, int(self.num_outer_iterations / 2**(max_level - level)))
         
+        print('   ##', 'out-while', memory())
         dtm_profile = downsample_profile(in_dsm_profile, 2**min_level)
         dtm_profile['nodata'] = nodata_val
         write_tiles(tile_buffer= dtm, 
@@ -394,5 +426,5 @@ class ClothSimulation(object):
         BulldozerLogger.log("Dtm extraction done", logging.INFO)
 
         in_dsm_dataset.close()
-
+        print('   ##', 'end', memory())
         return dtm_path
