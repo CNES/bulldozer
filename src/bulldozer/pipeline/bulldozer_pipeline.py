@@ -58,11 +58,14 @@ def dsm_to_dtm(cfg: dict) -> None:
     
     preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(cfg['dsmPath'], 
                                                                    cfg['outputDir'], 
-                                                                   cfg['nbMaxWorkers'], 
+                                                                   cfg['nbMaxWorkers'],
+                                                                   cfg['maxMemory'], 
                                                                    cfg['noData'], 
                                                                    cfg['slopeThreshold'], 
                                                                    cfg['fourConnexity'],
                                                                    cfg['minValidHeight'])
+    
+
 
     clothSimu = ClothSimulation(cfg['maxObjectWidth'], 
                                 cfg['uniformFilterSize'], 
@@ -82,10 +85,12 @@ def dsm_to_dtm(cfg: dict) -> None:
 
     postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
                          output_dir = cfg['outputDir'],
-                         nb_max_workers = cfg['nbMaxWorkers'], 
+                         nb_max_workers = cfg['nbMaxWorkers'],
+                         max_memory = cfg['maxMemory'], 
                          quality_mask_path =  quality_mask_path, 
                          generate_dhm = cfg['generateDhm'], 
                          dsm_path = cfg['dsmPath'],
+                         check_intersection = cfg['checkIntersection'],
                          nodata = cfg['noData'])
     
     if not cfg['developperMode']:

@@ -13,6 +13,10 @@ outputDir : "/work/OT/ai4usr/BULLDOZER/RESULTS/v_1.0.0/LIDAR/"
 generateDhm : True
 # If null, bulldozer will use the maximum number of available CPU on your system
 nbMaxWorkers : 16
+# max memory to use in Go
+maxMemory: 5
+# If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
+checkIntersection: False
 
 #-------------------------#
 #    Advanced settings    #

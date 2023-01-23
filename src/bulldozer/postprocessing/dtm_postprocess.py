@@ -65,7 +65,8 @@ def detectPitsComputer(inputBuffers: list, params: dict) -> np.ndarray:
 @Runtime
 def build_pits_mask(dtm_path : np.ndarray,
                     pits_mask_path: str,
-                    nb_max_workers : int = 1) -> None:
+                    nb_max_workers : int,
+                    max_memory: float) -> None:
     """
     This method detects pits in the input DTM.
     Those pits are generated during the DTM extraction by remaining artefacts.
@@ -93,6 +94,7 @@ def build_pits_mask(dtm_path : np.ndarray,
                  algoParams = pitsParams,
                  generateOutputProfileComputer = generateOutputProfileForPitsDetection,
                  nbWorkers = nb_max_workers,
+                 maxMemory=max_memory,
                  stableMargin = pitsParams["filter_size"],
                  inMemory=False)
 
@@ -121,6 +123,7 @@ def checkIntersection(dtm_path : str,
                       dsm_path : str, 
                       out_dtm_path : str, 
                       nb_max_workers : int,
+                      max_memory: float,
                       nodata: float) -> None:
     """
     This method will check that the new DTM is under the raw DSM and writes the result in out_dtm_path.
@@ -148,7 +151,8 @@ def checkIntersection(dtm_path : str,
                  algoComputer = checkIntersectionComputer, 
                  algoParams = intersectionParams, 
                  generateOutputProfileComputer = generateOuputProfileForFillPits, 
-                 nbWorkers = nb_max_workers, 
+                 nbWorkers = nb_max_workers,
+                 maxMemory=max_memory,
                  stableMargin = 0,
                  inMemory=False)
 
@@ -172,6 +176,7 @@ def fill_pits(raw_dtm_path : str,
               pits_mask_path : str, 
               out_dtm_path : str, 
               nb_max_workers : int,
+              max_memory: float,
               nodata: float) -> None:
     """
     This method fills the pits of the input raw DTM and writes the result in out_dtm_path.
@@ -198,7 +203,8 @@ def fill_pits(raw_dtm_path : str,
                  algoComputer = fillPitsComputer, 
                  algoParams = pitsParams, 
                  generateOutputProfileComputer = generateOuputProfileForFillPits, 
-                 nbWorkers = nb_max_workers, 
+                 nbWorkers = nb_max_workers,
+                 maxMemory=max_memory,
                  stableMargin = pitsParams["filter_size"],
                  inMemory=False)
 
@@ -223,7 +229,8 @@ def buildDhmComputer(inputBuffers: list, params: dict) -> np.ndarray:
 def build_dhm(dsm_path : str, 
               dtm_path : str, 
               dhm_path : str, 
-              nb_max_workers : int = 1,
+              nb_max_workers : int,
+              max_memory: float,
               nodata : float = None) -> None:
     """
     This method generates a Digital Height Model DHM (DSM-DTM) in the provided directory.
@@ -250,7 +257,8 @@ def build_dhm(dsm_path : str,
              algoComputer = buildDhmComputer, 
              algoParams = dhmParams, 
              generateOutputProfileComputer =  generateOuputProfileForBuildDhm, 
-             nbWorkers = nb_max_workers, 
+             nbWorkers = nb_max_workers,
+             maxMemory=max_memory,
              stableMargin = 0,
              inMemory = False)
 
@@ -346,10 +354,12 @@ def adaptToTargetResolution(raw_dtm_path: str,
 @Runtime
 def postprocess_pipeline(raw_dtm_path : str, 
                          output_dir : str,
-                         nb_max_workers : int = 1,
+                         nb_max_workers : int,
+                         max_memory: float,
                          quality_mask_path : str = None, 
                          generate_dhm : bool = False,
                          dsm_path : str = None,
+                         check_intersection: bool = False,
                          nodata : float = None) -> None:
     """
     Bulldozer postprocess pipeline. It removes remaining pits.
@@ -382,24 +392,27 @@ def postprocess_pipeline(raw_dtm_path : str,
     buildIntermediateFilledDtm(dtm_path = raw_dtm_path,
                                filled_dtm_path = filled_dtm_path,
                                nodata = nodata,
-                               nb_max_workers = nb_max_workers)
+                               nb_max_workers = nb_max_workers,
+                               max_memory = max_memory
+                               )
 
     # Detects the pits in the DTM (due to correlation issue)
     pits_mask_path: str = os.path.join(output_dir, 'pits.tif')
-    build_pits_mask(filled_dtm_path, pits_mask_path, nb_max_workers)
+    build_pits_mask(filled_dtm_path, pits_mask_path, nb_max_workers, max_memory)
 
     dtm_path = os.path.join(output_dir, 'DTM.tif')
     # Fills the detected pits
     #fill_pits(raw_dtm_path, pits_mask_path, dtm_path, nb_max_workers, nodata)
-    fill_pits(filled_dtm_path, pits_mask_path, dtm_path, nb_max_workers, nodata)
+    fill_pits(filled_dtm_path, pits_mask_path, dtm_path, nb_max_workers, max_memory, nodata)
 
 
-    if dsm_path:
+    if dsm_path and check_intersection:
         # check the interstion after the filling
         checkIntersection(dtm_path = filled_dtm_path,
                         dsm_path = dsm_path, 
                         out_dtm_path = dtm_path, 
                         nb_max_workers = nb_max_workers,
+                        max_memory=max_memory,
                         nodata = nodata)
 
     with rasterio.open(dtm_path, 'r') as dtm_dataset:
@@ -418,4 +431,4 @@ def postprocess_pipeline(raw_dtm_path : str,
         # Generates the DHM (DSM - DTM) if the option is activated
         if generate_dhm and dsm_path:
             dhm_path = os.path.join(output_dir, "DHM.tif")
-            build_dhm(dsm_path, dtm_path, dhm_path, nb_max_workers, nodata)
+            build_dhm(dsm_path, dtm_path, dhm_path, nb_max_workers, max_memory, nodata)
