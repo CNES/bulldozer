@@ -4,6 +4,7 @@ import numpy as np
 import rasterio
 import concurrent.futures
 from tqdm import tqdm
+from bulldozer.scale.Shared import Shared
 
 Tile = namedtuple('Tile', ["startX", "startY", "endX", "endY", "topM", "rightM", "bottomM", "leftM"])
 
@@ -61,9 +62,19 @@ def runNImgToImgAlgo(algoComputer: Callable,
                                      width = width,
                                      height = height)
     
+
     inputBuffers = []
     for imgPath in inputImagePaths:
-        inputBuffers.append(rasterio.open(imgPath).read(window=window, indexes=1))
+        if Shared.is_shared_memory_path(imgPath) :
+            sh = Shared()
+            sh.open(imgPath)
+            array = sh.getArray()
+            extract=array[row_off:row_off+height, col_off:col_off+width].copy()
+            sh.close()
+            inputBuffers.append(extract)
+            
+        else:
+            inputBuffers.append(rasterio.open(imgPath).read(window=window, indexes=1))
     
 
     # Image to image filter, the user callable function must return
@@ -135,21 +146,50 @@ def scaleRun(inputImagePaths: list,
         Memory aware multiprocessing execution
     """
 
-    if inMemory:
+        
+    if Shared.is_shared_memory_path(inputImagePaths[0]) :
+        sh = Shared()
+        sh.open(inputImagePaths[0])
+        shape = sh.metadata['shape']
+        dtype = sh.metadata['dtype']
+        if 'profile' in sh.metadata :
+            inputProfile = sh.metadata['profile']
     
+    else : 
         with rasterio.open(inputImagePaths[0], "r") as inputImgDataset:
+            shape = (inputImgDataset.height, inputImgDataset.width)
+            dtype = inputImgDataset.dtypes[0]
+            inputProfile = inputImgDataset.profile.copy()
 
-            # Generate the tiles
-            tiles = computeTiles(rasterHeight = inputImgDataset.height,
-                                rasterWidth = inputImgDataset.width,
-                                stableMargin = stableMargin,
-                                nbProcs = nbWorkers)
+    # Generate the tiles
+    tiles = computeTiles(rasterHeight = shape[0],
+                        rasterWidth = shape[1],
+                        stableMargin = stableMargin,
+                        nbProcs = nbWorkers)
 
-            # Generate the output profile
-            outputProfile = generateOutputProfileComputer(inputImgDataset.profile)
 
-            wholeOutputArray = np.zeros((outputProfile["height"], 
-                                         outputProfile["width"]), dtype=outputProfile["dtype"])
+    if inMemory:
+        wholeOutputArray = np.zeros(shape, dtype=dtype)
+        with concurrent.futures.ProcessPoolExecutor(max_workers = nbWorkers) as executor:
+
+            futures = {executor.submit(runNImgToImgAlgo,
+                                       algoComputer,
+                                       algoParams,
+                                       inputImagePaths,
+                                       tile) for tile in tiles}
+                
+            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=algoParams['desc']):
+
+                outputImgBuffer, outputWindow = future.result()
+                wholeOutputArray[outputWindow.row_off: outputWindow.row_off + outputWindow.height, outputWindow.col_off: outputWindow.col_off + outputWindow.width] = outputImgBuffer[:]
+        return wholeOutputArray
+               
+        
+    else:
+        # Generate the output profile
+        outputProfile = generateOutputProfileComputer(inputProfile)
+
+        with rasterio.open(outputImagePath, "w", **outputProfile) as outputImgDataset:
 
 
             with concurrent.futures.ProcessPoolExecutor(max_workers = nbWorkers) as executor:
@@ -164,38 +204,7 @@ def scaleRun(inputImagePaths: list,
 
                     outputImgBuffer, outputWindow = future.result()
 
-                    wholeOutputArray[outputWindow.row_off: outputWindow.row_off + outputWindow.height, outputWindow.col_off: outputWindow.col_off + outputWindow.width] = outputImgBuffer[:]
-            
-            return wholeOutputArray
-
-    else:
-        with rasterio.open(inputImagePaths[0], "r") as inputImgDataset:
-
-            # Generate the tiles
-            tiles = computeTiles(rasterHeight = inputImgDataset.height,
-                                rasterWidth = inputImgDataset.width,
-                                stableMargin = stableMargin,
-                                nbProcs = nbWorkers)
-
-            # Generate the output profile
-            outputProfile = generateOutputProfileComputer(inputImgDataset.profile)
-
-            with rasterio.open(outputImagePath, "w", **outputProfile) as outputImgDataset:
-
-
-                with concurrent.futures.ProcessPoolExecutor(max_workers = nbWorkers) as executor:
-
-                    futures = {executor.submit(runNImgToImgAlgo,
-                                               algoComputer,
-                                               algoParams,
-                                               inputImagePaths,
-                                               tile) for tile in tiles}
-                        
-                    for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=algoParams['desc']):
-
-                        outputImgBuffer, outputWindow = future.result()
-
-                        outputImgDataset.write(outputImgBuffer, window=outputWindow, indexes=1)
+                    outputImgDataset.write(outputImgBuffer, window=outputWindow, indexes=1)
             
         return None
 

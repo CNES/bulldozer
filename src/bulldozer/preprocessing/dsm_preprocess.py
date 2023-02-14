@@ -22,22 +22,16 @@
     This module is used to preprocess the DSM in order to improve the DTM computation.
 """
 
-import sys
 import rasterio
 import os
-import concurrent.futures
 import numpy as np
 import logging
-import scipy.ndimage as ndimage
-from rasterio.windows import Window
-from rasterio.fill import fillnodata
 import bulldozer.bordernodata as bn
 import bulldozer.disturbedareas as da
 from bulldozer.utils.helper import write_dataset
-from tqdm import tqdm
-from os import remove
 from bulldozer.utils.logging_helper import BulldozerLogger
-from bulldozer.scale.tools import computeTiles, scaleRun, scaleRunDebug
+from bulldozer.scale.tools import scaleRun
+from bulldozer.scale.Shared import Shared
 from bulldozer.utils.helper import Runtime
 
 # No data value constant used in bulldozer
@@ -75,7 +69,8 @@ def border_nodata_computer( inputBuffers: list,
         return border_nodata.build_border_nodata_mask(dsm, nodata).astype(np.ubyte)
     else:
         # Vertical border nodata detection case (axis = 1)
-        border_nodata_mask = border_nodata.build_border_nodata_mask(dsm.T, nodata).astype(np.ubyte)
+        dsm = dsm.T
+        border_nodata_mask = border_nodata.build_border_nodata_mask(dsm, nodata).astype(np.ubyte)
         return border_nodata_mask.T
     
 @Runtime
@@ -110,18 +105,26 @@ def build_border_nodata_mask(dsm_path : str,
                                         stableMargin = 0, 
                                         inMemory=True)
     
-    borderNoDataParams['doTranspose'] = True
-    vertical_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
-                                        outputImagePath = None, 
-                                        algoComputer = border_nodata_computer, 
-                                        algoParams = borderNoDataParams, 
-                                        generateOutputProfileComputer = generate_output_profile_for_mask, 
-                                        nbWorkers = nb_max_workers, 
-                                        stableMargin = 0, 
-                                        inMemory=True)     
     
-    # Merges the two masks
-    return np.logical_and(horizontal_border_nodata, vertical_border_nodata)
+    with Shared.make_shared_from_numpy(horizontal_border_nodata) as shared_horizontal_border_nodata:
+        horizontal_border_nodata = None
+        
+        borderNoDataParams['doTranspose'] = True
+        vertical_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
+                                            outputImagePath = None, 
+                                            algoComputer = border_nodata_computer, 
+                                            algoParams = borderNoDataParams, 
+                                            generateOutputProfileComputer = generate_output_profile_for_mask, 
+                                            nbWorkers = nb_max_workers, 
+                                            stableMargin = 0, 
+                                            inMemory=True)
+        
+        # Merges the two masks
+        mask =  np.logical_and(shared_horizontal_border_nodata.getArray(), vertical_border_nodata)
+        vertical_border_nodata = None
+    
+    
+    return mask
 
 
 def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
@@ -250,41 +253,51 @@ def preprocess_pipeline(dsm_path : str,
         nodata = NO_DATA_VALUE
 
     with rasterio.open(dsm_path) as dsm_dataset:
+        preprocessedDsmProfile = dsm_dataset.profile
+        preprocessedDsmProfile['nodata'] = nodata
         
-        # Read the buffer in memory
-        dsm = dsm_dataset.read(1)
+
+    # Read the buffer in shared memory
+    with Shared.make_shared_from_rasterio(dsm_path) as shared_dsm:
+        dsm = shared_dsm.getArray()
+        dsm_memory_path = shared_dsm.get_memory_path()
+        
         
         # handle the case where there are dynamic nodata values (MicMac DSM for example)
         if minValidHeight:
             BulldozerLogger.log("Min valid height set by the user" + str(minValidHeight), logging.INFO)
-            dsm = np.where( dsm < minValidHeight, nodata, dsm)
+            dsm[:] = np.where( dsm < minValidHeight, nodata, dsm)[:]
 
-        preprocessedDsmProfile = dsm_dataset.profile
-        preprocessedDsmProfile['nodata'] = nodata
-        
-        # Generates inner nodata mask
-        BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
-        border_nodata_mask = build_border_nodata_mask(dsm_path, nb_max_workers, nodata)
-        inner_nodata_mask = np.logical_and(np.logical_not(border_nodata_mask), dsm == nodata)
-        BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
-                
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         BulldozerLogger.log("Compute disturbance mask", logging.DEBUG)
-        disturbed_area_mask = build_disturbance_mask(dsm_path, nb_max_workers, slope_threshold, is_four_connexity, nodata)
+        disturbed_area_mask = build_disturbance_mask(dsm_memory_path, nb_max_workers, slope_threshold, is_four_connexity, nodata)
         BulldozerLogger.log("disturbance mask: Done", logging.INFO)
+
+     
+        with Shared.make_shared_from_numpy(disturbed_area_mask) as shared_disturbed_area_mask:
+            disturbed_area_mask = None
+            
+            # Generates inner nodata mask
+            BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
+            border_nodata_mask = build_border_nodata_mask(dsm_memory_path, nb_max_workers, nodata)
+            inner_nodata_mask = np.logical_and(np.logical_not(border_nodata_mask), dsm == nodata)
+            BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
         
-        # Merges and writes the quality mask
-        quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
-        write_quality_mask(border_nodata_mask, inner_nodata_mask, disturbed_area_mask, quality_mask_path, dsm_dataset.profile)
-        
-        dsm[disturbed_area_mask] = nodata
+            # Merges and writes the quality mask
+            quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
+            write_quality_mask(border_nodata_mask, inner_nodata_mask, shared_disturbed_area_mask.getArray(), quality_mask_path, preprocessedDsmProfile)
+            
+            border_nodata_mask = None
+            inner_nodata_mask = None
+            
+            dsm[shared_disturbed_area_mask.getArray()] = nodata
+    
 
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
         BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
         write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
 
-        dsm_dataset.close()
-        BulldozerLogger.log("Preprocess done", logging.INFO)
+    BulldozerLogger.log("Preprocess done", logging.INFO)
 
-        return preprocessed_dsm_path, quality_mask_path
+    return preprocessed_dsm_path, quality_mask_path

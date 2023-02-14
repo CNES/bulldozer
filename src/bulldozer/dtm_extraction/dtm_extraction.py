@@ -401,6 +401,7 @@ class ClothSimulation(object):
                     original_profile = dtm_profile,
                     tagLevel=min_level)
         
+        dtm = None
         BulldozerLogger.log("Dtm extraction done", logging.INFO)
 
         in_dsm_dataset.close()

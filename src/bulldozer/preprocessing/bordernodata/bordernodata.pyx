@@ -71,4 +71,4 @@ cdef class PyBorderNodata:
         # Border nodata detection
         self.border_nodata.buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], no_data_value)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
-        return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool)
+        return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.bool8)
