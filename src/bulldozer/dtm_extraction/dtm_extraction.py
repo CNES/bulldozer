@@ -218,7 +218,7 @@ class ClothSimulation(object):
                 
         # One final intersection check
         np.minimum(dtm, dsm, out=dtm, where=valid)
-
+        valid = None
         return dtm
 
     def tiled_drape_cloth(self,
@@ -243,6 +243,7 @@ class ClothSimulation(object):
         item = tile_pair[1].path.split("/")[-1]
         output_tile_dtm_path = os.path.join(tmp_dir, "output_" + item)
         write_tiles(dtm, output_tile_dtm_path, dsm_profile)
+        dtm = None
 
         return (tile_pair, output_tile_dtm_path)
 
@@ -293,6 +294,7 @@ class ClothSimulation(object):
         valid_data = dsm[dsm != nodata_val]
         min_alt = np.min(valid_data)
         max_alt = np.max(valid_data)
+        valid_data = None
 
         # We deduce the initial step
         step = (max_alt - min_alt) / self.num_outer_iterations
@@ -317,6 +319,7 @@ class ClothSimulation(object):
                 # New valid values has to replaced upsampled nodata in dtm
                 invalid_data = dtm == nodata_val
                 dtm[invalid_data] = dsm[invalid_data]
+                invalid_data = None
 
             # Check if we need to tile for multi processing execution
             margin = current_num_outer_iterations * self.num_inner_iterations * self.uniform_filter_size
@@ -329,6 +332,11 @@ class ClothSimulation(object):
                                                   tmp_dir=output_dir,
                                                   dsm_profile=in_dsm_profile)
 
+                # Free Memory before fork process
+                dtm_shape = dtm.shape
+                dsm = None
+                dtm = None
+                
                 output_tiles = []
 
                 # process each tile independently (results are flushed on disk, today disk accees is fast (SSD))
@@ -345,6 +353,7 @@ class ClothSimulation(object):
                     output_tiles.append((tile_pair, output_path))
 
 
+                dtm = np.empty(dtm_shape, dtype=np.float32)
                 # concatenate in the output dtm
                 for res in output_tiles:
                     input_tile_pair = res[0]
@@ -379,6 +388,7 @@ class ClothSimulation(object):
 
             # Decrease level
             level -= 1
+            dsm = None
 
             # Decrease step and number of outer iterations
             step = step / (2 * 2 ** (max_level - level))
@@ -391,6 +401,7 @@ class ClothSimulation(object):
                     original_profile = dtm_profile,
                     tagLevel=min_level)
         
+        dtm = None
         BulldozerLogger.log("Dtm extraction done", logging.INFO)
 
         in_dsm_dataset.close()
