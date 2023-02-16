@@ -41,29 +41,29 @@ import time
 __version__ = "0.1.0"
 
 
-import psutil
+# import psutil
 
-stop_thread = False
+# stop_thread = False
 
-def memory() :
-    t0 = time.time()
-    with open('memory.txt', 'w') as out :
-        process = psutil.Process(os.getpid())
-        while   True :
-            t = time.time()
-            mem = process.memory_info()
-            print("%.2f" % (t - t0), "%.2f" %  (mem.rss / 1024 / 1024), end='', file=out)
+# def memory() :
+#     t0 = time.time()
+#     with open('memory.txt', 'w') as out :
+#         process = psutil.Process(os.getpid())
+#         while   True :
+#             t = time.time()
+#             mem = process.memory_info()
+#             print("%.2f" % (t - t0), "%.2f" %  (mem.rss / 1024 / 1024), end='', file=out)
             
-            children = process.children()
-            for child in children:
-                print('\t', "%.2f" %  (child.memory_info().rss / 1024 / 1024), end='', file=out) 
+#             children = process.children()
+#             for child in children:
+#                 print('\t', "%.2f" %  (child.memory_info().rss / 1024 / 1024), end='', file=out) 
         
-            print('', file=out)
-            time.sleep(0.5)
-            global stop_thread
-            if stop_thread:
-                out.close()
-                break
+#             print('', file=out)
+#             time.sleep(0.5)
+#             global stop_thread
+#             if stop_thread:
+#                 out.close()
+#                 break
 
 @Runtime
 def dsm_to_dtm(cfg: dict) -> None:
@@ -78,8 +78,8 @@ def dsm_to_dtm(cfg: dict) -> None:
 
 
     
-    x = threading.Thread(target=memory)
-    x.start()
+    # x = threading.Thread(target=memory)
+    # x.start()
 
     # Retrieves the nodata value from the config file or the DSM metadata
     cfg['noData'] = retrieve_nodata(cfg['dsmPath'], cfg['noData'])
@@ -126,9 +126,9 @@ def dsm_to_dtm(cfg: dict) -> None:
         os.remove(raw_dtm_path)
         os.remove(preprocessed_dsm_path)
         
-    global stop_thread
-    stop_thread = True
-    x.join()
+    # global stop_thread
+    # stop_thread = True
+    # x.join()
 
 def get_parser():
     """

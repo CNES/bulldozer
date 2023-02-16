@@ -30,6 +30,7 @@ import scipy.ndimage as ndimage
 import bulldozer.springforce as sf
 from rasterio.fill import fillnodata
 from bulldozer.scale.tools import scaleRun
+from bulldozer.scale.Shared import Shared
 from rasterio.warp import reproject, Resampling
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.utils.helper import write_dataset, Runtime, retrieve_raster_resolution, Pyramid, write_tiles, downsample_profile, retrieve_nodata

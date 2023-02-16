@@ -12,7 +12,7 @@ class Shared(object):
     Shared allow to manage an array in shared memory
     The class :
      - store an array in multiprocessing.shared_memory
-     - manage metada to tanstyping data in a more complex object
+     - manage metada to transtyping data in a more complex object
      - manage lifetime of shared memory
     '''
 
@@ -37,7 +37,7 @@ class Shared(object):
     @staticmethod
     def make_shared_array(shape, dtype):
         '''
-        Construct directly an array in sahred memory
+        Construct directly an array in shared memory
         '''
         shd = Shared()
         shd.create(shape, dtype)
@@ -78,7 +78,7 @@ class Shared(object):
         if not self.is_shared_memory_path(path) :
             raise FileNotFoundError(path)
         
-        self.resourceKey = path.removeprefix('shd:/')
+        self.resourceKey = path.lstrip('shd:/') # path.removeprefix('shd:/')
         self.pid=-1
         
         shm = shared_memory.SharedMemory(name=self.resourceKey+'metadata')
