@@ -217,43 +217,7 @@ def scaleRun(inputImagePaths: list,
 
                     outputImgBuffer, outputWindow = future.result()
 
-<<<<<<< HEAD
-                    wholeOutputArray[outputWindow.row_off: outputWindow.row_off + outputWindow.height, outputWindow.col_off: outputWindow.col_off + outputWindow.width] = outputImgBuffer[:]
-            
-            return wholeOutputArray
-
-    else:
-        with rasterio.open(inputImagePaths[0], "r") as inputImgDataset:
-
-            # Generate the tiles
-            tiles = computeTiles(rasterHeight = inputImgDataset.height,
-                                rasterWidth = inputImgDataset.width,
-                                stableMargin = stableMargin,
-                                nbProcs = nbWorkers,
-                                maxMemory = maxMemory)
-
-            # Generate the output profile
-            outputProfile = generateOutputProfileComputer(inputImgDataset.profile)
-
-            with rasterio.open(outputImagePath, "w", **outputProfile) as outputImgDataset:
-
-
-                with concurrent.futures.ProcessPoolExecutor(max_workers = nbWorkers) as executor:
-
-                    futures = {executor.submit(runNImgToImgAlgo,
-                                               algoComputer,
-                                               algoParams,
-                                               inputImagePaths,
-                                               tile) for tile in tiles}
-                        
-                    for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=algoParams['desc']):
-
-                        outputImgBuffer, outputWindow = future.result()
-
-                        outputImgDataset.write(outputImgBuffer, window=outputWindow, indexes=1)
-=======
                     outputImgDataset.write(outputImgBuffer, window=outputWindow, indexes=1)
->>>>>>> memory
             
         return None
 

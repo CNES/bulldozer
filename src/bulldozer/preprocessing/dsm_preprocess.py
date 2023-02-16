@@ -107,19 +107,6 @@ def build_border_nodata_mask(dsm_path : str,
                                         stableMargin = 0, 
                                         inMemory=True)
     
-<<<<<<< HEAD
-    borderNoDataParams['doTranspose'] = True
-    vertical_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
-                                        outputImagePath = None, 
-                                        algoComputer = border_nodata_computer, 
-                                        algoParams = borderNoDataParams, 
-                                        generateOutputProfileComputer = generate_output_profile_for_mask, 
-                                        nbWorkers = nb_max_workers,
-                                        maxMemory=max_memory, 
-                                        stableMargin = 0, 
-                                        inMemory=True)     
-=======
->>>>>>> memory
     
     with Shared.make_shared_from_numpy(horizontal_border_nodata) as shared_horizontal_border_nodata:
         horizontal_border_nodata = None
