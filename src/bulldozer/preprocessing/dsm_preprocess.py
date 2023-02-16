@@ -76,7 +76,6 @@ def border_nodata_computer( inputBuffers: list,
 @Runtime
 def build_border_nodata_mask(dsm_path : str, 
                              nb_max_workers : int,
-                             max_memory: float, 
                              nodata : float = None) -> np.ndarray:
     """
     This method builds a mask corresponding to the border nodata values.
@@ -102,8 +101,7 @@ def build_border_nodata_mask(dsm_path : str,
                                         algoComputer = border_nodata_computer, 
                                         algoParams = borderNoDataParams, 
                                         generateOutputProfileComputer = generate_output_profile_for_mask, 
-                                        nbWorkers = nb_max_workers,
-                                        maxMemory=max_memory, 
+                                        nbWorkers = nb_max_workers, 
                                         stableMargin = 0, 
                                         inMemory=True)
     
@@ -159,7 +157,6 @@ def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
 
 def build_disturbance_mask(dsm_path: str,
                            nb_max_workers : int,
-                           max_memory: float,
                            slope_threshold: float = 2.0,
                            is_four_connexity : bool = True,
                            nodata: float = NO_DATA_VALUE) -> np.array:
@@ -191,7 +188,6 @@ def build_disturbance_mask(dsm_path: str,
                                 algoParams = disturbanceParams, 
                                 generateOutputProfileComputer = generate_output_profile_for_mask, 
                                 nbWorkers = nb_max_workers,
-                                maxMemory=max_memory,
                                 stableMargin = 1,
                                 inMemory=True)
     return disturbance_mask != 0
@@ -229,7 +225,6 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
 def preprocess_pipeline(dsm_path : str, 
                         output_dir : str,
                         nb_max_workers : int,
-                        max_memory: float,
                         nodata : float = None,
                         slope_threshold : float = 2.0, 
                         is_four_connexity : bool = True,
@@ -278,7 +273,7 @@ def preprocess_pipeline(dsm_path : str,
         disturbed_area_mask = build_disturbance_mask(dsm_memory_path, nb_max_workers, slope_threshold, is_four_connexity, nodata)
         BulldozerLogger.log("disturbance mask: Done", logging.INFO)
 
-     
+
         with Shared.make_shared_from_numpy(disturbed_area_mask) as shared_disturbed_area_mask:
             disturbed_area_mask = None
             

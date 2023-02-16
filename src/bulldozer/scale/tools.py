@@ -11,25 +11,15 @@ Tile = namedtuple('Tile', ["startX", "startY", "endX", "endY", "topM", "rightM",
 def computeTiles(rasterHeight: float,
                  rasterWidth: float,
                  stableMargin: int,
-                 nbProcs: int,
-                 maxMemory: float):
+                 nbProcs: int):
     """
         Given a square tile size and a stable margin,
         this method will compute a list of tiles covering
         all the given input image
-        maxMemory is given in MB
     """
     tiles = []
 
-    # Take into consideration the max number of memory
-    maxMemoryBytes: float = maxMemory * 1024 * 1024 *1024
-    
-    
-    nbMaxRowsPerStrip = rasterHeight
-    if maxMemoryBytes > rasterWidth * 4.0:
-        nbMaxRowsPerStrip: int = int(maxMemoryBytes /  (rasterWidth * 4.0))
-    nbMaxRowsPerStrip = min(int(rasterHeight), nbMaxRowsPerStrip)
-    stripHeight: int = int(nbMaxRowsPerStrip / nbProcs)
+    stripHeight: int = int(rasterHeight / nbProcs)
     nbTilesY : int = int(rasterHeight / stripHeight)
     nbTilesY = nbTilesY if rasterHeight % stripHeight == 0 else nbTilesY + 1
     
@@ -151,7 +141,6 @@ def scaleRun(inputImagePaths: list,
              algoParams: dict,
              generateOutputProfileComputer: Callable,
              nbWorkers: int,
-             maxMemory: float,
              stableMargin: int,
              inMemory: bool = True) -> np.ndarray:
     

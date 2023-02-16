@@ -90,8 +90,7 @@ def dsm_to_dtm(cfg: dict) -> None:
     
     preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(cfg['dsmPath'], 
                                                                    cfg['outputDir'], 
-                                                                   cfg['nbMaxWorkers'],
-                                                                   cfg['maxMemory'], 
+                                                                   cfg['nbMaxWorkers'], 
                                                                    cfg['noData'], 
                                                                    cfg['slopeThreshold'], 
                                                                    cfg['fourConnexity'],
@@ -118,7 +117,6 @@ def dsm_to_dtm(cfg: dict) -> None:
     postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
                          output_dir = cfg['outputDir'],
                          nb_max_workers = cfg['nbMaxWorkers'],
-                         max_memory = cfg['maxMemory'], 
                          quality_mask_path =  quality_mask_path, 
                          generate_dhm = cfg['generateDhm'], 
                          dsm_path = cfg['dsmPath'],
