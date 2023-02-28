@@ -1,12 +1,12 @@
 <div align="center">
-    <img src="docs/source/_static/images/bulldozer-logo.svg" width=512>
+    <img src="docs/source/images/bulldozer_logo.png" width=256
+    >
 
 **Bulldozer, a DTM extraction tool requiring only a DSM as input.**
 
 [![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Documentation](https://readthedocs.org/projects/cars/badge/?version=latest)](https://github.com/CNES/bulldozer)
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
@@ -25,29 +25,32 @@
 ## Key features
 
 <div align="center">
-<img src="docs/source/images/overview_dsm_3d.gif" alt="drawing" width="400"/>
+<img src="docs/source/images/result_overview.gif" alt="drawing" width="400"/>
 </div>
 
-
-**Bulldozer** is designed as a pipeline of standalone functions.
+**Bulldozer** is designed as a pipeline of standalone functions that aims to extract a *Digital Terrain Model* (DTM) from a *Digital Surface Model* (DSM).  
+But you can also use one of the following function without running the full pipeline:
 * **DSM preprocessing**
-    * **Nodata extraction:** 
-    * **Disturbed areas detection:**
+    * **Nodata extraction:** a group of methods to differentiate and extract nodata related to failed correlations during the DSM computation and those of the image border
+    * **Disturbed areas detection:** a method to locate disturbed areas. These noisy areas are mainly related to areas in which the correlator has incorrectly estimated the elevation (water or shadow areas).
 * **DTM extraction**
-    * **Nodata extraction:** 
-
+    * **DTM computation:** the main method that extracts the DTM from the preprocessed DSM.
 * **DTM postprocessing**
-    * **Nodata extraction:** 
+    * **Pits detection:** a method to detect pits in the provided raster and return the corresponding mask.
+    * **Pits filling:** a method to fill pits in the generated DTM (or input raster).
+    * **DHM computation:** a method to extract the *Digital Height Model* (DHM).
+
+For more information about these functions and how to call them, please refer to the <a href="#notebooks">notebook documentation section</a>.
 
 ## Installation
 
-It is recommended to install **Bullodzer** into a virtual environment, like `conda` or `virtualenv`.
+It is recommended to install **Bulldozer** into a virtual environment, like [conda](https://docs.conda.io/en/latest/) or [virtualenv](https://virtualenv.pypa.io/en/latest/).
 
 * Installation with `virtualenv`:
 
 ```sh
 # Clone the project
-git clone https://github.com/CNES/bullodzer.git
+git clone https://github.com/CNES/bulldozer.git
 cd bulldozer/
 
 # Create the environment
@@ -67,14 +70,37 @@ dsmPath : "<input_dsm.tif>"
 outputDir : "<output_dir>"
 ```
 2. Run the pipeline:
+   * Through CLI *(Command Line Interface)*
+   ```console
+   bulldozer --conf conf/configuration_template.yaml
+   ```
+   * Through Python API using the config file
+   ```python
+   from bulldozer.pipeline.bulldozer_pipeline import dsm_to_dtm
 
-```console
-bullodzer --conf conf/configuration_template.yaml
-```
+   dsm_to_dtm(config_path="conf/configuration_template.yaml")
+   ```
+   * Through Python API providing directly the input parameters (missing parameters will be replaced by default values)
+   ```python
+   from bulldozer.pipeline.bulldozer_pipeline import dsm_to_dtm
+   # Example with a specific number of workers
+   dsm_to_dtm(dsm_path="<input_dsm.tif>", output_dir="<output_dir>", nb_max_workers=16)
+   ```
+
 3. ✅ Done! Your DTM is available in the *<output_dir>*
 ## Documentation
 
-**Bullodzer** has some documentation. A high-level overview of how it’s organized will help you know where to look for certain things:
+### Notebooks
+
+For each section described in <a href="#key-features">Key Features</a> section you can follow one of the tutorial notebook:
+* [Running Bulldozer (full pipeline)](docs/notebooks/0_bulldozer_pipeline.ipynb)
+* [Preprocessing standalone functions](docs/notebooks/1_preprocess.ipynb)
+* [Extraction step](docs/notebooks/2_DTM_extraction.ipynb)
+* [Postprocessing standalone functions](docs/notebooks/3_postprocess.ipynb)
+
+### Full documentation (WIP)
+**Bulldozer** also has a more detailed documentation.  
+A high-level overview of how it’s organized will help you know where to look for certain things:
 
 * [Tutorials](docs/tutorials/index.md) take you by the hand through a series of steps to create a DLCooker application. Start here if you’re new to DLCooker.
 * [How-to guides](docs/how-to/index.md) are recipes. They guide you through the steps involved in addressing key problems and use-cases. They are more advanced than tutorials and assume some knowledge of how DLCooker works.
@@ -97,7 +123,7 @@ for any help or suggestion, feel free to contact the authors:
 - Pierre Lassalle : pierre.lassalle@cnes.fr
 ## Licence
 
-**Bullodzer** has a Apache V2.0 license, as found in the [LICENSE](LICENSE) file.
+**Bulldozer** has a Apache V2.0 license, as found in the [LICENSE](LICENSE) file.
 
 ## Credits
 

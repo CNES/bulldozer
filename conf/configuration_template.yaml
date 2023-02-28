@@ -22,10 +22,10 @@ checkIntersection: False
 # Minimum valid height value, None or a float value. If null this parameter is ignored
 minValidHeight: null
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
-noData : -9999.0
+noData : null
 # If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-outputResolution : 4
-# If true, keep the intermediate results
+outputResolution : null
+# If True, keep the intermediate results
 developperMode : False
 
 #-------------------------#
@@ -37,12 +37,11 @@ developperMode : False
 slopeThreshold : 2.0
 # numnumber of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.
 fourConnexity : True
-
+# Max object width in meter
+maxObjectWidth : 16
 # DtmExtraction part
-# max object width in meter
-maxObjectWidth : 24
 uniformFilterSize : 1
 preventUnhookIter : 10
-numOuterIter : 100
+numOuterIter : 50
 numInnerIter : 10
 mpTileSize : 1500

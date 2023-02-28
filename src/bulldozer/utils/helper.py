@@ -31,7 +31,6 @@ import logging
 import numpy as np
 from git import Repo
 from rasterio import Affine
-from git.exc import InvalidGitRepositoryError
 from bulldozer.utils.logging_helper import BulldozerLogger
 
 

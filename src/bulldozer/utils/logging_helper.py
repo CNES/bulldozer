@@ -25,10 +25,11 @@ import sys
 import os
 import logging
 import logging.config
+from git.exc import InvalidGitRepositoryError
 
 class BulldozerLogger:
     """
-        Bulldozer logger singleton
+        Bulldozer logger singleton. Only used in the full pipeline mode (not for the standalone calls).
     """
     __instance = None
 
