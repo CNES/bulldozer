@@ -30,12 +30,17 @@ extensions = [
 compiler_directives = { "language_level": 3, "embedsignature": True}
 extensions = cythonize(extensions, compiler_directives=compiler_directives)
 
-with open("requirements.txt") as fp:
-    install_requires = fp.read().strip().split("\n")
-
-setup(
-    ext_modules=extensions,
-    install_requires=install_requires,
-    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
-)
+try:
+    setup(
+        ext_modules=extensions,
+        packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
+    )
+except Exception:
+    print(
+        "\n\nAn error occurred while building the project, "
+        "please ensure you have the most updated version of setuptools, "
+        "setuptools_scm and wheel with:\n"
+        "\tpip install -U setuptools setuptools_scm wheel\n\n"
+    )
+    raise
 

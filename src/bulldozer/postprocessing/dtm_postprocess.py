@@ -66,7 +66,7 @@ def detectPitsComputer(inputBuffers: list, params: dict) -> np.ndarray:
 @Runtime
 def build_pits_mask(dtm_path : np.ndarray,
                     pits_mask_path: str,
-                    nb_max_workers : int) -> None:
+                    nb_max_workers : int = 1) -> None:
     """
     This method detects pits in the input DTM.
     Those pits are generated during the DTM extraction by remaining artefacts.
@@ -171,9 +171,9 @@ def fillPitsComputer(inputBuffers: list, params: dict) -> np.ndarray:
 @Runtime
 def fill_pits(raw_dtm_path : str,
               pits_mask_path : str, 
-              out_dtm_path : str, 
-              nb_max_workers : int,
-              nodata: float) -> None:
+              out_dtm_path : str = None, 
+              nb_max_workers : int = 1,
+              nodata: float = None) -> None:
     """
     This method fills the pits of the input raw DTM and writes the result in out_dtm_path.
 
@@ -183,6 +183,11 @@ def fill_pits(raw_dtm_path : str,
         out_dtm_path: path to the output filled DTM. If None, overrides the raw_dtm_path raster.
         nb_max_workers: number of availables workers (multiprocessing requirement).
     """
+    if out_dtm_path is None:
+        out_dtm_path = raw_dtm_path
+
+    if nodata is None:
+        nodata = retrieve_nodata(raw_dtm_path) 
 
     with rasterio.open(raw_dtm_path, 'r') as dataset:
 
@@ -224,7 +229,7 @@ def buildDhmComputer(inputBuffers: list, params: dict) -> np.ndarray:
 def build_dhm(dsm_path : str, 
               dtm_path : str, 
               dhm_path : str, 
-              nb_max_workers : int,
+              nb_max_workers : int = 1,
               nodata : float = None) -> None:
     """
     This method generates a Digital Height Model DHM (DSM-DTM) in the provided directory.
@@ -347,7 +352,7 @@ def adaptToTargetResolution(raw_dtm_path: str,
 @Runtime
 def postprocess_pipeline(raw_dtm_path : str, 
                          output_dir : str,
-                         nb_max_workers : int,
+                         nb_max_workers : int = 1,
                          quality_mask_path : str = None, 
                          generate_dhm : bool = False,
                          dsm_path : str = None,

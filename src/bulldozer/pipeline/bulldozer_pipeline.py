@@ -164,13 +164,13 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
     if not nb_max_workers:
         nb_max_workers = multiprocessing.cpu_count()
     
-    preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(dsm_path, 
-                                                                   output_dir, 
-                                                                   nb_max_workers, 
-                                                                   nodata, 
-                                                                   slope_threshold, 
-                                                                   four_connexity,
-                                                                   min_valid_height)
+    preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(dsm_path = dsm_path, 
+                                                                   output_dir = output_dir, 
+                                                                   nb_max_workers = nb_max_workers, 
+                                                                   nodata = nodata, 
+                                                                   slope_threshold = slope_threshold, 
+                                                                   is_four_connexity = four_connexity,
+                                                                   minValidHeight = min_valid_height)
     
 
     clothSimu = ClothSimulation(max_object_width, 
