@@ -82,7 +82,7 @@ def retrieve_nodata(dsm_path : str, cfg_nodata : str = None) -> float:
     Returns:
         nodata value used in Bulldozer.
     """
-    if cfg_nodata :
+    if cfg_nodata is not None :
         return float(cfg_nodata)
     
     # If nodata is not specified in the config file, retrieve the value from the DSM metadata

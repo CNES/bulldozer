@@ -88,6 +88,7 @@ outputDir : "<output_dir>"
    ```
 
 3. ✅ Done! Your DTM is available in the *<output_dir>*
+
 ## Documentation
 
 ### Notebooks

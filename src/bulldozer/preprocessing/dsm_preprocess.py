@@ -32,7 +32,7 @@ from bulldozer.utils.helper import write_dataset
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.scale.tools import scaleRun
 from bulldozer.scale.Shared import Shared
-from bulldozer.utils.helper import Runtime
+from bulldozer.utils.helper import Runtime, retrieve_nodata
 
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
@@ -75,7 +75,7 @@ def border_nodata_computer( inputBuffers: list,
     
 @Runtime
 def build_border_nodata_mask(dsm_path : str, 
-                             nb_max_workers : int,
+                             nb_max_workers : int = 1,
                              nodata : float = None) -> np.ndarray:
     """
     This method builds a mask corresponding to the border nodata values.
@@ -93,7 +93,7 @@ def build_border_nodata_mask(dsm_path : str,
     borderNoDataParams: dict = {
         'doTranspose': False,
         'nodata': nodata,
-        'desc': "Build Border NoData Mask"
+        'desc': "Build Horizontal Border NoData Mask"
     }
 
     horizontal_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
@@ -110,6 +110,7 @@ def build_border_nodata_mask(dsm_path : str,
         horizontal_border_nodata = None
         
         borderNoDataParams['doTranspose'] = True
+        borderNoDataParams['desc'] = "Build Vertical Border NoData Mask"
         vertical_border_nodata = scaleRun(inputImagePaths = [dsm_path], 
                                             outputImagePath = None, 
                                             algoComputer = border_nodata_computer, 
@@ -156,10 +157,10 @@ def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
 
 
 def build_disturbance_mask(dsm_path: str,
-                           nb_max_workers : int,
+                           nb_max_workers : int = 1,
                            slope_threshold: float = 2.0,
                            is_four_connexity : bool = True,
-                           nodata: float = NO_DATA_VALUE) -> np.array:
+                           nodata: float = None) -> np.array:
     """
     This method builds a mask corresponding to the disturbed areas in a given DSM.
     Most of those areas correspond to water or correlation issues during the DSM generation (obstruction, etc.).
@@ -174,6 +175,8 @@ def build_disturbance_mask(dsm_path: str,
     Returns:
         masks containing the disturbed areas.
     """
+    if nodata is None:
+        nodata = retrieve_nodata(dsm_path)
 
     disturbanceParams = {
         "is_four_connexity": is_four_connexity,
@@ -184,7 +187,7 @@ def build_disturbance_mask(dsm_path: str,
 
     disturbance_mask = scaleRun(inputImagePaths = [dsm_path], 
                                 outputImagePath = None,
-                                algoComputer= disturbedAreasComputer, 
+                                algoComputer = disturbedAreasComputer, 
                                 algoParams = disturbanceParams, 
                                 generateOutputProfileComputer = generate_output_profile_for_mask, 
                                 nbWorkers = nb_max_workers,
@@ -224,7 +227,7 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
 
 def preprocess_pipeline(dsm_path : str, 
                         output_dir : str,
-                        nb_max_workers : int,
+                        nb_max_workers : int = 1,
                         nodata : float = None,
                         slope_threshold : float = 2.0, 
                         is_four_connexity : bool = True,
@@ -242,6 +245,7 @@ def preprocess_pipeline(dsm_path : str,
         slope_treshold: if the slope is greater than this threshold then we consider it as disturbed variation.
         is_four_connexity: number of evaluated axis. 
                         Vertical and horizontal if true else vertical, horizontal and diagonals.
+        minValidHeight: DSM minimum valid elevation. All the points lower this threshold will be consider as nodata.             
     """ 
 
     BulldozerLogger.log("Starting preprocess", logging.DEBUG)

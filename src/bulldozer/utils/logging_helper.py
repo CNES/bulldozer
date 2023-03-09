@@ -25,6 +25,7 @@ import sys
 import os
 import logging
 import logging.config
+from git import Repo
 from git.exc import InvalidGitRepositoryError
 
 class BulldozerLogger:

@@ -11,20 +11,23 @@ outputDir : "/work/OT/ai4usr/BULLDOZER/RESULTS/v_1.0.0/LIDAR/"
 #-------------------------#
 # If True, generates the DHM (DSM - DTM) in the output directory 
 generateDhm : True
+# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
+outputResolution : null
 # If null, bulldozer will use the maximum number of available CPU on your system
 nbMaxWorkers : 16
-# If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
-checkIntersection: False
 
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
+
+# Foreground max object width (in meter)
+maxObjectWidth : 16
+# If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
+checkIntersection: False
 # Minimum valid height value, None or a float value. If null this parameter is ignored
 minValidHeight: null
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
 noData : null
-# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-outputResolution : null
 # If True, keep the intermediate results
 developperMode : False
 
@@ -37,8 +40,7 @@ developperMode : False
 slopeThreshold : 2.0
 # numnumber of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.
 fourConnexity : True
-# Max object width in meter
-maxObjectWidth : 16
+
 # DtmExtraction part
 uniformFilterSize : 1
 preventUnhookIter : 10
