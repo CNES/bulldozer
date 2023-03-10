@@ -213,15 +213,17 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
     """     
     quality_mask = np.zeros(np.shape(inner_nodata_mask), dtype=np.uint8)
 
+    maskProfile = profile.copy()
+
     # Metadata update
-    profile['dtype'] = np.uint8
-    profile['count'] = 1
+    maskProfile['dtype'] = np.uint8
+    maskProfile['count'] = 1
     # We don't except nodata value in this mask
-    profile['nodata'] = None
+    maskProfile['nodata'] = None
     quality_mask[disturbed_area_mask] = 2
     quality_mask[inner_nodata_mask] = 1
     quality_mask[border_nodata_mask] = 3
-    write_dataset(quality_mask_path, quality_mask, profile)
+    write_dataset(quality_mask_path, quality_mask, maskProfile)
 
 
 
@@ -300,6 +302,7 @@ def preprocess_pipeline(dsm_path : str,
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
         BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
+
         write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
 
     BulldozerLogger.log("Preprocess done", logging.INFO)
