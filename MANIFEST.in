@@ -1,2 +1,4 @@
 global-include *.pyx
 global-include *.pxd
+global-include c_*.cpp
+global-include c_*.h

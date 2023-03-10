@@ -7,6 +7,8 @@
 [![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![PyPI Version](https://img.shields.io/pypi/v/bulldozer?color=%2334D058&label=pypi%20package)](https://pypi.org/project/bulldozer/)
+
 
 <p align="center">
   <a href="#key-features">Key Features</a> •
@@ -43,6 +45,13 @@ But you can also use one of the following function without running the full pipe
 For more information about these functions and how to call them, please refer to the <a href="#notebooks">notebook documentation section</a>.
 
 ## Installation
+
+### Using Pypi
+You can install **Bulldozer** by running the following command:
+```sh
+pip install bulldozer-dtm
+```
+### Using Github
 
 It is recommended to install **Bulldozer** into a virtual environment, like [conda](https://docs.conda.io/en/latest/) or [virtualenv](https://virtualenv.pypa.io/en/latest/).
 
