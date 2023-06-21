@@ -308,7 +308,7 @@ def preprocess_pipeline(dsm_path : str,
             BulldozerLogger.log("Min valid height set by the user" + str(minValidHeight), logging.INFO)
             dsm[:] = np.where( dsm < minValidHeight, nodata, dsm)[:]
         else:
-            print("minValidHeight is none")
+            BulldozerLogger.log("Min valid height is not set by the user, this may be dangerous if there are aberrant low height values !", logging.INFO)
 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         BulldozerLogger.log("Compute disturbance mask", logging.DEBUG)
@@ -317,6 +317,8 @@ def preprocess_pipeline(dsm_path : str,
 
 
         with Shared.make_shared_from_numpy(disturbed_area_mask) as shared_disturbed_area_mask:
+
+            # Can be unset since it became a shared resource
             disturbed_area_mask = None
             
             # Generates inner nodata mask
@@ -328,24 +330,15 @@ def preprocess_pipeline(dsm_path : str,
             # Replace border nodata by maximum valid height
             dsm[border_nodata_mask] = maxValidHeight
 
-            # # Fill inner nodata value with minimum valid value
-            # # 1. Create a connected component label raster to identify each hole with unique id
-            # inner_nodata_mask = np.logical_or(shared_disturbed_area_mask, inner_nodata_mask)
-            # labelHoles, numLabels = measure.label(inner_nodata_mask, background=0, return_num=True, connectivity=None)
-            # # 2. Fill inner nodata by minimum value
-            # dsm[:] = fh.cyFillHoleAreas(numLabels = numLabels,
-            #                             npLabels = labelHoles,
-            #                             npBuffer = dsm[:])
-
             # Merges and writes the quality mask
             quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
             write_quality_mask(border_nodata_mask, inner_nodata_mask, shared_disturbed_area_mask.getArray(), quality_mask_path, preprocessedDsmProfile)
 
+            # Merge inner nodata and disturbed areas into a mask indicating all the pixels to interpolate by idw
             pixelsToInterpolate = np.invert(np.logical_or(inner_nodata_mask, shared_disturbed_area_mask.getArray()))
             
             border_nodata_mask = None
             inner_nodata_mask = None
-            #dsm[shared_disturbed_area_mask.getArray()] = nodata
             
             with Shared.make_shared_from_numpy(pixelsToInterpolate) as shared_pixels_to_interpolate_mask:
                 
@@ -357,13 +350,6 @@ def preprocess_pipeline(dsm_path : str,
                                       outputPath = outputFilledDsmPath,
                                       nb_max_workers= nb_max_workers)
 
-
-        # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
-        # BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
-        # preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
-
-        # write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
-
+    # The input dsm for dtm extraction must be filled !
     BulldozerLogger.log("Preprocess done", logging.INFO)
     return outputFilledDsmPath, quality_mask_path
-    #return preprocessed_dsm_path, quality_mask_path

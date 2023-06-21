@@ -42,7 +42,7 @@ slopeThreshold : 2.0
 fourConnexity : True
 
 # DtmExtraction part
-uniformFilterSize : 1
+uniformFilterSize : 3
 preventUnhookIter : 10
 numOuterIter : 50
 numInnerIter : 10

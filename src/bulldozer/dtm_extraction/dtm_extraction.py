@@ -25,6 +25,7 @@ import rasterio
 import numpy as np
 from tqdm import tqdm
 import concurrent.futures
+import scipy.ndimage as ndimage
 from collections import namedtuple
 import bulldozer.springforce as sf
 from bulldozer.utils.logging_helper import BulldozerLogger
@@ -211,10 +212,7 @@ class ClothSimulation(object):
                 np.minimum(dtm, dsm, out=dtm, where=valid)
 
                 # apply spring tension forces (blur the DTM)
-                nb_rows = dtm.shape[0]
-                nb_cols = dtm.shape[1]
-                dtm = bfilters.run(dtm, nb_rows, nb_cols, self.uniform_filter_size, nodata_val)
-                dtm = dtm.reshape((nb_rows, nb_cols))
+                dtm = ndimage.uniform_filter(dtm, size=self.uniform_filter_size)
                 
         # One final intersection check
         np.minimum(dtm, dsm, out=dtm, where=valid)
@@ -283,10 +281,7 @@ class ClothSimulation(object):
         # Prevent unhook from hills
         bfilters = sf.PyBulldozerFilters()
         for i in tqdm(range(self.prevent_unhook_iter), desc="Prevent unhook from hills..."):
-            nb_rows = dtm.shape[0]
-            nb_cols = dtm.shape[1]
-            dtm = bfilters.run(dtm, nb_rows, nb_cols, self.uniform_filter_size, nodata_val)
-            dtm = dtm.reshape((nb_rows, nb_cols))
+            dtm = ndimage.uniform_filter(dtm, size=self.uniform_filter_size)
         
         
         # Get min and max valid height from dsm

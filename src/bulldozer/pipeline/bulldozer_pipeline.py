@@ -124,6 +124,7 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         generate_dhm = cfg['generateDhm']
         check_intersection = cfg['checkIntersection']
         developper_mode = cfg['developperMode']
+
     # User directly provide the configuration as dsm_to_dtm parameters case
     else :
         if not 'dsm_path' in kwargs:
@@ -199,7 +200,7 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         # Remove the raw DTM since the postprocess pipeline generates a refined DTM
         preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
         os.remove(raw_dtm_path)
-        os.remove(preprocessed_dsm_path)
+        #os.remove(preprocessed_dsm_path)
         
     # global stop_thread
     # stop_thread = True
