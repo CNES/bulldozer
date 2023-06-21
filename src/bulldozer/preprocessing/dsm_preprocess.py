@@ -23,11 +23,15 @@
 """
 
 import rasterio
+from rasterio.fill import fillnodata
 import os
 import numpy as np
 import logging
+from skimage import measure
 import bulldozer.bordernodata as bn
 import bulldozer.disturbedareas as da
+import bulldozer.fillholeareas as fh
+import bulldozer.entropy as ent
 from bulldozer.utils.helper import write_dataset
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.scale.tools import scaleRun
@@ -36,6 +40,9 @@ from bulldozer.utils.helper import Runtime, retrieve_nodata
 
 # No data value constant used in bulldozer
 NO_DATA_VALUE = -32768
+
+def generate_identical_profile(input_profile: rasterio.DatasetReader.profile) -> dict:
+    return input_profile
 
 def generate_output_profile_for_mask(input_profile: rasterio.DatasetReader.profile) -> dict:
     output_profile = input_profile
@@ -194,6 +201,30 @@ def build_disturbance_mask(dsm_path: str,
                                 stableMargin = 1,
                                 inMemory=True)
     return disturbance_mask != 0
+
+def fillNoDataComputer(inputBuffers: list,
+                       params: dict) -> np.ndarray:
+    
+    return fillnodata(inputBuffers[0], mask=inputBuffers[1], max_search_distance=100.0, smoothing_iterations=0)
+
+
+def multiProcsFillNoData(inputImagePaths: list,
+                         outputPath: str,
+                         nb_max_workers: int = 1) -> None:
+    
+    fillNoDataParams = {
+        "desc": "Filling DSM nodata..."
+    }
+
+    filledDSM = scaleRun(inputImagePaths = inputImagePaths, 
+                         outputImagePath = outputPath, 
+                         algoComputer = fillNoDataComputer, 
+                         algoParams = fillNoDataParams, 
+                         generateOutputProfileComputer = generate_identical_profile, 
+                         nbWorkers = nb_max_workers, 
+                         stableMargin = 100,
+                         inMemory=False)
+
     
 def write_quality_mask(border_nodata_mask: np.ndarray,
                        inner_nodata_mask : np.ndarray, 
@@ -251,6 +282,7 @@ def preprocess_pipeline(dsm_path : str,
     """ 
 
     BulldozerLogger.log("Starting preprocess", logging.DEBUG)
+    outputFilledDsmPath = os.path.join(output_dir, 'preprocessed_DSM.tif')
 
     # The value is already retrieved before calling the preprocess method
     # If it is none, it is set automatically to -32768
@@ -267,12 +299,16 @@ def preprocess_pipeline(dsm_path : str,
     with Shared.make_shared_from_rasterio(dsm_path) as shared_dsm:
         dsm = shared_dsm.getArray()
         dsm_memory_path = shared_dsm.get_memory_path()
-        
+
+        # Get the maximum height value
+        maxValidHeight: float = np.amax(dsm)
         
         # handle the case where there are dynamic nodata values (MicMac DSM for example)
-        if minValidHeight:
+        if minValidHeight is not None:
             BulldozerLogger.log("Min valid height set by the user" + str(minValidHeight), logging.INFO)
             dsm[:] = np.where( dsm < minValidHeight, nodata, dsm)[:]
+        else:
+            print("minValidHeight is none")
 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         BulldozerLogger.log("Compute disturbance mask", logging.DEBUG)
@@ -289,22 +325,45 @@ def preprocess_pipeline(dsm_path : str,
             inner_nodata_mask = np.logical_and(np.logical_not(border_nodata_mask), dsm == nodata)
             BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
         
+            # Replace border nodata by maximum valid height
+            dsm[border_nodata_mask] = maxValidHeight
+
+            # # Fill inner nodata value with minimum valid value
+            # # 1. Create a connected component label raster to identify each hole with unique id
+            # inner_nodata_mask = np.logical_or(shared_disturbed_area_mask, inner_nodata_mask)
+            # labelHoles, numLabels = measure.label(inner_nodata_mask, background=0, return_num=True, connectivity=None)
+            # # 2. Fill inner nodata by minimum value
+            # dsm[:] = fh.cyFillHoleAreas(numLabels = numLabels,
+            #                             npLabels = labelHoles,
+            #                             npBuffer = dsm[:])
+
             # Merges and writes the quality mask
             quality_mask_path = os.path.join(output_dir, "quality_mask.tif")
             write_quality_mask(border_nodata_mask, inner_nodata_mask, shared_disturbed_area_mask.getArray(), quality_mask_path, preprocessedDsmProfile)
+
+            pixelsToInterpolate = np.invert(np.logical_or(inner_nodata_mask, shared_disturbed_area_mask.getArray()))
             
             border_nodata_mask = None
             inner_nodata_mask = None
+            #dsm[shared_disturbed_area_mask.getArray()] = nodata
             
-            dsm[shared_disturbed_area_mask.getArray()] = nodata
-    
+            with Shared.make_shared_from_numpy(pixelsToInterpolate) as shared_pixels_to_interpolate_mask:
+                
+                pixelsToInterpolate = None
+                
+                pixels_to_interpolate_mem_path = shared_pixels_to_interpolate_mask.get_memory_path()
+
+                multiProcsFillNoData( inputImagePaths= [dsm_memory_path, pixels_to_interpolate_mem_path], 
+                                      outputPath = outputFilledDsmPath,
+                                      nb_max_workers= nb_max_workers)
+
 
         # Creates the preprocessed DSM. This DSM is only intended for bulldozer DTM extraction function.
-        BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
-        preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
+        # BulldozerLogger.log("Write preprocessed dsm", logging.DEBUG)
+        # preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
 
-        write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
+        # write_dataset(preprocessed_dsm_path, dsm, preprocessedDsmProfile)
 
     BulldozerLogger.log("Preprocess done", logging.INFO)
-
-    return preprocessed_dsm_path, quality_mask_path
+    return outputFilledDsmPath, quality_mask_path
+    #return preprocessed_dsm_path, quality_mask_path

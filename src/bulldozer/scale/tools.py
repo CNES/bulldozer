@@ -4,7 +4,7 @@ import numpy as np
 import rasterio
 import concurrent.futures
 from tqdm import tqdm
-from bulldozer.scale.Shared import Shared
+from bulldozer.scale.Shared import Shared, dictToRasterioProfile, getNumpyArrayShapeFromProfile
 
 Tile = namedtuple('Tile', ["startX", "startY", "endX", "endY", "topM", "rightM", "bottomM", "leftM"])
 
@@ -152,20 +152,23 @@ def scaleRun(inputImagePaths: list,
     if Shared.is_shared_memory_path(inputImagePaths[0]) :
         sh = Shared()
         sh.open(inputImagePaths[0])
-        shape = sh.metadata['shape']
-        dtype = sh.metadata['dtype']
-        if 'profile' in sh.metadata :
-            inputProfile = sh.metadata['profile']
+        inputProfile = sh.metadata['profile']
+        shape = getNumpyArrayShapeFromProfile(inputProfile)
+        dtype = inputProfile['dtype']
+        inputProfile = dictToRasterioProfile(inputProfile)
     
     else : 
         with rasterio.open(inputImagePaths[0], "r") as inputImgDataset:
             shape = (inputImgDataset.height, inputImgDataset.width)
+            if inputImgDataset.count > 1:
+                shape = (inputImgDataset.count, inputImgDataset.height, inputImgDataset.width)
             dtype = inputImgDataset.dtypes[0]
             inputProfile = inputImgDataset.profile.copy()
+    
 
     # Generate the tiles
-    tiles = computeTiles(rasterHeight = shape[0],
-                        rasterWidth = shape[1],
+    tiles = computeTiles(rasterHeight = inputProfile['height'],
+                        rasterWidth = inputProfile['width'],
                         stableMargin = stableMargin,
                         nbProcs = nbWorkers)
 

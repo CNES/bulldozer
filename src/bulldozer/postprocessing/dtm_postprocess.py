@@ -346,6 +346,9 @@ def adaptToTargetResolution(raw_dtm_path: str,
                                 dst=quality_mask_path)
 
                 return decimated_dsm_path
+            
+            # If min level but not decimated we return the initial dsm path
+            return dsm_path
         else:
             return dsm_path
 
