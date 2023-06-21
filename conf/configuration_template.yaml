@@ -25,7 +25,7 @@ maxObjectWidth : 16
 # If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
 checkIntersection: False
 # Minimum valid height value, None or a float value. If null this parameter is ignored
-minValidHeight: null
+minValidHeight: 0.0
 # If null, the nodata value will be extracted from the input DSM (float value or nan)
 noData : null
 # If True, keep the intermediate results
