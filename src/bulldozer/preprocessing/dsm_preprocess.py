@@ -27,11 +27,8 @@ from rasterio.fill import fillnodata
 import os
 import numpy as np
 import logging
-from skimage import measure
 import bulldozer.bordernodata as bn
 import bulldozer.disturbedareas as da
-import bulldozer.fillholeareas as fh
-import bulldozer.entropy as ent
 from bulldozer.utils.helper import write_dataset
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.scale.tools import scaleRun
