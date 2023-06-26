@@ -299,6 +299,15 @@ class ClothSimulation(object):
         max_level = nb_levels - 1
         current_num_outer_iterations = self.num_outer_iterations
 
+        start_res = self.output_resolution if self.output_resolution is not None and self.output_resolution > dsm_res else dsm_res
+        resolutions = [ start_res ]
+        i: int = 1
+        for l in range(min_level + 1, nb_levels):
+            resolutions.append( resolutions[i-1] * 2.0 )
+            i += 1
+        
+        i = len(resolutions) - 1
+
         while level >= min_level:
 
             BulldozerLogger.log("Process level " + str(level) + "...", logging.INFO)
@@ -381,8 +390,19 @@ class ClothSimulation(object):
                                                   step = step,
                                                   nodata_val = nodata_val)
 
+            # flush this intermediate dtm to disk
+            if level > min_level:
+                inter_dtm_profile = downsample_profile(in_dsm_profile, 2**level)
+                inter_dtm_profile['nodata'] = nodata_val
+                inter_dtm_path = os.path.join(output_dir, "raw_DTM_" + str(resolutions[i]).replace(".", "_") + ".tif")
+                write_tiles(tile_buffer= dtm, 
+                            tile_path = inter_dtm_path,
+                            original_profile = inter_dtm_profile,
+                            tagLevel=level)
+            
             # Decrease level
             level -= 1
+            i -= 1
             dsm = None
 
             # Decrease step and number of outer iterations
