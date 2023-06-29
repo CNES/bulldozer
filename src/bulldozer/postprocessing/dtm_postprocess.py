@@ -417,13 +417,17 @@ def postprocess_pipeline(raw_dtm_path : str,
         # Updates the quality mask if it's provided
         if quality_mask_path:
             # Add a new band for the pits mask
+            concat_mask = np.zeros((2, dtm_dataset.height, dtm_dataset.width), dtype=np.uint8)
+            concat_profile = None
             with rasterio.open(quality_mask_path, 'r') as q_mask_dataset:
                 with rasterio.open(pits_mask_path, "r") as pits_mask_dataset:
-                    pits_mask = pits_mask_dataset.read(indexes=1)
-                    q_mask_profile = q_mask_dataset.profile
-                    q_mask_profile['count'] = q_mask_profile['count'] + 1
-                    write_dataset(quality_mask_path, pits_mask, q_mask_profile, band=q_mask_profile['count'])
+                    concat_mask[1,:,:] = pits_mask_dataset.read(indexes=1)
+                    concat_mask[0,:,:] = q_mask_dataset.read(indexes=1)
+                    concat_profile = q_mask_dataset.profile
                     os.remove(pits_mask_path)
+            concat_profile['count'] = 2
+            with rasterio.open(quality_mask_path, 'w', **concat_profile) as q_mask_dataset:
+                q_mask_dataset.write(concat_mask)
         else:
             BulldozerLogger.log("No quality mask provided", logging.WARNING)
         # Generates the DHM (DSM - DTM) if the option is activated
