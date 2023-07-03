@@ -96,8 +96,8 @@ namespace bulldozer
                                                 float nodata_value) {
 
         if(m_IsFourConnexity) {
-            for(unsigned int r = 1; r < nb_rows -2; r++) {
-                for(unsigned int c = 1; c < nb_cols -2; c++) {
+            for(unsigned int r = 1; r < nb_rows - 1; r++) {
+                for(unsigned int c = 1; c < nb_cols - 1; c++) {
                     const unsigned int coords = r * nb_cols + c;
                     if(dsm[coords] != nodata_value){
                         disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh, nodata_value) 
@@ -107,8 +107,8 @@ namespace bulldozer
             }
         }
         else {
-            for(unsigned int r = 1; r < nb_rows -2; r++) {
-                for(unsigned int c = 1; c < nb_cols -2; c++) {
+            for(unsigned int r = 1; r < nb_rows - 1; r++) {
+                for(unsigned int c = 1; c < nb_cols - 1; c++) {
                     const unsigned int coords = r * nb_cols + c;
                     if(dsm[coords] != nodata_value){
                         disturbance_mask[coords] = isVerticalDisturbed(dsm, coords, nb_cols, thresh, nodata_value) && 
