@@ -346,9 +346,8 @@ def adaptToTargetResolution(raw_dtm_path: str,
                                 dst=quality_mask_path)
 
                 return decimated_dsm_path
-            
-            # If min level but not decimated we return the initial dsm path
-            return dsm_path
+            else:
+                return dsm_path
         else:
             return dsm_path
 
@@ -379,10 +378,11 @@ def postprocess_pipeline(raw_dtm_path : str,
     # We need to retrieve the resolution factor from the dtm
     # in the case the user gives an output resolution greater than the full
     # resolution
-    dsm_path: str = adaptToTargetResolution(raw_dtm_path = raw_dtm_path,
-                                            dsm_path = dsm_path,
-                                            output_dir = output_dir,
-                                            quality_mask_path = quality_mask_path)
+    if dsm_path is not None:
+        dsm_path: str = adaptToTargetResolution(raw_dtm_path = raw_dtm_path,
+                                                dsm_path = dsm_path,
+                                                output_dir = output_dir,
+                                                quality_mask_path = quality_mask_path)
 
 
     # Fill DTM nodata for future pits detection
@@ -412,6 +412,8 @@ def postprocess_pipeline(raw_dtm_path : str,
                         out_dtm_path = dtm_path, 
                         nb_max_workers = nb_max_workers,
                         nodata = nodata)
+
+    os.remove(filled_dtm_path)
 
     with rasterio.open(dtm_path, 'r') as dtm_dataset:
         # Updates the quality mask if it's provided

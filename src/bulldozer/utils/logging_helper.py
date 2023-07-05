@@ -23,6 +23,10 @@ This module aims to centralize the use of the logger in Bullodzer.
 """
 import sys
 import os
+import getpass
+import platform
+import psutil
+import multiprocessing
 import logging
 import logging.config
 from git import Repo
@@ -116,22 +120,29 @@ class BulldozerLogger:
                 info['branch'] = "No git repo found ({})".format(e)
                 
             # Node info
-            info['user']=getpass.getuser()
-            info['node']=platform.node()
-            info['processor']=platform.processor()
-            info['ram']=str(round(psutil.virtual_memory().total / (1024 **3)))+" GB"
-
+            try:
+                info['user'] = getpass.getuser()
+            except:
+                info['user'] = 'unknown'
+            try:
+                info['node'] = platform.node()
+            except:
+                info['node'] = 'unknown'
+            info['processor'] = platform.processor()
+            info['cpu_count'] = multiprocessing.cpu_count()
+            info['ram'] = str(round(psutil.virtual_memory().total / (1024 **3)))+" GB"
+            
             # OS info
-            info['system']=platform.system()
-            info['release']=platform.release()
-            info['os_version']=platform.version()
+            info['system'] = platform.system()
+            info['release'] = platform.release()
+            info['os_version'] = platform.version()
             
             # Message format
             init = ("\n"+"#"*17+"\n#   BULLDOZER   #\n"+"#"*17+"\n# <Git info>\n#\t- branch: {}\n#\t- commit SHA: {}"
-                    "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - processor: {}\n#\t - RAM: {}"
+                    "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - processor: {}\n#\t - CPU count: {}\n#\t - RAM: {}"
                     "\n#\n# <OS info>\n#\t - system: {}\n#\t - release: {}\n#\t - version: {}\n"
                     +"#"*17).format(info['branch'], info['commit_sha'], info['user'], info['node'], 
-                                    info['processor'], info['ram'], info['system'], info['release'], info['os_version'])
+                                    info['processor'], info['cpu_count'], info['ram'], info['system'], info['release'], info['os_version'])
             BulldozerLogger.log(init, logging.DEBUG)
 
         except Exception as e:

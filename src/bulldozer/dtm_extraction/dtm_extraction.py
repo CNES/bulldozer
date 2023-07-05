@@ -43,7 +43,8 @@ class ClothSimulation(object):
                  num_inner_iterations: int= 10,
                  mp_tile_size: int = 1500,
                  output_resolution : float = -1.,
-                 mp_nb_procs: int = 16):
+                 mp_nb_procs: int = 16,
+                 keep_inter_dtm: bool = False):
         """ """
         self.max_object_size: int = max_object_size
         self.uniform_filter_size: int = uniform_filter_size
@@ -53,6 +54,8 @@ class ClothSimulation(object):
         self.mp_tile_size: int = mp_tile_size
         self.output_resolution = output_resolution
         self.mp_nb_procs: int = mp_nb_procs
+        self.keep_inter_dtm: bool = keep_inter_dtm
+
 
     def next_power_of_2(self, x : int) -> int:
         """
@@ -391,7 +394,7 @@ class ClothSimulation(object):
                                                   nodata_val = nodata_val)
 
             # flush this intermediate dtm to disk
-            if level > min_level:
+            if level > min_level and self.keep_inter_dtm:
                 inter_dtm_profile = downsample_profile(in_dsm_profile, 2**level)
                 inter_dtm_profile['nodata'] = nodata_val
                 inter_dtm_path = os.path.join(output_dir, "raw_DTM_" + str(resolutions[i]).replace(".", "_") + ".tif")

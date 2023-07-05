@@ -1,49 +1,50 @@
 #-------------------------#
 #       Parameters        #
 #-------------------------#
-# Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
-dsmPath : "/work/OT/ai4usr/BULLDOZER/INPUT_DSM/LIDAR/ASS_LidarHD_Montpellier_idw.tif"
-# Output directory path (if the directory doesn't exist, create it)
-outputDir : "/work/OT/ai4usr/BULLDOZER/RESULTS/v_1.0.0/LIDAR/"
+# [Required] - Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>") 
+dsm_path : "input_dsm_path/dsm.tif"
+# [Required] - Output directory path (if the directory doesn't exist, create it)
+output_dir : "output_dir_path"
 
 #-------------------------#
 #         Options         #
 #-------------------------#
-# If True, generates the DHM (DSM - DTM) in the output directory 
-generateDhm : True
-# If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-outputResolution : null
-# If null, bulldozer will use the maximum number of available CPU on your system
-nbMaxWorkers : 16
+# [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
+generate_dhm : True
+# [Optional] - If null, the output DTM resolution will be the same as the input DSM (float value in meter)
+output_resolution : null
+# [Optional] - If null, bulldozer will use the maximum number of available CPU on your system
+nb_max_workers : 16
 
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
-
-# Foreground max object width (in meter)
-maxObjectWidth : 16
-# If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
-checkIntersection: False
-# Minimum valid height value, None or a float value. If null this parameter is ignored
-minValidHeight: 0.0
-# If null, the nodata value will be extracted from the input DSM (float value or nan)
-noData : null
-# If True, keep the intermediate results
-developperMode : False
+# [Optional] - Foreground max object width (in meter)
+max_object_width : 24
+# [Optional] - If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
+check_intersection: False
+# [Optional] - If null, the nodata value will be extracted from the input DSM (float value or nan)
+nodata : null
+# [Optional] - Minimum valid height value, None or a float value. If null this parameter is ignored
+min_valid_height: null
+# [Optional] - If True, keep the intermediate results
+developper_mode : False
+# [Optional] - If True, keep the intermediate DTM at each level of the pyramid
+keep_inter_dtm : False
 
 #-------------------------#
 # Bulldozer core settings #
 #-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
-# DetectDisturbedAreasAndFill part
-slopeThreshold : 2.0
-# numnumber of evaluated axis. Vertical and horizontal if true else vertical, horizontal and diagonals.
-fourConnexity : True
+# [Optional] - DetectDisturbedAreasAndFill part
+slope_threshold : 2.0
+# [Optional] - Number of evaluated axis. Vertical and horizontal if True else vertical, horizontal and diagonals.
+four_connexity : True
 
-# DtmExtraction part
-uniformFilterSize : 3
-preventUnhookIter : 10
-numOuterIter : 50
-numInnerIter : 10
-mpTileSize : 1500
+# [Optional] - DtmExtraction parameters
+uniform_filter_size : 1
+prevent_unhook_iter : 10
+num_outer_iter : 50
+num_inner_iter : 10
+mp_tile_size : 1500

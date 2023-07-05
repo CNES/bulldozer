@@ -33,10 +33,8 @@ from bulldozer.utils.helper import write_dataset
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.scale.tools import scaleRun
 from bulldozer.scale.Shared import Shared
-from bulldozer.utils.helper import Runtime, retrieve_nodata
+from bulldozer.utils.helper import Runtime, retrieve_nodata, DefaultValues
 
-# No data value constant used in bulldozer
-NO_DATA_VALUE = -32768
 
 def generate_identical_profile(input_profile: rasterio.DatasetReader.profile) -> dict:
     return input_profile
@@ -63,8 +61,8 @@ def border_nodata_computer( inputBuffers: list,
     nodata = params['nodata']
 
     if np.isnan(nodata):
-        dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
-        nodata = NO_DATA_VALUE
+        dsm = np.nan_to_num(dsm, False, nan=DefaultValues['NODATA'])
+        nodata = DefaultValues['NODATA']
     
     # We're using our C++ implementation to perform this computation
     border_nodata = bn.PyBorderNodata()
@@ -150,8 +148,8 @@ def disturbedAreasComputer(inputBuffers: list, params: dict) -> np.ndarray:
     nodata = params["nodata"]
 
     if np.isnan(nodata):
-        dsm = np.nan_to_num(dsm, False, nan=NO_DATA_VALUE)
-        nodata = NO_DATA_VALUE
+        dsm = np.nan_to_num(dsm, False, nan=DefaultValues['NODATA'])
+        nodata = DefaultValues['NODATA']
 
     disturbed_areas = da.PyDisturbedAreas(params["is_four_connexity"])
     disturbance_mask = disturbed_areas.build_disturbance_mask(inputBuffers[0], 
@@ -182,6 +180,7 @@ def build_disturbance_mask(dsm_path: str,
     if nodata is None:
         nodata = retrieve_nodata(dsm_path)
 
+    #TODO assert not none c++ param raise Value Error (missing value for parameters)
     disturbanceParams = {
         "is_four_connexity": is_four_connexity,
         "slope_threshold": slope_threshold,
@@ -198,7 +197,7 @@ def build_disturbance_mask(dsm_path: str,
                                 stableMargin = 1,
                                 inMemory=True)
     return disturbance_mask != 0
-
+    
 def fillNoDataComputer(inputBuffers: list,
                        params: dict) -> np.ndarray:
     
@@ -239,21 +238,17 @@ def write_quality_mask(border_nodata_mask: np.ndarray,
         output_dir: bulldozer output directory. The quality mask will be written in this folder.
         profile: DSM profile (TIF metadata).
     """     
-    quality_mask = np.zeros(np.shape(inner_nodata_mask), dtype=np.uint8)
-
-    maskProfile = profile.copy()
+    quality_mask_profile = profile.copy()
 
     # Metadata update
-    maskProfile['dtype'] = np.uint8
-    maskProfile['count'] = 1
+    quality_mask_profile['dtype'] = np.uint8
+    quality_mask_profile['count'] = 3
     # We don't except nodata value in this mask
-    maskProfile['nodata'] = None
-    quality_mask[disturbed_area_mask] = 2
-    quality_mask[inner_nodata_mask] = 1
-    quality_mask[border_nodata_mask] = 3
-    write_dataset(quality_mask_path, quality_mask, maskProfile)
-
-
+    quality_mask_profile['nodata'] = None
+    buffer = np.stack([inner_nodata_mask, disturbed_area_mask, border_nodata_mask], axis=0)
+    with rasterio.open(quality_mask_path, 'w', nbits=1, **quality_mask_profile) as dst_dataset:
+        dst_dataset.write(buffer)
+        dst_dataset.close()
 
 def preprocess_pipeline(dsm_path : str, 
                         output_dir : str,
@@ -284,8 +279,7 @@ def preprocess_pipeline(dsm_path : str,
     # The value is already retrieved before calling the preprocess method
     # If it is none, it is set automatically to -32768
     if nodata is None:
-        BulldozerLogger.log("No data value is set to " + str(NO_DATA_VALUE), logging.INFO)
-        nodata = NO_DATA_VALUE
+        nodata = retrieve_nodata(dsm_path)
 
     with rasterio.open(dsm_path) as dsm_dataset:
         preprocessedDsmProfile = dsm_dataset.profile
@@ -296,7 +290,7 @@ def preprocess_pipeline(dsm_path : str,
     with Shared.make_shared_from_rasterio(dsm_path) as shared_dsm:
         dsm = shared_dsm.getArray()
         dsm_memory_path = shared_dsm.get_memory_path()
-
+        
         # Get the maximum height value
         maxValidHeight: float = np.amax(dsm)
         
@@ -305,7 +299,7 @@ def preprocess_pipeline(dsm_path : str,
             BulldozerLogger.log("Min valid height set by the user" + str(minValidHeight), logging.INFO)
             dsm[:] = np.where( dsm < minValidHeight, nodata, dsm)[:]
         else:
-            BulldozerLogger.log("Min valid height is not set by the user, this may be dangerous if there are aberrant low height values !", logging.INFO)
+            BulldozerLogger.log("Min valid height is not set by the user, this may be dangerous if there are aberrant low height values !", logging.DEBUG)
 
         # Retrieves the disturbed area mask (mainly correlation issues: occlusion, water, etc.)
         BulldozerLogger.log("Compute disturbance mask", logging.DEBUG)
@@ -338,9 +332,9 @@ def preprocess_pipeline(dsm_path : str,
             inner_nodata_mask = None
             
             with Shared.make_shared_from_numpy(pixelsToInterpolate) as shared_pixels_to_interpolate_mask:
-                
+    
                 pixelsToInterpolate = None
-                
+
                 pixels_to_interpolate_mem_path = shared_pixels_to_interpolate_mask.get_memory_path()
 
                 multiProcsFillNoData( inputImagePaths= [dsm_memory_path, pixels_to_interpolate_mem_path], 

@@ -23,6 +23,7 @@
 """
 import os
 import sys
+import logging
 from shutil import copy
 from datetime import datetime
 from sys import stdout
@@ -34,46 +35,76 @@ from bulldozer.preprocessing.dsm_preprocess import preprocess_pipeline
 from bulldozer.postprocessing.dtm_postprocess import postprocess_pipeline
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.logging_helper import BulldozerLogger
-from bulldozer.utils.helper import Runtime, retrieve_nodata
+from bulldozer.utils.helper import Runtime, retrieve_nodata, DefaultValues
 
-#import threading
-import time
-
-__version__ = "1.0.0"
-
-
-# import psutil
-
-# stop_thread = False
-
-# def memory() :
-#     t0 = time.time()
-#     with open('memory.txt', 'w') as out :
-#         process = psutil.Process(os.getpid())
-#         while    :
-#             t = time.time()True
-#             mem = process.memory_info()
-#             print("%.2f" % (t - t0), "%.2f" %  (mem.rss / 1024 / 1024), end='', file=out)
-            
-#             children = process.children()
-#             for child in children:
-#                 print('\t', "%.2f" %  (child.memory_info().rss / 1024 / 1024), end='', file=out) 
-        
-#             print('', file=out)
-#             time.sleep(0.5)
-#             global stop_thread
-#             if stop_thread:
-#                 out.close()
-#                 break
+__version__ = "1.0.1"
 
 @Runtime
 def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
     """
-        Pipeline orchestrator.
+        Main pipeline orchestrator.
         
         Args:
             config_path: path to the config file (YAML file expected, refers to the provided template in /conf).
-            **kwargs: you can directly provide the parameters but we expect the following parameters name :
+            **kwargs: bulldozer parameters (used if the user don't provide a configuration file).
+
+    """
+    # Retrieves Bulldozer settings from the config file, the CLI parameters or the Python API parameters
+    params = retrieve_params(config_path, **kwargs) 
+
+    # If the target output directory does not exist, creates it
+    if not os.path.isdir(params['output_dir']):
+            os.makedirs(params['output_dir']) 
+
+    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
+
+    BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) +": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
+
+    preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(dsm_path = params['dsm_path'], 
+                                                                   output_dir = params['output_dir'], 
+                                                                   nb_max_workers = params['nb_max_workers'], 
+                                                                   nodata = params['nodata'], 
+                                                                   slope_threshold = params['slope_threshold'], 
+                                                                   is_four_connexity = params['four_connexity'],
+                                                                   minValidHeight = params['min_valid_height'])
+
+    clothSimu = ClothSimulation(params['max_object_width'], 
+                                params['uniform_filter_size'], 
+                                params['prevent_unhook_iter'],
+                                params['num_outer_iter'], 
+                                params['num_inner_iter'], 
+                                params['mp_tile_size'],
+                                params['output_resolution'], 
+                                params['nb_max_workers'],
+                                params['keep_inter_dtm'])
+
+    raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
+                                      params['output_dir'], 
+                                      params['nodata'])
+
+    postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
+                         output_dir = params['output_dir'],
+                         nb_max_workers = params['nb_max_workers'],
+                         quality_mask_path =  quality_mask_path, 
+                         generate_dhm = params['generate_dhm'], 
+                         dsm_path = params['dsm_path'],
+                         check_intersection = params['check_intersection'],
+                         nodata = params['nodata'])
+    
+    if not params['developper_mode']:
+        # Remove the raw DTM since the postprocess pipeline generates a refined DTM
+        preprocessed_dsm_path = os.path.join(params['output_dir'], 'preprocessed_DSM.tif')
+        os.remove(raw_dtm_path)
+        os.remove(preprocessed_dsm_path)
+
+def retrieve_params(config_path : str = None, **kwargs):
+    """
+        Defines the input parameters based on the provided configuration file (if provided), or the kwargs (CLI or Python API).
+        For the missing parameters the Bullodzer default values are set.
+        
+        Args:
+            config_path: path to the config file (YAML file expected, refers to the provided template in /conf).
+            **kwargs: list of expected arguments if the urser don't provide a configuration file:
                 - dsm_path: str (required)
                 - output_dir: str (required)
                 - nodata: float (optionnal)
@@ -91,10 +122,13 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
                 - generate_dhm: bool (optionnal)
                 - check_intersection: bool (optionnal)
                 - developper_mode : bool (optionnal)
-                refers to the config file template to understand the use of each parameter.
-
+                refers to the documentation to understand the use of each parameter.
     """
+    bulldozer_params = dict()
     # Config path provided case
+
+    input_params = dict()
+
     if config_path:
         # Configuration file format check
         if not (config_path.endswith('.yaml') or config_path.endswith('.yml')) :
@@ -106,105 +140,40 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         
         # Retrieves all the settings
         parser = ConfigParser(False)
-        cfg = parser.read(config_path)
-        dsm_path = cfg['dsmPath']
-        output_dir = cfg['outputDir']
-        nodata = cfg['noData']
-        nb_max_workers = cfg['nbMaxWorkers']
-        slope_threshold = cfg['slopeThreshold']
-        four_connexity = cfg['fourConnexity']
-        min_valid_height = cfg['minValidHeight']
-        max_object_width = cfg['maxObjectWidth']
-        uniform_filter_size = cfg['uniformFilterSize']
-        prevent_unhook_iter = cfg['preventUnhookIter']
-        num_outer_iter = cfg['numOuterIter']
-        num_inner_iter = cfg['numInnerIter']
-        mp_tile_size = cfg['mpTileSize']
-        output_resolution = cfg['outputResolution']
-        generate_dhm = cfg['generateDhm']
-        check_intersection = cfg['checkIntersection']
-        developper_mode = cfg['developperMode']
+        input_params = parser.read(config_path)
+        if 'dsm_path' not in input_params.keys():
+            raise ValueError('No DSM path provided or invalid YAML key syntax. Expected: dsm_path="<path>/<dsm_file>.<[tif/tiff]>"')
+        else:
+            bulldozer_params['dsm_path'] = input_params['dsm_path']
 
-    # User directly provide the configuration as dsm_to_dtm parameters case
+        if 'output_dir' not in input_params.keys():
+            raise ValueError('No output diectory path provided or invalid YAML key syntax. Expected: output_dir="<path>")')
+        else:
+            bulldozer_params['output_dir'] = input_params['output_dir']
     else :
-        if not 'dsm_path' in kwargs:
-            raise ValueError('No DSM path provided or invalid argument syntax. Expected dsm_to_dtm(dsm_path="<path>")')
-        dsm_path = kwargs['dsm_path']
-        if not 'output_dir' in kwargs:
-            raise ValueError('No output diectory path provided or invalid argument syntax. Expected dsm_to_dtm(dsm_path="<path>, output_dir="<path>")')
-        output_dir = kwargs['output_dir']
-        nodata = kwargs['nodata'] if 'nodata' in kwargs else None
-        nb_max_workers = kwargs['nb_max_workers'] if 'nb_max_workers' in kwargs else None
-        slope_threshold = kwargs['slope_threshold'] if 'slope_threshold' in kwargs else None
-        four_connexity = kwargs['four_connexity'] if 'four_connexity' in kwargs else None
-        min_valid_height = kwargs['min_valid_height'] if 'min_valid_height' in kwargs else None
-        max_object_width = kwargs['max_object_width'] if 'max_object_width' in kwargs else None
-        uniform_filter_size = kwargs['uniform_filter_size'] if 'uniform_filter_size' in kwargs else None
-        prevent_unhook_iter = kwargs['prevent_unhook_iter'] if 'prevent_unhook_iter' in kwargs else None
-        num_outer_iter = kwargs['num_outer_iter'] if 'num_outer_iter' in kwargs else None
-        num_inner_iter = kwargs['num_inner_iter'] if 'num_inner_iter' in kwargs else None
-        mp_tile_size = kwargs['mp_tile_size'] if 'mp_tile_size' in kwargs else None
-        output_resolution = kwargs['output_resolution'] if 'output_resolution' in kwargs else None
-        generate_dhm = kwargs['generate_dhm'] if 'generate_dhm' in kwargs else None
-        check_intersection = kwargs['check_intersection'] if 'check_intersection' in kwargs else None
-        developper_mode = kwargs['developper_mode'] if 'developper_mode' in kwargs else None
-    
-    # If the target output directory does not exist, creates it
-    if not os.path.isdir(output_dir):
-            os.mkdir(output_dir) 
+        # User directly provides the input parameters (kwargs)
+        input_params = kwargs
+        if not 'dsm_path' in input_params:
+            raise ValueError('No DSM path provided or invalid argument syntax. Expected: \n\t-Python API: dsm_to_dtm(dsm_path="<path>")\n\t-CLI: bulldozer -in <path>')
+        bulldozer_params['dsm_path'] = input_params['dsm_path']
+        if not 'output_dir' in input_params:
+            raise ValueError('No output diectory path provided or invalid argument syntax. Expected: \n\t-Python API:  dsm_to_dtm(dsm_path="<path>, output_dir="<path>")\n\t-CLI: bulldozer -in <path> -out path')
+        bulldozer_params['output_dir'] = input_params['output_dir']
 
-    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(output_dir, "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
-   
-    # x = threading.Thread(target=memory)
-    # x.start()
-
-    # Retrieves the nodata value from the config file or the DSM metadata
-    nodata = retrieve_nodata(dsm_path, nodata)
-    
-    # Retrieves the number of CPU if the number of available workers is not set
-    if not nb_max_workers:
-        nb_max_workers = multiprocessing.cpu_count()
-    
-    preprocessed_dsm_path, quality_mask_path = preprocess_pipeline(dsm_path = dsm_path, 
-                                                                   output_dir = output_dir, 
-                                                                   nb_max_workers = nb_max_workers, 
-                                                                   nodata = nodata, 
-                                                                   slope_threshold = slope_threshold, 
-                                                                   is_four_connexity = four_connexity,
-                                                                   minValidHeight = min_valid_height)
-    
-
-    clothSimu = ClothSimulation(max_object_width, 
-                                uniform_filter_size, 
-                                prevent_unhook_iter,
-                                num_outer_iter, 
-                                num_inner_iter, 
-                                mp_tile_size,
-                                output_resolution, 
-                                nb_max_workers)
-
-    raw_dtm_path: str = clothSimu.run(preprocessed_dsm_path, 
-                                      output_dir, 
-                                      nodata)
-
-    postprocess_pipeline(raw_dtm_path =  raw_dtm_path, 
-                         output_dir = output_dir,
-                         nb_max_workers = nb_max_workers,
-                         quality_mask_path =  quality_mask_path, 
-                         generate_dhm = generate_dhm, 
-                         dsm_path = dsm_path,
-                         check_intersection = check_intersection,
-                         nodata = nodata)
-    
-    if not developper_mode:
-        # Remove the raw DTM since the postprocess pipeline generates a refined DTM
-        preprocessed_dsm_path = os.path.join(output_dir, 'preprocessed_DSM.tif')
-        os.remove(raw_dtm_path)
-        #os.remove(preprocessed_dsm_path)
+    # For each optional parameters of Bulldozer check if the user provide a specific value, otherwise retrieve the default value from DefaultValues enum
+    for key, value in DefaultValues.items():
+        bulldozer_params[key.lower()] = input_params[key.lower()] if key.lower() in input_params.keys() else value  
         
-    # global stop_thread
-    # stop_thread = True
-    # x.join()
+    # Retrieves the nodata value from input DSM metadata if the user didn't provides a specific value
+    if bulldozer_params['nodata'] is None:
+        bulldozer_params['nodata'] = retrieve_nodata(bulldozer_params['dsm_path'])
+    
+    # Retrieves the number of CPU if the number of available workers if the user didn't provides a specific value
+    if bulldozer_params['nb_max_workers'] is None:
+        bulldozer_params['nb_max_workers'] = multiprocessing.cpu_count()
+    
+    return bulldozer_params
+    
 
 def get_parser():
     """
@@ -225,6 +194,8 @@ def get_parser():
         action="version",
         version="%(prog)s {version}".format(version=__version__),
     )
+    
+    #TODO add all the parameters
     return parser
 
 

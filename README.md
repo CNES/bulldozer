@@ -1,6 +1,5 @@
 <div align="center">
-    <img src="docs/source/images/bulldozer_logo.png" width=256
-    >
+    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/bulldozer_logo.png" width=256>
 
 **Bulldozer, a DTM extraction tool requiring only a DSM as input.**
 
@@ -27,7 +26,7 @@
 ## Key features
 
 <div align="center">
-<img src="docs/source/images/result_overview.gif" alt="drawing" width="400"/>
+<img src="docs/source/images/result_overview.gif" alt="demo" width="400"/>
 </div>
 
 **Bulldozer** is designed as a pipeline of standalone functions that aims to extract a *Digital Terrain Model* (DTM) from a *Digital Surface Model* (DSM).  
@@ -74,9 +73,9 @@ pip install .
 1. First you have to create a configuration file or edit the `configuration_template.yaml` available in the `conf` directory. You have to update at least the following parameters:
 ```yaml
 # Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>")
-dsmPath : "<input_dsm.tif>"
+dsm_path : "<input_dsm.tif>"
 # Output directory path (if the directory doesn't exist, create it)
-outputDir : "<output_dir>"
+output_dir : "<output_dir>"
 ```
 2. Run the pipeline:
    * Through CLI *(Command Line Interface)*

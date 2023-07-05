@@ -21,11 +21,8 @@
 """
     This module groups different generic methods used in Bulldozer.
 """
-import platform
-import psutil
 import time
 import os
-import getpass
 import rasterio
 import logging
 import numpy as np
@@ -33,6 +30,28 @@ from git import Repo
 from rasterio import Affine
 from bulldozer.utils.logging_helper import BulldozerLogger
 
+# This dict store all the Bulldozer default parameters
+DefaultValues = {
+    # Basic parameters
+    'GENERATE_DHM' : True,
+    'MAX_OBJECT_WIDTH' : 16,
+    # Advanced settings
+    'OUTPUT_RESOLUTION' : None,
+    'NODATA' : -32768.0,
+    'MIN_VALID_HEIGHT' : None,
+    'NB_MAX_WORKERS' : None,
+    'CHECK_INTERSECTION' : False,
+    'DEVELOPPER_MODE' : False,
+    # Bulldozer core settings
+    'FOUR_CONNEXITY' : True,
+    'UNIFORM_FILTER_SIZE': 1,
+    'PREVENT_UNHOOK_ITER' : 10,
+    'NUM_OUTER_ITER' : 50,
+    'NUM_INNER_ITER' : 10,
+    'MP_TILE_SIZE' : 1500,
+    'SLOPE_THRESHOLD' : 2,
+    'KEEP_INTER_DTM' : False
+}
 
 def write_dataset(buffer_path : str, 
                   buffer : np.ndarray, 
@@ -88,10 +107,12 @@ def retrieve_nodata(dsm_path : str, cfg_nodata : str = None) -> float:
     # If nodata is not specified in the config file, retrieve the value from the DSM metadata
     with rasterio.open(dsm_path) as dsm_dataset:
         nodata = dsm_dataset.nodata
-        return nodata
+        if nodata is not None :
+            return nodata
     
-    # By default, if no value is set for nodata, return None
-    return None
+    BulldozerLogger.log("No data value is set to " + str(DefaultValues.NODATA.value), logging.INFO)
+    # By default, if no value is set for nodata, return -32768.0
+    return DefaultValues.NODATA.value
 
 def downsample_profile(profile, factor : float) :
     
