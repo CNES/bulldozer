@@ -44,7 +44,7 @@ DefaultValues = {
     'DEVELOPPER_MODE' : False,
     # Bulldozer core settings
     'FOUR_CONNEXITY' : True,
-    'UNIFORM_FILTER_SIZE': 1,
+    'UNIFORM_FILTER_SIZE': 3,
     'PREVENT_UNHOOK_ITER' : 10,
     'NUM_OUTER_ITER' : 50,
     'NUM_INNER_ITER' : 10,

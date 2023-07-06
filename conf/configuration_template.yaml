@@ -43,7 +43,7 @@ slope_threshold : 2.0
 four_connexity : True
 
 # [Optional] - DtmExtraction parameters
-uniform_filter_size : 1
+uniform_filter_size : 3
 prevent_unhook_iter : 10
 num_outer_iter : 50
 num_inner_iter : 10
