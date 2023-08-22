@@ -418,17 +418,19 @@ def postprocess_pipeline(raw_dtm_path : str,
     with rasterio.open(dtm_path, 'r') as dtm_dataset:
         # Updates the quality mask if it's provided
         if quality_mask_path:
-            # Add a new band for the pits mask
-            concat_mask = np.zeros((2, dtm_dataset.height, dtm_dataset.width), dtype=np.uint8)
-            concat_profile = None
+
             with rasterio.open(quality_mask_path, 'r') as q_mask_dataset:
+
+                concat_mask = np.zeros((q_mask_dataset.count + 1, dtm_dataset.height, dtm_dataset.width), dtype=np.uint8)
+
                 with rasterio.open(pits_mask_path, "r") as pits_mask_dataset:
-                    concat_mask[1,:,:] = pits_mask_dataset.read(indexes=1)
-                    concat_mask[0,:,:] = q_mask_dataset.read(indexes=1)
-                    concat_profile = q_mask_dataset.profile
-                    os.remove(pits_mask_path)
-            concat_profile['count'] = 2
-            with rasterio.open(quality_mask_path, 'w', **concat_profile) as q_mask_dataset:
+                    pits_mask = pits_mask_dataset.read(indexes=1)
+                    q_mask_profile = q_mask_dataset.profile
+                    q_mask_profile['count'] = q_mask_profile['count'] + 1
+                    concat_mask[0:q_mask_dataset.count,:,:] = q_mask_dataset.read()
+                    concat_mask[q_mask_dataset.count,:,:] = pits_mask_dataset.read(indexes=1)
+            
+            with rasterio.open(quality_mask_path, 'w', nbits=1, **q_mask_profile) as q_mask_dataset:
                 q_mask_dataset.write(concat_mask)
         else:
             BulldozerLogger.log("No quality mask provided", logging.WARNING)
