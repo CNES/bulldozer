@@ -65,8 +65,6 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
     params = retrieve_params(config_path, **kwargs)
 
 
-    print(params)
-
     # If the target output directory does not exist, creates it
     if not os.path.isdir(params['output_dir']):
         os.makedirs(params['output_dir']) 
