@@ -12,4 +12,6 @@ output_dir : "output_dir_path"
 # [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
 generate_dhm : True
 # [Optional] - If null, bulldozer will use the maximum number of available CPU on your system
-nb_max_workers : 16
+nb_max_workers : 8
+# [Optional] - Minimal frequency of an object on the ground in the observed landscape
+min_object_spatial_frequency: 0.0625

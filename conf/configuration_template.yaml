@@ -11,40 +11,33 @@ output_dir : "output_dir_path"
 #-------------------------#
 # [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
 generate_dhm : True
-# [Optional] - If null, the output DTM resolution will be the same as the input DSM (float value in meter)
-output_resolution : null
 # [Optional] - If null, bulldozer will use the maximum number of available CPU on your system
-nb_max_workers : 16
+nb_max_workers : 8
+# [Optional] - Minimal frequency of an object on the ground in the observed landscape
+min_object_spatial_frequency: 0.0625
 
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
-# [Optional] - Foreground max object width (in meter)
-max_object_width : 24
-# [Optional] - If True, this flag allows snapping DTM values above the DSM to the DSM values in order to satisfy the property that DTM is always below the DSM.
-check_intersection: False
-# [Optional] - If null, the nodata value will be extracted from the input DSM (float value or nan)
-nodata : null
-# [Optional] - Minimum valid height value, None or a float value. If null this parameter is ignored
-min_valid_height: null
+# [Optional] - planimetric height error of the input DSM
+dsm_z_precision: 1.0
 # [Optional] - If True, keep the intermediate results
-developper_mode : False
-# [Optional] - If True, keep the intermediate DTM at each level of the pyramid
-keep_inter_dtm : False
+developer_mode : False
+# [Optional] - Exploration window to find a minimum height to fill an uncertain pixel
+fill_search_radius: 100
+# [Optional] - The maximum slope of the terrain of the observed landscape in percentage
+max_ground_slope: 20.0
+# [Optional] - The absolute maximum error of the first pass drape cloth filter between the
+# ground height estimation and the real ground height
+dtm_max_error: 2.0,
 
 #-------------------------#
 # Bulldozer core settings #
 #-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
-# [Optional] - DetectDisturbedAreasAndFill part
-slope_threshold : 2.0
-# [Optional] - Number of evaluated axis. Vertical and horizontal if True else vertical, horizontal and diagonals.
-four_connexity : True
-
 # [Optional] - DtmExtraction parameters
-uniform_filter_size : 3
+cloth_tension_force : 3
 prevent_unhook_iter : 10
-num_outer_iter : 50
+num_outer_iter : 100
 num_inner_iter : 10
-mp_tile_size : 1500
