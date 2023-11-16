@@ -7,6 +7,7 @@
 namespace bulldoproto
 {
     void compute_stats(float * dsm,
+                       unsigned char * invalid_mask,
                        float * stats,
                        unsigned int nb_rows,
                        unsigned int nb_cols,

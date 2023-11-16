@@ -9,7 +9,10 @@ def minmax_filter(input_buffers : list,
                   filter_parameters: dict):
     
     stats_filter = pystats.PyStats()
-    return stats_filter.computeStats(input_buffers[0][0], float(input_profiles[0]["nodata"]))
+    if filter_parameters['is_invalid_mask']:
+        return stats_filter.computeStats(input_buffers[0][0], input_buffers[1][0], float(input_profiles[0]["nodata"]))
+    else:
+        return stats_filter.computeStats(input_buffers[0][0], np.ones(input_buffers[0][0].shape).astype(np.uint8), float(input_profiles[0]["nodata"]))
 
 def minmax_concatenate(output_scalars, chunk_output_scalars, tile):
     output_scalars[0] = min(output_scalars[0], chunk_output_scalars[0] )
@@ -31,7 +34,14 @@ def compute_hist(input_buffers : list,
                  filter_parameters: dict):
     """ """
     hist_filter = pyhist.PyHist()
-    return hist_filter.computeHist(input_buffers[0][0],
+    if filter_parameters['is_invalid_mask']:
+        return hist_filter.computeHist(input_buffers[0][0], input_buffers[1][0],
+                                   float(filter_parameters["dsm_min_z"]),
+                                   int(filter_parameters["nb_bins"]),
+                                   float(filter_parameters["bin_width"]),
+                                   float(input_profiles[0]["nodata"]))
+    else:
+        return hist_filter.computeHist(input_buffers[0][0], np.ones(input_buffers[0][0].shape).astype(np.uint8),
                                    float(filter_parameters["dsm_min_z"]),
                                    int(filter_parameters["nb_bins"]),
                                    float(filter_parameters["bin_width"]),
@@ -63,18 +73,30 @@ def uncertain_profile(input_profiles: list,
 
 def run(input_dsm_key: str,
         eomanager: eom.EOContextManager,
-        dsm_z_precision: float) -> dict :
+        dsm_z_precision: float,
+        input_invalid_key : str = None) -> dict :
 
     """ """
-
+    min_max_parameters = {}
+    min_max_parameters['is_invalid_mask'] = True if input_invalid_key is not None else False
     # Compute valid min and max heights (taking into account nodata values)
-    [dsm_min, dsm_max] = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key],
+    if(min_max_parameters['is_invalid_mask']):
+        [dsm_min, dsm_max] = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key, input_invalid_key],
+                                                     filter_parameters=min_max_parameters,
                                                      image_filter = minmax_filter,
                                                      nb_output_scalars = 2,
                                                      concatenate_filter = minmax_concatenate,
                                                      context_manager = eomanager,
                                                      filter_desc= "Min/Max value processing...")
-    
+    else:
+        [dsm_min, dsm_max] = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key],
+                                                     filter_parameters=min_max_parameters,
+                                                     image_filter = minmax_filter,
+                                                     nb_output_scalars = 2,
+                                                     concatenate_filter = minmax_concatenate,
+                                                     context_manager = eomanager,
+                                                     filter_desc= "Min/Max value processing...")
+    print("min: ",dsm_min,"\nmax:", dsm_max)
     #  Histogram computation
     nb_bins, bin_width = configure_histogram(min_z = dsm_min, 
                                              max_z = dsm_max, 
@@ -83,14 +105,23 @@ def run(input_dsm_key: str,
     # Compute the number of bins and bin width
     nb_bins, bin_width = configure_histogram(dsm_min, dsm_max, dsm_z_precision)
 
-
     hist_params: dict = {
         "dsm_min_z": dsm_min,
         "nb_bins": nb_bins,
-        "bin_width": bin_width
+        "bin_width": bin_width,
+        "is_invalid_mask" : True if input_invalid_key is not None else False
     }
-
-    hist = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key],
+    if(min_max_parameters['is_invalid_mask']):
+        hist = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key, input_invalid_key],
+                                            filter_parameters = hist_params,
+                                        image_filter = compute_hist,
+                                        nb_output_scalars = 1,
+                                        output_scalars = [np.zeros(nb_bins, dtype=np.uint32)],
+                                        concatenate_filter = concatenate_hist,
+                                        context_manager = eomanager,
+                                        filter_desc= "Compute histogram...")
+    else:
+        hist = eoexe.n_images_to_m_scalars(inputs = [input_dsm_key],
                                         filter_parameters = hist_params,
                                         image_filter = compute_hist,
                                         nb_output_scalars = 1,
@@ -98,7 +129,6 @@ def run(input_dsm_key: str,
                                         concatenate_filter = concatenate_hist,
                                         context_manager = eomanager,
                                         filter_desc= "Compute histogram...")
-    
 
     # Compute the mean value of the histogram bin and determine the first bin greater than the mean (it is experimentaly the ground)
     robust_min_z = compute_robust_min_z(hist = hist[0],

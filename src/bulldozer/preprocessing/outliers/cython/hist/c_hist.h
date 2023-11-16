@@ -6,6 +6,7 @@
 namespace bulldoproto
 {
     void compute_hist(float * dsm,
+                      unsigned char * invalid_mask,
 					  unsigned int * hist,
 					  float min_z,
 					  float bin_width,

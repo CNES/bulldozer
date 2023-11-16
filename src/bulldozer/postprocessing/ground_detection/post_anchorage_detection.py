@@ -1,6 +1,6 @@
 import numpy as np
-import eoscale.manager as eom
-import eoscale.eo_executors as eoexe
+import bulldozer.eoscale.manager as eom
+import bulldozer.eoscale.eo_executors as eoexe
 
 def post_anchorage_filter(input_buffers : list, 
                           input_profiles: list, 

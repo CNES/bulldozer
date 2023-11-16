@@ -5,6 +5,7 @@ namespace bulldoproto {
 
 	
 	void buildRegularMask(float * dsm,
+						  unsigned char * noisyMask,
 						  unsigned char * regularMask,
                           unsigned int nb_rows,
                           unsigned int nb_cols,
@@ -36,7 +37,7 @@ namespace bulldoproto {
 				sum = 0;
 				used = 0;
 
-				if (dsm[pos] > nodata_dsm) {
+				if (dsm[pos] > nodata_dsm && noisyMask[pos] < 1) {
 					for(int v=0; v<nb_neigbhors; v++) {
 						if(dsm[pos+v8_off[v]] >  nodata_dsm) {
 							sum += std::fabs(dsm[pos+v8_off[v]] - dsm[pos]);
@@ -55,53 +56,5 @@ namespace bulldoproto {
 		}
 	}
 
-	void predict_anchorage_mask(unsigned char * regular_mask,
-								unsigned char * anchorage_mask,
-								unsigned int nb_rows,
-                          		unsigned int nb_cols,
-								unsigned int max_object_size) {
-		
-		const long int n_rows = nb_rows;
-		const long int n_cols = nb_cols;
-
-
-		long int min_r, max_r, min_c, max_c;
-		long int pos, centered_pos;
-		bool is_anchor = false;
-
-		for(long int r = 0; r < n_rows; r++){
-			for(long int c = 0; c < n_cols; c++){
-
-				centered_pos = r * n_cols + c;
-
-				if(regular_mask[centered_pos] > 0){
-				
-					min_r = std::max((long int)0, r - max_object_size);
-					max_r = std::min(n_rows - 1, r + max_object_size);
-					min_c = std::max((long int)0, c - max_object_size);
-					max_c = std::min(n_cols - 1, c + max_object_size);
-
-					is_anchor = true;
-					for(long int nr = min_r; nr <= max_r; nr++){
-						for(long int nc = min_c; nc <= max_c; nc++){
-							pos = nr * n_cols + nc;
-							if(regular_mask[pos] < 1){
-								is_anchor = false;
-								break;
-							}
-						}
-						if(!is_anchor){
-							break;
-						}
-					}
-
-					if (is_anchor) {
-						anchorage_mask[centered_pos] = 1;
-					}
-				}
-			}
-		}
-
-	}
 
 } // end of namespace bulldoproto

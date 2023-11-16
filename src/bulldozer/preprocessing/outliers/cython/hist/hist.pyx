@@ -15,6 +15,7 @@ cdef extern from "c_hist.cpp":
 cdef extern from "c_hist.h" namespace "bulldoproto":
 
     void compute_hist(float * dsm,
+					  unsigned char * invalid_mask,
 					  unsigned int * hist,
 					  float min_z,
 					  float bin_width,
@@ -36,6 +37,7 @@ cdef class PyHist:
 
     def computeHist(self, 
                     dsm_strip : np.array,
+                    invalid_mask : np.array,
                     dsm_min_z: float,
                     nb_bins: int,
                     bin_width: float, 
@@ -50,11 +52,12 @@ cdef class PyHist:
         Return:
             an array of two values corresponding to min and max value
         """
-        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
+        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
+        cdef unsigned char[::1] invalid_mask_memview = npAsContiguousArray(invalid_mask.ravel())
         # Ouput mask that will be filled by the C++ part
         cdef unsigned int [::1] hist_memview = npAsContiguousArray(np.zeros((nb_bins), dtype=np.uint32))
         # Compute stats
-        compute_hist(&dsm_memview[0], &hist_memview[0], dsm_min_z, bin_width, nb_bins, dsm_strip.shape[0], dsm_strip.shape[1], nodata)
+        compute_hist(&dsm_memview[0], &invalid_mask_memview[0], &hist_memview[0], dsm_min_z, bin_width, nb_bins, dsm_strip.shape[0], dsm_strip.shape[1], nodata)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
         nphist = np.asarray(hist_memview).astype(np.uint32)
 

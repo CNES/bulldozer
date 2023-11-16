@@ -3,6 +3,7 @@
 namespace bulldoproto {
 
 	void compute_stats(float * dsm,
+                       unsigned char * invalid_mask,
                        float * stats,
                        unsigned int nb_rows,
                        unsigned int nb_cols,
@@ -15,7 +16,7 @@ namespace bulldoproto {
 
 		const unsigned int nb_pixels = nb_rows * nb_cols;
 		for(unsigned int p = 0; p < nb_pixels; p++){
-			if(dsm[p] > nodata){
+			if(dsm[p] > nodata && invalid_mask[p] > 0){
 				stats[0] = std::min(stats[0], dsm[p]);
 				stats[1] = std::max(stats[1], dsm[p]);
 			}

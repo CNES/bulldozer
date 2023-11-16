@@ -108,9 +108,7 @@ def drape_cloth_filter(input_buffers: list,
     step: float = params['step']
     dtm = copy.deepcopy(input_buffers[0][0,:,:])
     dsm = input_buffers[1][0,:,:]
-    uncertainties = input_buffers[2][0,:,:]
-    predicted_anchors = input_buffers[3][0,:,:]
-    uncertainty_mask = uncertainties > 0
+    predicted_anchors = input_buffers[2][0,:,:]
     snap_mask = predicted_anchors > 0
 
     for i in range(num_outer_iterations):
@@ -122,11 +120,8 @@ def drape_cloth_filter(input_buffers: list,
             # Snap dtm to anchors point
             dtm[snap_mask] = dsm[snap_mask]
 
-            # handle DSM intersections, snap back to below DSM taking uncertainties into account
-            np.minimum(dtm, dsm + uncertainties, out=dtm)
-            
-            # Dont allow uncertain pixels to go down beyond their uncertainties
-            np.maximum(dtm, dsm - uncertainties, out=dtm, where=uncertainty_mask)
+            # handle DSM intersections
+            np.minimum(dtm, dsm, out=dtm)
 
             # apply spring tension forces (blur the DTM)
             dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
@@ -134,8 +129,7 @@ def drape_cloth_filter(input_buffers: list,
         
     # One final intersection check
     dtm[snap_mask] = dsm[snap_mask]
-    np.minimum(dtm, dsm + uncertainties, out=dtm)
-    np.maximum(dtm, dsm - uncertainties, out=dtm, where=uncertainty_mask)
+    np.minimum(dtm, dsm, out=dtm)
     
     return dtm
 
@@ -156,8 +150,7 @@ def downsample_profile(profile, factor : float) :
     
     return newprofile
 
-def drape_cloth_with_uncertainty(filled_dsm_key: str,
-                                 uncertainty_map_key: str,
+def drape_cloth(filled_dsm_key: str,
                                  predicted_anchorage_mask_key: str,
                                  eomanager: eom.EOContextManager,
                                  max_object_size: float,
@@ -204,7 +197,7 @@ def drape_cloth_with_uncertainty(filled_dsm_key: str,
 
         print(f"Process level {level} ...")
 
-        # Create the memviews of the filled dsm and the uncertainty map of this level
+        # Create the memviews of the filled dsm map of this level
 
         current_dezoom_profile: dict = downsample_profile(profile = eomanager.get_profile(key=filled_dsm_key), 
                                                           factor = 2**level)
@@ -213,10 +206,6 @@ def drape_cloth_with_uncertainty(filled_dsm_key: str,
         filled_dsm_memview = eomanager.create_memview(key = filled_dsm_key, 
                                                          arr_subset = eomanager.get_array(key=filled_dsm_key)[:,::2**level, ::2**level], 
                                                          arr_subset_profile = current_dezoom_profile)
-        
-        uncertainty_map_memview = eomanager.create_memview(key = uncertainty_map_key, 
-                                                           arr_subset = eomanager.get_array(key=uncertainty_map_key)[:,::2**level, ::2**level], 
-                                                           arr_subset_profile = current_dezoom_profile)
         
         predicted_anchorage_mask_key_memview = eomanager.create_memview(key = predicted_anchorage_mask_key, 
                                                                         arr_subset = eomanager.get_array(key=predicted_anchorage_mask_key)[:,::2**level, ::2**level], 
@@ -240,7 +229,7 @@ def drape_cloth_with_uncertainty(filled_dsm_key: str,
         }
 
 
-        [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs = [dtm_key, filled_dsm_memview, uncertainty_map_memview, predicted_anchorage_mask_key_memview], 
+        [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs = [dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview], 
                                                           image_filter = drape_cloth_filter,
                                                           generate_output_profiles = drape_cloth_profiles,
                                                           filter_parameters = drape_cloth_parameters,

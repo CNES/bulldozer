@@ -3,8 +3,8 @@ import uuid
 import numpy
 import copy
 
-import eoscale.utils as eoutils
-import eoscale.shared as eosh
+import bulldozer.eoscale.utils as eoutils
+import bulldozer.eoscale.shared as eosh
 
 class EOContextManager:
 

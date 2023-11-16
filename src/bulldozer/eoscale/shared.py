@@ -5,7 +5,7 @@ import uuid
 import os
 import json
 import copy
-import eoscale.utils as eoutils
+import bulldozer.eoscale.utils as eoutils
 
 EOSHARED_PREFIX: str = "eoshared"
 EOSHARED_MTD: str = "metadata"

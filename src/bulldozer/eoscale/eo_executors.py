@@ -5,9 +5,9 @@ import numpy
 import math
 import copy
 
-import eoscale.shared as eosh
-import eoscale.utils as eotools
-import eoscale.manager as eom
+import bulldozer.eoscale.shared as eosh
+import bulldozer.eoscale.utils as eotools
+import bulldozer.eoscale.manager as eom
 
 def isPowerOfTwo(x: int):
     # First x in the below expression

@@ -15,6 +15,7 @@ cdef extern from "c_stats.cpp":
 cdef extern from "c_stats.h" namespace "bulldoproto":
 
     void compute_stats(float * dsm,
+                       unsigned char * invalid_mask,
                        float * stats,
                        unsigned int nb_rows,
                        unsigned int nb_cols,
@@ -32,7 +33,8 @@ cdef class PyStats:
         pass
 
     def computeStats(self, 
-                     dsm_strip : np.array, 
+                     dsm_strip : np.array,
+                     invalid_mask_strip : np.array, 
                      nodata : float) -> list:
         """ 
         This method compute min and max valid height given a nodata value
@@ -44,11 +46,12 @@ cdef class PyStats:
         Return:
             an array of two values corresponding to min and max value
         """
-        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.flatten().astype(np.float32))
+        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
+        cdef unsigned char[::1] invalid_mask_memview = npAsContiguousArray(invalid_mask_strip.ravel())
         # Ouput mask that will be filled by the C++ part
         cdef float[::1] stats_memview = npAsContiguousArray(np.zeros((2), dtype=np.float32))
         # Compute stats
-        compute_stats(&dsm_memview[0], &stats_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], nodata)
+        compute_stats(&dsm_memview[0], &invalid_mask_memview[0], &stats_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], nodata)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
         npstats = np.asarray(stats_memview).astype(np.float32)
 
