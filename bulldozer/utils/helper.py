@@ -57,7 +57,7 @@ DefaultValues = {
     'DEVELOPER_MODE' : False,
     'FILL_SEARCH_RADIUS': 100,
     'MAX_GROUND_SLOPE': 20.0,
-    'DTM_MAX_ERROR': 2.0,
+    'DTM_MAX_ERROR': None,
     # Bulldozer core settings
     'CLOTH_TENSION_FORCE': 3,
     'PREVENT_UNHOOK_ITER' : 10,

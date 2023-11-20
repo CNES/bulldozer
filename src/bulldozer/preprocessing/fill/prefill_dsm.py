@@ -4,7 +4,6 @@ import rasterio
 from rasterio.fill import fillnodata
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.preprocessing.uncertain as pyunc
 
 def run(input_dsm_key: str,
         refined_min_z: float,

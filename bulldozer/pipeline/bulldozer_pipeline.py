@@ -51,6 +51,8 @@ import bulldozer.postprocessing.ground_detection.post_anchorage_detection as pos
 
 __version__ = "2.0.0"
 
+
+
 @Runtime
 def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
     """
@@ -82,30 +84,28 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         # Compute the height histogram of the input DSM with a bin width equal to the
         # height dsm precision X 2 and then determine lower height cut to determine
         # the real robust minimum height of the DSM
-        BulldozerLogger.log("Uncertain mask computation: Starting...", logging.INFO)
+        BulldozerLogger.log("Detect low height aberrant values: Starting...", logging.INFO)
         outliers_output = preprocess_histogram_outliers.run( input_dsm_key = input_dsm_key,
                                                              eomanager = eomanager,
                                                              dsm_z_precision = params['dsm_z_precision'] )
-        BulldozerLogger.log("Uncertain mask computation: Done.", logging.INFO)
+        BulldozerLogger.log("Detect low height aberrant values: Done.", logging.INFO)
         
 
-        uncertain_mask_key = outliers_output["uncertain_mask"]
+        noisy_mask_key = outliers_output["noisy_mask"]
         dsm_min = outliers_output["robust_min_z"]
         dsm_max = outliers_output["max_z"]
-        print(dsm_min)
         if params["developer_mode"]:
-            uncertain_mask_path: str = os.path.join(params["output_dir"], "uncertain_mask.tif")
-            eomanager.write(key = uncertain_mask_key, img_path = uncertain_mask_path)
+            noisy_mask_path: str = os.path.join(params["output_dir"], "noisy_mask.tif")
+            eomanager.write(key = noisy_mask_key, img_path = noisy_mask_path)
         
         # Step 2
         # Compute the regular area mask
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
-        #regular_slope: float = float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
         max_object_size: float = 1.0 / params['min_object_spatial_frequency']
         anchorage_exploration_size = int(max_object_size + 1)
         regular_outputs = preprocess_regular_detector.run(dsm_key= input_dsm_key,
-                                                          noisy_key= uncertain_mask_key,
+                                                          noisy_key= noisy_mask_key,
                                                           eomanager = eomanager,
                                                           regular_slope = regular_slope,
                                                           anchorage_exploration_size = anchorage_exploration_size)
@@ -115,25 +115,73 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
                                                             input_invalid_key=regular_outputs['regular_mask'],
                                                              eomanager = eomanager,
                                                              dsm_z_precision = params['dsm_z_precision'] )
-        BulldozerLogger.log("Uncertain mask computation: Done.", logging.INFO)
-        print("refined min z: ",outliers_output["robust_min_z"])
+        BulldozerLogger.log("Noisy mask computation: Done.", logging.INFO)
 
         regular_mask_key = regular_outputs["regular_mask"]
-        # preprocess_anchorage_mask_key = regular_outputs["predicted_anchorage_mask"]
-
         if params["developer_mode"]:
             regular_mask_path : str = os.path.join(params["output_dir"], "regular_mask.tif")
             preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
             eomanager.write(key = regular_mask_key, img_path = regular_mask_path)
-            # eomanager.write(key = preprocess_anchorage_mask_key, img_path = preprocess_anchorage_mask_path)
+        
+        # # Step 2.5
+        # dsm_profile = eomanager.get_profile(key = input_dsm_key)
+        # max_object_size_pixels = int(max_object_size / dsm_profile["transform"][0])
+        # anchorage_tile_diameter: int = 2 * max_object_size_pixels
+        # nb_anchorage_tiles_x = dsm_profile["width"] // anchorage_tile_diameter
+        # nb_anchorage_tiles_y = dsm_profile["height"] // anchorage_tile_diameter
+        # offset_x: int = (dsm_profile["width"] % anchorage_tile_diameter) // 2
+        # offset_y: int = (dsm_profile["height"] % anchorage_tile_diameter) // 2
+        # optimized_tile_size: int = 32 * 20
+        # nb_optimized_tiles_x = nb_anchorage_tiles_x // 20
+        # nb_optimized_tiles_y = nb_anchorage_tiles_y // 20
+        # if nb_anchorage_tiles_x % 20 > 0:
+        #     nb_optimized_tiles_x += 1
+        # if nb_anchorage_tiles_y % 20 > 0:
+        #     nb_optimized_tiles_y += 1
 
-        # # Step 3
-        # # Fill the input DSM and compute the uncertainties
+        # tiles = []
+        # for ty in range(nb_optimized_tiles_y):
+        #     for tx in range(nb_optimized_tiles_x):
+        #         sx = tx * 20
+        #         sy = ty * 20
+        #         ey = min( nb_anchorage_tiles_y - 1,  (ty +1) * 20 - 1)
+        #         ex = min( nb_anchorage_tiles_x - 1,  (tx +1) * 20 - 1)
+        #         tiles.append( (sx, sy, ex, ey) )
+
+        # anchor_profile = dsm_profile
+        # anchor_profile["dtype"] = np.uint8
+        # anchor_profile["nodata"] = None
+        # preprocess_anchorage_mask_key = eomanager.create_image(anchor_profile)
+        # preprocess_anchor_mask = eomanager.get_array(key = preprocess_anchorage_mask_key)
+
+        # with concurrent.futures.ProcessPoolExecutor(max_workers= min(eomanager.nb_workers, len(tiles))) as executor:
+
+        #     futures = { executor.submit(preprocess_anchorage_run,
+        #                                 input_dsm_key,
+        #                                 regular_mask_key,
+        #                                 preprocess_anchorage_mask_key,
+        #                                 dsm_min,
+        #                                 max_object_size_pixels,
+        #                                 tile,
+        #                                 eomanager) for tile in tiles }
+            
+        #     for future in tqdm.tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=filter_desc):
+
+        #         chunk_buffer, tile = future.result()
+        #         stable_x = offset_x + tile[0] * optimized_tile_size
+        #         stable_y = offset_y + tile[1] * optimized_tile_size
+        #         stable_end_x = stable_x + optimized_tile_size
+        #         stable_end_y = stable_y + optimized_tile_size
+        #         preprocess_anchor_mask[0,stable_x:stable_end_x,stable_y:stable_end_y] = chunk_buffer[:,:]
+
+
+        # Step 3
+        # Fill the input DSM and compute the uncertainties
         refined_min_z = outliers_output["robust_min_z"]
-        BulldozerLogger.log("Filling the DSM and computing the uncertainties: Starting...", logging.INFO)
+        BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
         fill_outputs = prefill_dsm.run(input_dsm_key = input_dsm_key, 
-                                                     refined_min_z = refined_min_z, 
-                                                     eomanager = eomanager)
+                                       refined_min_z = refined_min_z, 
+                                       eomanager = eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
         
         filled_dsm_key = fill_outputs["filled_dsm"]
@@ -142,62 +190,99 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         eomanager.write(key =  filled_dsm_key, img_path = filled_dsm_path)
 
         # Step 4
-        # First pass of the drape cloth filter using uncertainties and predicted anchorage
+        # First pass of the drape cloth filter
         BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
         #TODO handle Land use map (convert it to reach: ground=1/else=0)
         preprocess_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
-        inter_dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
-                                                                    predicted_anchorage_mask_key=preprocess_anchorage_mask_key,
-                                                                    eomanager = eomanager,
-                                                                    max_object_size = max_object_size,
-                                                                    dsm_min_z = refined_min_z,
-                                                                    dsm_max_z = dsm_max,
-                                                                    prevent_unhook_iter = params["prevent_unhook_iter"],
-                                                                    spring_tension = params["cloth_tension_force"],
-                                                                    num_outer_iterations = params["num_outer_iter"],
-                                                                    num_inner_iterations = params["num_inner_iter"])
+        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
+                                            predicted_anchorage_mask_key=preprocess_anchorage_mask_key,
+                                            eomanager = eomanager,
+                                            max_object_size = max_object_size,
+                                            dsm_min_z = refined_min_z,
+                                            dsm_max_z = dsm_max,
+                                            prevent_unhook_iter = params["prevent_unhook_iter"],
+                                            spring_tension = params["cloth_tension_force"],
+                                            num_outer_iterations = params["num_outer_iter"],
+                                            num_inner_iterations = params["num_inner_iter"])
         BulldozerLogger.log("First pass of a drape cloth filter: Done.", logging.INFO)
         
         if params["developer_mode"]:
             inter_dtm_path: str = os.path.join(params["output_dir"], "dtm_first_pass.tif")
-            eomanager.write(key = inter_dtm_key, img_path = inter_dtm_path)
+            eomanager.write(key = dtm_key, img_path = inter_dtm_path)
         
-        # # Step 5
-        # # Attempt to detect terrain pixels
-        # # Brute force post process to minimize a side effet of the drap that often underestimates the terrain height
-        # # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
-        # # Knowing that the drape cloth will be run again.
-        # BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
-        # post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=inter_dtm_key, 
-        #                                                   dsm_key=filled_dsm_key, 
-        #                                                   regular_mask_key=regular_mask_key,
-        #                                                   error_threshold=params["dtm_max_error"], 
-        #                                                   eomanager=eomanager)
-        # BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
-        
-        # post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
 
-        # if params["developer_mode"]:
-        #     output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
-        #     eomanager.write(key = post_anchorage_mask_key, img_path = output_post_anchorage_path)
-        
-        # eomanager.release(key = inter_dtm_key)
+        # #TODO for steps 5 and 6: add a conditional statement to activate the second pass
 
-        # # Step 6
-        # # Compute final DTM with post processed predicted terrain point
-        # BulldozerLogger.log("Second pass of a drape cloth filter: Starting...", logging.INFO)
-        # dtm_key = dtm_extraction.drape_cloth_with_uncertainty(filled_dsm_key = filled_dsm_key,
-        #                                                       uncertainty_map_key = uncertain_map_key,
-        #                                                       predicted_anchorage_mask_key=post_anchorage_mask_key,
-        #                                                       eomanager = eomanager,
-        #                                                       max_object_size = max_object_size,
-        #                                                       dsm_min_z = dsm_min,
-        #                                                       dsm_max_z = dsm_max,
-        #                                                       prevent_unhook_iter = params["prevent_unhook_iter"],
-        #                                                       spring_tension = params["cloth_tension_force"],
-        #                                                       num_outer_iterations = params["num_outer_iter"],
-        #                                                       num_inner_iterations = params["num_inner_iter"])
-        # BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
+        # Step 5
+        # Attempt to detect terrain pixels
+        # Brute force post process to minimize a side effet of the drap that often underestimates the terrain height
+        # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
+        # Knowing that the drape cloth will be run again.
+        if params["dtm_max_error"] is None:
+            params["dtm_max_error"] = 2.0 * params['dsm_z_precision']
+        BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
+        post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=dtm_key, 
+                                                          dsm_key=filled_dsm_key, 
+                                                          regular_mask_key=regular_mask_key,
+                                                          error_threshold=params["dtm_max_error"], 
+                                                          eomanager=eomanager)
+        BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
+        
+        post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
+
+        if params["developer_mode"]:
+            output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
+            eomanager.write(key = post_anchorage_mask_key, img_path = output_post_anchorage_path)
+        
+        eomanager.release(key = dtm_key)
+
+        # Step 6
+        # Compute final DTM with post processed predicted terrain point
+        BulldozerLogger.log("Second pass of a drape cloth filter: Starting...", logging.INFO)
+        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
+                                             predicted_anchorage_mask_key=post_anchorage_mask_key,
+                                             eomanager = eomanager,
+                                             max_object_size = max_object_size,
+                                             dsm_min_z = refined_min_z,
+                                             dsm_max_z = dsm_max,
+                                             prevent_unhook_iter = params["prevent_unhook_iter"],
+                                             spring_tension = params["cloth_tension_force"],
+                                             num_outer_iterations = params["num_outer_iter"],
+                                             num_inner_iterations = params["num_inner_iter"])
+        BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
+
+        eomanager.write(key = dtm_key, img_path = os.path.join(params["output_dir"], "dtm_second_pass.tif"))
+
+
+        # Step 7: reverse drape cloth
+        # Needs: dtm_key and post_anchors to snap and dsm_max_z for int
+        BulldozerLogger.log("Reverse pass of a drape cloth filter: Starting...", logging.INFO)
+        reverse_dtm_key = dtm_extraction.reverse_drape_cloth(filled_dsm_key = filled_dsm_key,
+                                             first_pass_dtm_key = dtm_key,
+                                             pre_anchorage_mask_key = preprocess_anchorage_mask_key,
+                                             post_anchorage_mask_key=post_anchorage_mask_key,
+                                             eomanager = eomanager,
+                                             max_object_size = max_object_size,
+                                             dsm_min_z = refined_min_z,
+                                             dsm_max_z = dsm_max,
+                                             prevent_unhook_iter = params["prevent_unhook_iter"],
+                                             spring_tension = params["cloth_tension_force"],
+                                             num_outer_iterations = params["num_outer_iter"],
+                                             num_inner_iterations = params["num_inner_iter"])
+        
+        if params["developer_mode"]:
+            eomanager.write(key = reverse_dtm_key, img_path = os.path.join(params["output_dir"], "reverse_dtm.tif"))
+        
+        final_dtm = eomanager.get_array(key = dtm_key)
+        reverse_dtm = eomanager.get_array(key = reverse_dtm_key)
+        final_dtm[0,:, :] +=  reverse_dtm[0,:,:]
+        final_dtm[0,:, :] /= 2.0
+        eomanager.release(key = reverse_dtm_key)
+        eomanager.write(key = dtm_key, img_path = os.path.join(params["output_dir"], "final_dtm.tif"))
+
+
+        # Si more steps dont forget (if reverse not activated) to release the DSM.
+
         
         # dtm_path: str = os.path.join(params["output_dir"], "dtm.tif")
         # eomanager.write(key = dtm_key, img_path = dtm_path)

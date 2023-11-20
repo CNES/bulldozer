@@ -137,7 +137,7 @@ def run(input_dsm_key: str,
                                         dsm_z_precision = dsm_z_precision)
 
     # Compute the uncertain mask and flush it to disk
-    [uncertain_mask] = eoexe.n_images_to_m_images_filter(inputs = [input_dsm_key],
+    [noisy_mask] = eoexe.n_images_to_m_images_filter(inputs = [input_dsm_key],
                                                          image_filter = compute_uncertain_mask,
                                                          filter_parameters = {"min_z": robust_min_z},
                                                          generate_output_profiles = uncertain_profile,
@@ -146,7 +146,7 @@ def run(input_dsm_key: str,
                                                          filter_desc= "Uncertain mask processing...")
     
     return {
-        "uncertain_mask": uncertain_mask,
+        "noisy_mask": noisy_mask,
         "robust_min_z": robust_min_z,
         "max_z": dsm_max
     }
