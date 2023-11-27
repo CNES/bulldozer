@@ -29,7 +29,7 @@ fill_search_radius: 100
 max_ground_slope: 20.0
 # [Optional] - The absolute maximum error of the first pass drape cloth filter between the
 # ground height estimation and the real ground height
-dtm_max_error: 2.0,
+dtm_max_error: 2.0
 
 #-------------------------#
 # Bulldozer core settings #

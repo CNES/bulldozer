@@ -42,6 +42,7 @@ import bulldozer.eoscale.manager as eom
 import bulldozer.preprocessing.outliers.histogram as preprocess_histogram_outliers
 import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_regular_detector
 import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
+import bulldozer.preprocessing.anchorage_prediction.anchorage_predictor as preprocess_anchors_detector
 
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
@@ -93,7 +94,7 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
 
         noisy_mask_key = outliers_output["noisy_mask"]
         dsm_min = outliers_output["robust_min_z"]
-        dsm_max = outliers_output["max_z"]
+        dsm_max = outliers_output["robust_max_z"]
         if params["developer_mode"]:
             noisy_mask_path: str = os.path.join(params["output_dir"], "noisy_mask.tif")
             eomanager.write(key = noisy_mask_key, img_path = noisy_mask_path)
@@ -120,67 +121,18 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         regular_mask_key = regular_outputs["regular_mask"]
         if params["developer_mode"]:
             regular_mask_path : str = os.path.join(params["output_dir"], "regular_mask.tif")
-            preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
             eomanager.write(key = regular_mask_key, img_path = regular_mask_path)
         
-        # # Step 2.5
-        # dsm_profile = eomanager.get_profile(key = input_dsm_key)
-        # max_object_size_pixels = int(max_object_size / dsm_profile["transform"][0])
-        # anchorage_tile_diameter: int = 2 * max_object_size_pixels
-        # nb_anchorage_tiles_x = dsm_profile["width"] // anchorage_tile_diameter
-        # nb_anchorage_tiles_y = dsm_profile["height"] // anchorage_tile_diameter
-        # offset_x: int = (dsm_profile["width"] % anchorage_tile_diameter) // 2
-        # offset_y: int = (dsm_profile["height"] % anchorage_tile_diameter) // 2
-        # optimized_tile_size: int = 32 * 20
-        # nb_optimized_tiles_x = nb_anchorage_tiles_x // 20
-        # nb_optimized_tiles_y = nb_anchorage_tiles_y // 20
-        # if nb_anchorage_tiles_x % 20 > 0:
-        #     nb_optimized_tiles_x += 1
-        # if nb_anchorage_tiles_y % 20 > 0:
-        #     nb_optimized_tiles_y += 1
-
-        # tiles = []
-        # for ty in range(nb_optimized_tiles_y):
-        #     for tx in range(nb_optimized_tiles_x):
-        #         sx = tx * 20
-        #         sy = ty * 20
-        #         ey = min( nb_anchorage_tiles_y - 1,  (ty +1) * 20 - 1)
-        #         ex = min( nb_anchorage_tiles_x - 1,  (tx +1) * 20 - 1)
-        #         tiles.append( (sx, sy, ex, ey) )
-
-        # anchor_profile = dsm_profile
-        # anchor_profile["dtype"] = np.uint8
-        # anchor_profile["nodata"] = None
-        # preprocess_anchorage_mask_key = eomanager.create_image(anchor_profile)
-        # preprocess_anchor_mask = eomanager.get_array(key = preprocess_anchorage_mask_key)
-
-        # with concurrent.futures.ProcessPoolExecutor(max_workers= min(eomanager.nb_workers, len(tiles))) as executor:
-
-        #     futures = { executor.submit(preprocess_anchorage_run,
-        #                                 input_dsm_key,
-        #                                 regular_mask_key,
-        #                                 preprocess_anchorage_mask_key,
-        #                                 dsm_min,
-        #                                 max_object_size_pixels,
-        #                                 tile,
-        #                                 eomanager) for tile in tiles }
-            
-        #     for future in tqdm.tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=filter_desc):
-
-        #         chunk_buffer, tile = future.result()
-        #         stable_x = offset_x + tile[0] * optimized_tile_size
-        #         stable_y = offset_y + tile[1] * optimized_tile_size
-        #         stable_end_x = stable_x + optimized_tile_size
-        #         stable_end_y = stable_y + optimized_tile_size
-        #         preprocess_anchor_mask[0,stable_x:stable_end_x,stable_y:stable_end_y] = chunk_buffer[:,:]
-
 
         # Step 3
         # Fill the input DSM and compute the uncertainties
         refined_min_z = outliers_output["robust_min_z"]
+        refined_max_z = outliers_output["robust_max_z"]
+        print("Refined min max", refined_min_z, refined_max_z)
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
         fill_outputs = prefill_dsm.run(input_dsm_key = input_dsm_key, 
-                                       refined_min_z = refined_min_z, 
+                                       refined_min_z = refined_min_z,
+                                       refined_max_z = refined_max_z, 
                                        eomanager = eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
         
@@ -189,11 +141,27 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         filled_dsm_path: str = os.path.join(params["output_dir"], "filled_dsm.tif")
         eomanager.write(key =  filled_dsm_key, img_path = filled_dsm_path)
 
+        # Step 3.5
+        # #TODO if COS then preprocess_anchorage_mask_key initialised to the COS
+        BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
+        preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key = filled_dsm_key,
+                                        regular_mask_key = regular_mask_key,
+                                        refined_min_z = refined_min_z,
+                                        refined_max_z = refined_max_z,
+                                        max_object_size = max_object_size,
+                                        eomanager = eomanager)
+        BulldozerLogger.log("Predicting anchorage points : Done", logging.INFO)
+
+
+        if params["developer_mode"]:
+            preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
+            eomanager.write(key = preprocess_anchorage_mask_key, img_path = preprocess_anchorage_mask_path)
+
         # Step 4
         # First pass of the drape cloth filter
         BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
         #TODO handle Land use map (convert it to reach: ground=1/else=0)
-        preprocess_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+        #preprocess_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
         dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
                                             predicted_anchorage_mask_key=preprocess_anchorage_mask_key,
                                             eomanager = eomanager,

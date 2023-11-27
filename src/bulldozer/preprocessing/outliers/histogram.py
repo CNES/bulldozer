@@ -52,18 +52,20 @@ def concatenate_hist(output_scalars,
                      tile):
     output_scalars[0] += chunk_output_scalars[0]
 
-def compute_robust_min_z(hist: np.ndarray,
-                         dsm_min_z: float,
-                         bin_width: float,
-                         dsm_z_precision: float) -> float:
+def compute_robust_z_interval(hist: np.ndarray,
+                              dsm_min_z: float,
+                              bin_width: float,
+                              dsm_z_precision: float) -> float:
     indices = np.argwhere(hist >= np.mean(hist))
-    return indices[0][0] * bin_width + dsm_min_z - dsm_z_precision
+
+    return indices[0][0] * bin_width + dsm_min_z - dsm_z_precision, indices[0][-1] * bin_width + dsm_min_z + dsm_z_precision
 
 def compute_uncertain_mask(input_buffers : list, 
                            input_profiles: list, 
                            filter_parameters: dict) -> np.ndarray:
     """ """
-    return np.where( input_buffers[0] < filter_parameters["min_z"], 1, 0).astype(np.uint8)
+    return np.where( np.logical_or(input_buffers[0] < filter_parameters["min_z"], 
+                                   input_buffers[0] > filter_parameters["max_z"]), 1, 0).astype(np.uint8)
 
 def uncertain_profile(input_profiles: list,
                       params: dict) -> dict:
@@ -131,15 +133,16 @@ def run(input_dsm_key: str,
                                         filter_desc= "Compute histogram...")
 
     # Compute the mean value of the histogram bin and determine the first bin greater than the mean (it is experimentaly the ground)
-    robust_min_z = compute_robust_min_z(hist = hist[0],
-                                        dsm_min_z = dsm_min,
-                                        bin_width = bin_width,
-                                        dsm_z_precision = dsm_z_precision)
+    robust_min_z, robust_max_z = compute_robust_z_interval(hist = hist[0],
+                                             dsm_min_z = dsm_min,
+                                             bin_width = bin_width,
+                                             dsm_z_precision = dsm_z_precision)
+    robust_max_z = dsm_max
 
     # Compute the uncertain mask and flush it to disk
     [noisy_mask] = eoexe.n_images_to_m_images_filter(inputs = [input_dsm_key],
                                                          image_filter = compute_uncertain_mask,
-                                                         filter_parameters = {"min_z": robust_min_z},
+                                                         filter_parameters = {"min_z": robust_min_z, "max_z": robust_max_z},
                                                          generate_output_profiles = uncertain_profile,
                                                          context_manager = eomanager,
                                                          stable_margin = 0,
@@ -148,5 +151,5 @@ def run(input_dsm_key: str,
     return {
         "noisy_mask": noisy_mask,
         "robust_min_z": robust_min_z,
-        "max_z": dsm_max
+        "robust_max_z": robust_max_z
     }
