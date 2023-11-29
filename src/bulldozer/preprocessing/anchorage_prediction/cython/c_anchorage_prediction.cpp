@@ -14,7 +14,9 @@ namespace bulldoproto {
 
         // Compute the tiles
         // sqrt(2) factor because tiles are square and also factor 2 because of Shannon
-        const unsigned int tile_size = static_cast<unsigned int>(max_object_size * sqrt(2));
+        // 64 mètres
+        //const unsigned int tile_size = static_cast<unsigned int>(max_object_size * sqrt(2));
+        const unsigned int tile_size = static_cast<unsigned int>(128 * sqrt(2));
         
         unsigned int nb_tiles_x = nb_cols / tile_size;
         unsigned int remainder_x = nb_cols % tile_size;

@@ -161,9 +161,9 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         # First pass of the drape cloth filter
         BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
         #TODO handle Land use map (convert it to reach: ground=1/else=0)
-        #preprocess_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+        cos_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
         dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
-                                            predicted_anchorage_mask_key=preprocess_anchorage_mask_key,
+                                            predicted_anchorage_mask_key=cos_mask_key,
                                             eomanager = eomanager,
                                             max_object_size = max_object_size,
                                             dsm_min_z = refined_min_z,
@@ -197,6 +197,11 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
         
         post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
+
+        # Union of post_anchorage_mask with pre_process_anchorage_mask
+        post_anchors = eomanager.get_array(key = post_anchorage_mask_key)
+        pre_anchors = eomanager.get_array(key = preprocess_anchorage_mask_key)
+        np.logical_or(pre_anchors[0,:,:], post_anchors[0,:,:], out= post_anchors[0,:,:])
 
         if params["developer_mode"]:
             output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
