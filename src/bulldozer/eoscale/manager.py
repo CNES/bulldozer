@@ -39,13 +39,13 @@ class EOContextManager:
     # Public methods
 
     def open_raster(self,
-                    raster_path: str) -> None:
+                    raster_path: str) -> str:
         """
-            Create an new shared instance from file
+        Create a new shared instance from file and return its virtual path
         """
         
         new_shared_resource = eosh.EOShared()
-        new_shared_resource.create_from_raster_path(raster_path = raster_path)
+        new_shared_resource.create_from_raster_path(raster_path=raster_path)
         self.shared_resources[new_shared_resource.virtual_path] = new_shared_resource
         return new_shared_resource.virtual_path
     

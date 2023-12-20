@@ -45,6 +45,7 @@ def allocate_dezoom_dtm(level: int,
     dtm_key = eomanager.create_image(profile = dezoomed_dtm_profile)
     return dtm_key
 
+
 def apply_first_tension(dtm_key: str,
                         filled_dsm_key: str,
                         predicted_anchorage_mask_key: str,
@@ -53,16 +54,17 @@ def apply_first_tension(dtm_key: str,
                         prevent_unhook_iter: int,
                         spring_tension: int) -> None:
     
-    dsm = eomanager.get_array(key=filled_dsm_key)[0,::2**(nb_levels-1),::2**(nb_levels-1)]
-    predicted_anchors = eomanager.get_array(key=predicted_anchorage_mask_key)[0,::2**(nb_levels-1),::2**(nb_levels-1)]
-    dtm = eomanager.get_array(key=dtm_key)[0,:,:]
-    dtm[:,:] = dsm[:,:]
+    dsm = eomanager.get_array(key=filled_dsm_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
+    predicted_anchors = eomanager.get_array(key=predicted_anchorage_mask_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
+    dtm = eomanager.get_array(key=dtm_key)[0, :, :]
+    dtm[:, :] = dsm[:, :]
     snap_mask = predicted_anchors > 0
 
     # Prevent unhook from hills
     for i in tqdm(range(prevent_unhook_iter), desc="Prevent unhook from hills..."):
         dtm = scipy.ndimage.uniform_filter(dtm, output=dtm, size=spring_tension)
         dtm[snap_mask] = dsm[snap_mask]
+
 
 def upsample(dtm_key: str,
              filled_dsm_key: str,
@@ -306,23 +308,29 @@ def reverse_drape_cloth(filled_dsm_key: str,
     # on the ground.
     nb_levels = get_max_pyramid_level(max_object_size_pixels/2) + 1
 
-    init_dtm_shape = eomanager.get_array(key=filled_dsm_key)[:,::2**(nb_levels - 1), ::2**(nb_levels - 1)].shape
-    dtm_key = allocate_dezoom_dtm(level = nb_levels - 1,
-                                    dezoom_shape = init_dtm_shape,
-                                    eomanager = eomanager)
+    init_dtm_shape = eomanager.get_array(key=filled_dsm_key)[:, ::2**(nb_levels - 1), ::2**(nb_levels - 1)].shape
+    dtm_key = allocate_dezoom_dtm(level=nb_levels - 1,
+                                  dezoom_shape=init_dtm_shape,
+                                  eomanager=eomanager)
 
-    apply_first_tension(dtm_key = dtm_key,
-                        filled_dsm_key = filled_dsm_key,
-                        predicted_anchorage_mask_key=pre_anchorage_mask_key,
-                        eomanager = eomanager,
-                        nb_levels = nb_levels,
-                        prevent_unhook_iter = prevent_unhook_iter,
-                        spring_tension = spring_tension)
+    if pre_anchorage_mask_key is None:
+        anchorage_mask_key = post_anchorage_mask_key
+    else:
+        anchorage_mask_key = pre_anchorage_mask_key
+
+    apply_first_tension(dtm_key=dtm_key,
+                        filled_dsm_key=filled_dsm_key,
+                        predicted_anchorage_mask_key=anchorage_mask_key,
+                        eomanager=eomanager,
+                        nb_levels=nb_levels,
+                        prevent_unhook_iter=prevent_unhook_iter,
+                        spring_tension=spring_tension)
     
-    eomanager.release(key = filled_dsm_key)
-    eomanager.release(key = pre_anchorage_mask_key)
+    eomanager.release(key=filled_dsm_key)
+    if pre_anchorage_mask_key is not None:
+        eomanager.release(key=pre_anchorage_mask_key)
 
-    # Init classical parameters of drap cloth
+    # Init classical parameters of drape cloth
     level = nb_levels - 1
     current_num_outer_iterations = num_outer_iterations
 
@@ -330,33 +338,28 @@ def reverse_drape_cloth(filled_dsm_key: str,
     step = (dsm_max_z - dsm_min_z) / num_outer_iterations
 
     while level >= 0:
-
         print(f"Process level {level} ...")
 
         # Create the memviews of the filled dsm map of this level
-
-        current_dezoom_profile: dict = downsample_profile(profile = eomanager.get_profile(key=first_pass_dtm_key), 
-                                                          factor = 2**level)
+        current_dezoom_profile: dict = downsample_profile(profile=eomanager.get_profile(key=first_pass_dtm_key),
+                                                          factor=2**level)
         
-
-        first_pass_dtm_memview = eomanager.create_memview(key = first_pass_dtm_key, 
-                                                          arr_subset = eomanager.get_array(key=first_pass_dtm_key)[:,::2**level, ::2**level], 
-                                                          arr_subset_profile = current_dezoom_profile)
+        first_pass_dtm_memview = eomanager.create_memview(key=first_pass_dtm_key,
+                                                          arr_subset=eomanager.get_array(key=first_pass_dtm_key)[:, ::2**level, ::2**level],
+                                                          arr_subset_profile=current_dezoom_profile)
         
-        post_anchorage_mask_key_memview = eomanager.create_memview(key = post_anchorage_mask_key, 
-                                                                   arr_subset = eomanager.get_array(key=post_anchorage_mask_key)[:,::2**level, ::2**level], 
-                                                                   arr_subset_profile = current_dezoom_profile)
+        post_anchorage_mask_key_memview = eomanager.create_memview(key=post_anchorage_mask_key,
+                                                                   arr_subset=eomanager.get_array(key=post_anchorage_mask_key)[:, ::2**level, ::2**level],
+                                                                   arr_subset_profile=current_dezoom_profile)
         
-
         if level < nb_levels - 1:
 
-            dtm_key = upsample(dtm_key = dtm_key,
-                               filled_dsm_key = first_pass_dtm_memview, 
-                               level = level,
-                               dezoom_profile = current_dezoom_profile,
-                               eomanager = eomanager)
+            dtm_key = upsample(dtm_key=dtm_key,
+                               filled_dsm_key=first_pass_dtm_memview,
+                               level=level,
+                               dezoom_profile=current_dezoom_profile,
+                               eomanager=eomanager)
         
-
         drape_cloth_parameters: dict = {
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
@@ -364,24 +367,22 @@ def reverse_drape_cloth(filled_dsm_key: str,
             'step': step
         }
 
-
-        [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs = [dtm_key, first_pass_dtm_memview, post_anchorage_mask_key_memview], 
-                                                          image_filter = reverse_drape_cloth_filter,
-                                                          generate_output_profiles = drape_cloth_profiles,
-                                                          filter_parameters = drape_cloth_parameters,
-                                                          stable_margin = int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
-                                                          context_manager = eomanager,
-                                                          filter_desc = "Reverse Drape cloth simulation...")
+        [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs=[dtm_key, first_pass_dtm_memview, post_anchorage_mask_key_memview],
+                                                          image_filter=reverse_drape_cloth_filter,
+                                                          generate_output_profiles=drape_cloth_profiles,
+                                                          filter_parameters=drape_cloth_parameters,
+                                                          stable_margin=int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
+                                                          context_manager=eomanager,
+                                                          filter_desc="Reverse Drape cloth simulation...")
         
         eomanager.release(key=dtm_key)
         dtm_key = new_dtm_key
-
 
         level -= 1
         step = step / (2 * 2 ** (nb_levels - 1 - level))
         current_num_outer_iterations = max(1, int(num_outer_iterations / 2**(nb_levels - 1 - level)))
     
     # dtm_key contains the final dtm, we can save it to disk
-    dtm_key = eomanager.update_profile(key = dtm_key, profile = eomanager.get_profile(key=first_pass_dtm_memview))
+    dtm_key = eomanager.update_profile(key=dtm_key, profile=eomanager.get_profile(key=first_pass_dtm_memview))
     
     return dtm_key

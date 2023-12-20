@@ -37,35 +37,41 @@ from bulldozer.utils.logging_helper import BulldozerLogger
 # - fill_search_radius: int (optional, 100 by default)
 # - max_ground_slope: float (optional, 20.0 % by default)
 # - min_object_spatial_frequency: float (optional, 0.0625 m^-1 by default)
-# - cloth_tension_force: int (optionnal, 3 by default)
-# - prevent_unhook_iter: int (optionnal, 10 by default)
-# - num_outer_iter: int (optionnal, 100 by default)
-# - num_inner_iter: int (optionnal, 10 by default)
-# - output_resolution: float (optionnal, null by default)
-# - generate_dhm: bool (optionnal, True by default)
-# - developer_mode : bool (optionnal, False by default)
+# - cloth_tension_force: int (optional, 3 by default)
+# - prevent_unhook_iter: int (optional, 10 by default)
+# - num_outer_iter: int (optional, 100 by default)
+# - num_inner_iter: int (optional, 10 by default)
+# - output_resolution: float (optional, null by default)
+# - generate_dhm: bool (optional, True by default)
+# - developer_mode : bool (optional, False by default)
 # - dtm_max_error: float (optional, 2 meters)
+# - anchor_points_activation : bool (optional, False by default)
+# - reverse_drape_cloth_activation : bool (optional, False by default)
+
 
 # This dict store all the Bulldozer default parameters
 DefaultValues = {
     # Basic parameters
-    'GENERATE_DHM' : True,
-    'MIN_OBJECT_SPATIAL_FREQUENCY' : 0.0625,
-    'NB_MAX_WORKERS' : 8,
+    'GENERATE_DHM': True,
+    'MIN_OBJECT_SPATIAL_FREQUENCY': 0.0625,
+    'NB_MAX_WORKERS': 8,
     # Advanced settings
     'DSM_Z_PRECISION': 1.0,
-    'DEVELOPER_MODE' : False,
+    'DEVELOPER_MODE': False,
     'FILL_SEARCH_RADIUS': 100,
     'MAX_GROUND_SLOPE': 20.0,
     'DTM_MAX_ERROR': None,
+    'ANCHOR_POINTS_ACTIVATION': False,
+    'REVERSE_DRAPE_CLOTH_ACTIVATION': False,
     # Bulldozer core settings
     'CLOTH_TENSION_FORCE': 3,
-    'PREVENT_UNHOOK_ITER' : 10,
-    'NUM_OUTER_ITER' : 100,
-    'NUM_INNER_ITER' : 10,
+    'PREVENT_UNHOOK_ITER': 10,
+    'NUM_OUTER_ITER': 100,
+    'NUM_INNER_ITER': 10,
 }
 
-def npAsContiguousArray(arr : np.array) -> np.array:
+
+def npAsContiguousArray(arr: np.array) -> np.array:
     """
     This method checks that the input array is contiguous. 
     If not, returns the contiguous version of the input numpy array.
@@ -80,7 +86,8 @@ def npAsContiguousArray(arr : np.array) -> np.array:
         arr = np.ascontiguousarray(arr)
     return arr
 
-def downsample_profile(profile, factor : float) :
+
+def downsample_profile(profile, factor: float):
     
     transform= profile['transform']
 
@@ -88,11 +95,12 @@ def downsample_profile(profile, factor : float) :
     dst_transform = Affine.translation(transform[2], transform[5]) * Affine.scale(transform[0]*factor, transform[4]*factor)
     
     newprofile.update({
-    'transform': dst_transform,
+        'transform': dst_transform,
     })
     
     return newprofile
-        
+
+
 class Runtime:
     """
     This class is used as decorator to monitor the runtime .

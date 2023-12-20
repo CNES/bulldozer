@@ -53,9 +53,8 @@ import bulldozer.postprocessing.ground_detection.post_anchorage_detection as pos
 __version__ = "2.0.0"
 
 
-
 @Runtime
-def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
+def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     """
         Main pipeline orchestrator.
         
@@ -67,16 +66,15 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
     # Retrieves Bulldozer settings from the config file, the CLI parameters or the Python API parameters
     params = retrieve_params(config_path, **kwargs)
 
-
     # If the target output directory does not exist, creates it
     if not os.path.isdir(params['output_dir']):
         os.makedirs(params['output_dir']) 
 
-    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") +".log"))
+    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") + ".log"))
 
-    BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) +": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
+    BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
-    with eom.EOContextManager(nb_workers = params['nb_max_workers'], tile_mode = True) as eomanager:
+    with eom.EOContextManager(nb_workers=params['nb_max_workers'], tile_mode=True) as eomanager:
 
         # Open the input dsm that might be noisy and full of nodatas...
         input_dsm_key = eomanager.open_raster(raster_path = params['dsm_path'])
@@ -86,18 +84,17 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         # height dsm precision X 2 and then determine lower height cut to determine
         # the real robust minimum height of the DSM
         BulldozerLogger.log("Detect low height aberrant values: Starting...", logging.INFO)
-        outliers_output = preprocess_histogram_outliers.run( input_dsm_key = input_dsm_key,
-                                                             eomanager = eomanager,
-                                                             dsm_z_precision = params['dsm_z_precision'] )
+        outliers_output = preprocess_histogram_outliers.run( input_dsm_key=input_dsm_key,
+                                                             eomanager=eomanager,
+                                                             dsm_z_precision=params['dsm_z_precision'])
         BulldozerLogger.log("Detect low height aberrant values: Done.", logging.INFO)
-        
 
         noisy_mask_key = outliers_output["noisy_mask"]
         dsm_min = outliers_output["robust_min_z"]
         dsm_max = outliers_output["robust_max_z"]
         if params["developer_mode"]:
             noisy_mask_path: str = os.path.join(params["output_dir"], "noisy_mask.tif")
-            eomanager.write(key = noisy_mask_key, img_path = noisy_mask_path)
+            eomanager.write(key=noisy_mask_key, img_path=noisy_mask_path)
         
         # Step 2
         # Compute the regular area mask
@@ -105,81 +102,81 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
         max_object_size: float = 1.0 / params['min_object_spatial_frequency']
         anchorage_exploration_size = int(max_object_size + 1)
-        regular_outputs = preprocess_regular_detector.run(dsm_key= input_dsm_key,
-                                                          noisy_key= noisy_mask_key,
-                                                          eomanager = eomanager,
-                                                          regular_slope = regular_slope,
-                                                          anchorage_exploration_size = anchorage_exploration_size)
+        regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
+                                                          noisy_key=noisy_mask_key,
+                                                          eomanager=eomanager,
+                                                          regular_slope=regular_slope,
+                                                          anchorage_exploration_size=anchorage_exploration_size)
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
 
-        outliers_output = preprocess_histogram_outliers.run( input_dsm_key = input_dsm_key,
+        outliers_output = preprocess_histogram_outliers.run(input_dsm_key=input_dsm_key,
                                                             input_invalid_key=regular_outputs['regular_mask'],
-                                                             eomanager = eomanager,
-                                                             dsm_z_precision = params['dsm_z_precision'] )
+                                                            eomanager=eomanager,
+                                                            dsm_z_precision=params['dsm_z_precision'])
         BulldozerLogger.log("Noisy mask computation: Done.", logging.INFO)
 
         regular_mask_key = regular_outputs["regular_mask"]
         if params["developer_mode"]:
-            regular_mask_path : str = os.path.join(params["output_dir"], "regular_mask.tif")
-            eomanager.write(key = regular_mask_key, img_path = regular_mask_path)
+            regular_mask_path: str = os.path.join(params["output_dir"], "regular_mask.tif")
+            eomanager.write(key=regular_mask_key, img_path=regular_mask_path)
         
-
         # Step 3
         # Fill the input DSM and compute the uncertainties
         refined_min_z = outliers_output["robust_min_z"]
         refined_max_z = outliers_output["robust_max_z"]
         print("Refined min max", refined_min_z, refined_max_z)
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
-        fill_outputs = prefill_dsm.run(input_dsm_key = input_dsm_key, 
-                                       refined_min_z = refined_min_z,
-                                       refined_max_z = refined_max_z, 
-                                       eomanager = eomanager)
+        fill_outputs = prefill_dsm.run(input_dsm_key=input_dsm_key,
+                                       refined_min_z=refined_min_z,
+                                       refined_max_z=refined_max_z,
+                                       eomanager=eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
         
         filled_dsm_key = fill_outputs["filled_dsm"]
 
         filled_dsm_path: str = os.path.join(params["output_dir"], "filled_dsm.tif")
-        eomanager.write(key =  filled_dsm_key, img_path = filled_dsm_path)
+        eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
 
-        # Step 3.5
-        # #TODO if COS then preprocess_anchorage_mask_key initialised to the COS
-        BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
-        preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key = filled_dsm_key,
-                                        regular_mask_key = regular_mask_key,
-                                        refined_min_z = refined_min_z,
-                                        refined_max_z = refined_max_z,
-                                        max_object_size = max_object_size,
-                                        eomanager = eomanager)
-        BulldozerLogger.log("Predicting anchorage points : Done", logging.INFO)
+        # Step 3.5 - optional
+        if params['anchor_points_activation']:
+            # #TODO if COS then preprocess_anchorage_mask_key initialised to the COS
+            BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
+            preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key=filled_dsm_key,
+                                                                            regular_mask_key=regular_mask_key,
+                                                                            refined_min_z=refined_min_z,
+                                                                            refined_max_z=refined_max_z,
+                                                                            max_object_size=max_object_size,
+                                                                            eomanager=eomanager)
+            BulldozerLogger.log("Predicting anchorage points : Done", logging.INFO)
 
-
-        if params["developer_mode"]:
-            preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
-            eomanager.write(key = preprocess_anchorage_mask_key, img_path = preprocess_anchorage_mask_path)
+            if params["developer_mode"]:
+                preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
+                eomanager.write(key=preprocess_anchorage_mask_key, img_path=preprocess_anchorage_mask_path)
+        else:
+            preprocess_anchorage_mask_key = None
 
         # Step 4
         # First pass of the drape cloth filter
         BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
-        #TODO handle Land use map (convert it to reach: ground=1/else=0)
+        # TODO handle Land use map (convert it to reach: ground=1/else=0)
         cos_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
-        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
-                                            predicted_anchorage_mask_key=cos_mask_key,
-                                            eomanager = eomanager,
-                                            max_object_size = max_object_size,
-                                            dsm_min_z = refined_min_z,
-                                            dsm_max_z = dsm_max,
-                                            prevent_unhook_iter = params["prevent_unhook_iter"],
-                                            spring_tension = params["cloth_tension_force"],
-                                            num_outer_iterations = params["num_outer_iter"],
-                                            num_inner_iterations = params["num_inner_iter"])
+        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
+                                             predicted_anchorage_mask_key=cos_mask_key,
+                                             eomanager=eomanager,
+                                             max_object_size=max_object_size,
+                                             dsm_min_z=refined_min_z,
+                                             dsm_max_z=dsm_max,
+                                             prevent_unhook_iter=params["prevent_unhook_iter"],
+                                             spring_tension=params["cloth_tension_force"],
+                                             num_outer_iterations=params["num_outer_iter"],
+                                             num_inner_iterations=params["num_inner_iter"])
         BulldozerLogger.log("First pass of a drape cloth filter: Done.", logging.INFO)
         
         if params["developer_mode"]:
             inter_dtm_path: str = os.path.join(params["output_dir"], "dtm_first_pass.tif")
-            eomanager.write(key = dtm_key, img_path = inter_dtm_path)
-        
+            eomanager.write(key=dtm_key, img_path=inter_dtm_path)
 
-        # #TODO for steps 5 and 6: add a conditional statement to activate the second pass
+        # TODO for steps 5 and 6: add a conditional statement to activate the second pass
 
         # Step 5
         # Attempt to detect terrain pixels
@@ -198,65 +195,65 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         
         post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
 
-        # Union of post_anchorage_mask with pre_process_anchorage_mask
-        post_anchors = eomanager.get_array(key = post_anchorage_mask_key)
-        pre_anchors = eomanager.get_array(key = preprocess_anchorage_mask_key)
-        np.logical_or(pre_anchors[0,:,:], post_anchors[0,:,:], out= post_anchors[0,:,:])
+        if preprocess_anchorage_mask_key is not None:
+            # Union of post_anchorage_mask with pre_process_anchorage_mask
+            post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
+            pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
+            np.logical_or(pre_anchors[0, :, :], post_anchors[0, :, :], out=post_anchors[0, :, :])
 
         if params["developer_mode"]:
             output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
-            eomanager.write(key = post_anchorage_mask_key, img_path = output_post_anchorage_path)
+            eomanager.write(key=post_anchorage_mask_key, img_path=output_post_anchorage_path)
         
-        eomanager.release(key = dtm_key)
+        eomanager.release(key=dtm_key)
 
         # Step 6
         # Compute final DTM with post processed predicted terrain point
         BulldozerLogger.log("Second pass of a drape cloth filter: Starting...", logging.INFO)
-        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key = filled_dsm_key,
+        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
                                              predicted_anchorage_mask_key=post_anchorage_mask_key,
-                                             eomanager = eomanager,
-                                             max_object_size = max_object_size,
-                                             dsm_min_z = refined_min_z,
-                                             dsm_max_z = dsm_max,
-                                             prevent_unhook_iter = params["prevent_unhook_iter"],
-                                             spring_tension = params["cloth_tension_force"],
-                                             num_outer_iterations = params["num_outer_iter"],
-                                             num_inner_iterations = params["num_inner_iter"])
+                                             eomanager=eomanager,
+                                             max_object_size=max_object_size,
+                                             dsm_min_z=refined_min_z,
+                                             dsm_max_z=dsm_max,
+                                             prevent_unhook_iter=params["prevent_unhook_iter"],
+                                             spring_tension=params["cloth_tension_force"],
+                                             num_outer_iterations=params["num_outer_iter"],
+                                             num_inner_iterations=params["num_inner_iter"])
         BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
 
-        eomanager.write(key = dtm_key, img_path = os.path.join(params["output_dir"], "dtm_second_pass.tif"))
+        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
 
-
-        # Step 7: reverse drape cloth
+        # Step 7: reverse drape cloth - optional
         # Needs: dtm_key and post_anchors to snap and dsm_max_z for int
-        BulldozerLogger.log("Reverse pass of a drape cloth filter: Starting...", logging.INFO)
-        reverse_dtm_key = dtm_extraction.reverse_drape_cloth(filled_dsm_key = filled_dsm_key,
-                                             first_pass_dtm_key = dtm_key,
-                                             pre_anchorage_mask_key = preprocess_anchorage_mask_key,
-                                             post_anchorage_mask_key=post_anchorage_mask_key,
-                                             eomanager = eomanager,
-                                             max_object_size = max_object_size,
-                                             dsm_min_z = refined_min_z,
-                                             dsm_max_z = dsm_max,
-                                             prevent_unhook_iter = params["prevent_unhook_iter"],
-                                             spring_tension = params["cloth_tension_force"],
-                                             num_outer_iterations = params["num_outer_iter"],
-                                             num_inner_iterations = params["num_inner_iter"])
-        
-        if params["developer_mode"]:
-            eomanager.write(key = reverse_dtm_key, img_path = os.path.join(params["output_dir"], "reverse_dtm.tif"))
-        
-        final_dtm = eomanager.get_array(key = dtm_key)
-        reverse_dtm = eomanager.get_array(key = reverse_dtm_key)
-        final_dtm[0,:, :] +=  reverse_dtm[0,:,:]
-        final_dtm[0,:, :] /= 2.0
-        eomanager.release(key = reverse_dtm_key)
-        eomanager.write(key = dtm_key, img_path = os.path.join(params["output_dir"], "final_dtm.tif"))
+        if params['reverse_drape_cloth_activation']:
+            BulldozerLogger.log("Reverse pass of a drape cloth filter: Starting...", logging.INFO)
+            reverse_dtm_key = dtm_extraction.reverse_drape_cloth(filled_dsm_key=filled_dsm_key,
+                                                                 first_pass_dtm_key=dtm_key,
+                                                                 pre_anchorage_mask_key=preprocess_anchorage_mask_key,
+                                                                 post_anchorage_mask_key=post_anchorage_mask_key,
+                                                                 eomanager=eomanager,
+                                                                 max_object_size=max_object_size,
+                                                                 dsm_min_z=refined_min_z,
+                                                                 dsm_max_z=dsm_max,
+                                                                 prevent_unhook_iter=params["prevent_unhook_iter"],
+                                                                 spring_tension=params["cloth_tension_force"],
+                                                                 num_outer_iterations=params["num_outer_iter"],
+                                                                 num_inner_iterations=params["num_inner_iter"])
 
-
-        # Si more steps dont forget (if reverse not activated) to release the DSM.
-
+            if params["developer_mode"]:
+                eomanager.write(key=reverse_dtm_key, img_path=os.path.join(params["output_dir"], "reverse_dtm.tif"))
         
+            final_dtm = eomanager.get_array(key=dtm_key)
+            reverse_dtm = eomanager.get_array(key=reverse_dtm_key)
+            final_dtm[0, :, :] += reverse_dtm[0, :, :]
+            final_dtm[0, :, :] /= 2.0
+            eomanager.release(key=reverse_dtm_key)
+
+        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "final_dtm.tif"))
+
+        # Si more steps don't forget (if reverse not activated) to release the DSM.
+
         # dtm_path: str = os.path.join(params["output_dir"], "dtm.tif")
         # eomanager.write(key = dtm_key, img_path = dtm_path)
 
@@ -273,30 +270,31 @@ def dsm_to_dtm(config_path : str = None, **kwargs) -> None:
         # BulldozerLogger.log("And finally we are done ! It is exhausting to extract a DTM don't you think ?", logging.INFO)
 
 
-
-def retrieve_params(config_path : str = None, **kwargs):
+def retrieve_params(config_path: str = None, **kwargs):
     """
         Defines the input parameters based on the provided configuration file (if provided), or the kwargs (CLI or Python API).
-        For the missing parameters the Bullodzer default values are set.
+        For the missing parameters the Bulldozer default values are set.
         
         Args:
             config_path: path to the config file (YAML file expected, refers to the provided template in /conf).
-            **kwargs: list of expected arguments if the urser don't provide a configuration file:
+            **kwargs: list of expected arguments if the user don't provide a configuration file:
                 - dsm_path: str (required)
                 - output_dir: str (required)
-                - nb_max_workers: int (optionnal, 8 by default)
+                - nb_max_workers: int (optional, 8 by default)
                 - dsm_z_precision: float (optional, 1.0 by default)
                 - fill_search_radius: int (optional, 100 by default)
                 - max_ground_slope: float (optional, 20.0 % by default)
                 - min_object_spatial_frequency: float (optional, 0.0625 by default)
                 - dtm_max_error: float (optional, 2.0 meters by default)
-                - cloth_tension_force: int (optionnal, 3 by default)
-                - prevent_unhook_iter: int (optionnal, 10 by default)
-                - num_outer_iter: int (optionnal, 100 by default)
-                - num_inner_iter: int (optionnal, 10 by default)
-                - output_resolution: float (optionnal, null by default)
-                - generate_dhm: bool (optionnal, True by default)
-                - developper_mode : bool (optionnal, False by default)
+                - cloth_tension_force: int (optional, 3 by default)
+                - prevent_unhook_iter: int (optional, 10 by default)
+                - num_outer_iter: int (optional, 100 by default)
+                - num_inner_iter: int (optional, 10 by default)
+                - output_resolution: float (optional, null by default)
+                - generate_dhm: bool (optional, True by default)
+                - developer_mode : bool (optional, False by default)
+                - anchor_points_activation : bool (optional, False by default)
+                - reverse_drape_cloth_activation : bool (optional, False by default)
                 refers to the documentation to understand the use of each parameter.
     """
     bulldozer_params = dict()
@@ -306,7 +304,7 @@ def retrieve_params(config_path : str = None, **kwargs):
 
     if config_path:
         # Configuration file format check
-        if not (config_path.endswith('.yaml') or config_path.endswith('.yml')) :
+        if not (config_path.endswith('.yaml') or config_path.endswith('.yml')):
             raise ValueError('Expected yaml configuration file: \'config_path\' argument should be a path to a Yaml file (here: {})'.format(config_path))
 
         # Configuration file existence check
@@ -325,13 +323,13 @@ def retrieve_params(config_path : str = None, **kwargs):
             raise ValueError('No output diectory path provided or invalid YAML key syntax. Expected: output_dir="<path>")')
         else:
             bulldozer_params['output_dir'] = input_params['output_dir']
-    else :
+    else:
         # User directly provides the input parameters (kwargs)
         input_params = kwargs
-        if not 'dsm_path' in input_params:
+        if 'dsm_path' not in input_params:
             raise ValueError('No DSM path provided or invalid argument syntax. Expected: \n\t-Python API: dsm_to_dtm(dsm_path="<path>")\n\t-CLI: bulldozer -in <path>')
         bulldozer_params['dsm_path'] = input_params['dsm_path']
-        if not 'output_dir' in input_params:
+        if 'output_dir' not in input_params:
             raise ValueError('No output diectory path provided or invalid argument syntax. Expected: \n\t-Python API:  dsm_to_dtm(dsm_path="<path>, output_dir="<path>")\n\t-CLI: bulldozer -in <path> -out path')
         bulldozer_params['output_dir'] = input_params['output_dir']
 
@@ -339,7 +337,7 @@ def retrieve_params(config_path : str = None, **kwargs):
     for key, value in DefaultValues.items():
         bulldozer_params[key.lower()] = input_params[key.lower()] if key.lower() in input_params.keys() else value
     
-    # Retrieves the number of CPU if the number of available workers if the user didn't provides a specific value
+    # Retrieves the number of CPU if the number of available workers if the user didn't provide a specific value
     if bulldozer_params['nb_max_workers'] is None:
         bulldozer_params['nb_max_workers'] = multiprocessing.cpu_count()
     
@@ -353,7 +351,7 @@ def get_parser():
     Returns:
         the parser.
     """
-    parser = argparse.ArgumentParser(description=("Bulldozer"))
+    parser = argparse.ArgumentParser(description="Bulldozer")
 
     parser.add_argument(
         "--conf", required=True, type=str, help="Bulldozer config file"
@@ -366,7 +364,7 @@ def get_parser():
         version="%(prog)s {version}".format(version=__version__),
     )
     
-    #TODO add all the parameters
+    # TODO add all the parameters
     return parser
 
 
@@ -382,6 +380,7 @@ def bulldozer_cli() -> None:
     config_path = args.conf
 
     dsm_to_dtm(config_path)
+
 
 if __name__ == "__main__":
     bulldozer_cli()
