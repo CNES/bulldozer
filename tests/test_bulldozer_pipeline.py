@@ -11,12 +11,12 @@ from bulldozer.pipeline import bulldozer_pipeline
 
 @pytest.fixture
 def input_dsm_path():
-    return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/in/ARCACHON/dsm_ARCACHON_tuile_6.tif"
+    return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/in/ARCACHON/dsm_ARCACHON_tuile_0.tif"
 
 
 @pytest.fixture
 def ref_path():
-    return "/work/scratch/data/emiliea/bulldozer/67_benchmark/out_ref_tests/"
+    return "/work/scratch/data/emiliea/bulldozer/67_benchmark/out_tuile0/"
 
 
 def test_dsm_to_dtm(input_dsm_path, ref_path):
@@ -26,8 +26,8 @@ def test_dsm_to_dtm(input_dsm_path, ref_path):
                                       output_dir=directory)
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
-        ref_dtm_path = os.path.join(ref_path, "final_dtm_default.tif")
-        # shutil.copyfile(dtm_path, ref_dtm_path)
+        ref_dtm_path = os.path.join(ref_path, "final_dtm_no_gradient.tif")
+        shutil.copyfile(dtm_path, ref_dtm_path)
 
         with rio.open(dtm_path) as dtm:
             with rio.open(ref_dtm_path) as ref:
@@ -45,7 +45,7 @@ def test_dsm_to_dtm_anchor(input_dsm_path, ref_path):
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
         ref_dtm_path = os.path.join(ref_path, "final_dtm_anchor.tif")
-        # shutil.copyfile(dtm_path, ref_dtm_path)
+        shutil.copyfile(dtm_path, ref_dtm_path)
 
         with rio.open(dtm_path) as dtm:
             with rio.open(ref_dtm_path) as ref:
@@ -62,8 +62,8 @@ def test_dsm_to_dtm_reverse_drape(input_dsm_path, ref_path):
                                       reverse_drape_cloth_activation=True)
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
-        ref_dtm_path = os.path.join(ref_path, "final_dtm_reverse.tif")
-        # shutil.copyfile(dtm_path, ref_dtm_path)
+        ref_dtm_path = os.path.join(ref_path, "final_dtm_reverse_no_gradient.tif")
+        shutil.copyfile(dtm_path, ref_dtm_path)
 
         with rio.open(dtm_path) as dtm:
             with rio.open(ref_dtm_path) as ref:
@@ -82,7 +82,7 @@ def test_dsm_to_dtm_anchor_reverse_drape(input_dsm_path, ref_path):
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
         ref_dtm_path = os.path.join(ref_path, "final_dtm_anchor_reverse.tif")
-        # shutil.copyfile(dtm_path, ref_dtm_path)
+        shutil.copyfile(dtm_path, ref_dtm_path)
 
         with rio.open(dtm_path) as dtm:
             with rio.open(ref_dtm_path) as ref:

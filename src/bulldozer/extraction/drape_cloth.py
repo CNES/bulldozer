@@ -6,7 +6,8 @@ from rasterio import Affine
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 
-def next_power_of_2(x : int) -> int:
+
+def next_power_of_2(x: int) -> int:
     """
     This function returns the smallest power of 2 that is greater than or equal to a given non-negative integer x.
 
@@ -16,21 +17,23 @@ def next_power_of_2(x : int) -> int:
     Returns:
         the corresponding power index power (2**index >= x).
     """
-    return 0 if x==0 else (1<<(x-1).bit_length()).bit_length() - 1
+    return 0 if x == 0 else (1 << (x-1).bit_length()).bit_length() - 1
+
 
 def get_max_pyramid_level(max_object_size_pixels: float) -> int :
     """ 
         Given the max size of an object on the ground,
-        this methods compute the max level of the pyramid
-        for drap cloth algorithm
+        this method computes the max level of the pyramid
+        for drape cloth algorithm
     """
     power = next_power_of_2(int(max_object_size_pixels))
     
     # Take the closest power to the max object size
-    if abs(2**(power-1) - max_object_size_pixels) <  abs(2**(power) - max_object_size_pixels):
+    if abs(2**(power-1) - max_object_size_pixels) < abs(2**power - max_object_size_pixels):
         power -= 1
 
     return power
+
 
 def allocate_dezoom_dtm(level: int,
                         dezoom_shape: tuple,
@@ -42,7 +45,7 @@ def allocate_dezoom_dtm(level: int,
         "width": dezoom_shape[2],
         "dtype": np.float32
     }
-    dtm_key = eomanager.create_image(profile = dezoomed_dtm_profile)
+    dtm_key = eomanager.create_image(profile=dezoomed_dtm_profile)
     return dtm_key
 
 
@@ -73,9 +76,9 @@ def upsample(dtm_key: str,
              eomanager: eom.EOContextManager) -> str:
     
     next_shape = eomanager.get_array(key=filled_dsm_key).shape
-    next_dtm_key = allocate_dezoom_dtm(level = level, dezoom_shape=next_shape, eomanager = eomanager)
-    prev_dtm = eomanager.get_array(key=dtm_key)[0,:,:]
-    next_dtm = eomanager.get_array(key=next_dtm_key)[0,:,:]
+    next_dtm_key = allocate_dezoom_dtm(level=level, dezoom_shape=next_shape, eomanager=eomanager)
+    prev_dtm = eomanager.get_array(key=dtm_key)[0, :, :]
+    next_dtm = eomanager.get_array(key=next_dtm_key)[0, :, :]
 
     # Adjust the slicing for odd row count
     if next_dtm.shape[0] % 2 == 1:
@@ -90,7 +93,7 @@ def upsample(dtm_key: str,
         s1 = np.s_[:]
 
     # Only fill upsampled value since we are working on the same shared memory
-    next_dtm[::2, ::2] = prev_dtm[:,:]
+    next_dtm[::2, ::2] = prev_dtm[:, :]
     next_dtm[1::2, ::2] = prev_dtm[s0, :]
     next_dtm[::2, 1::2] = prev_dtm[:, s1]
     next_dtm[1::2, 1::2] = prev_dtm[s0, s1]
@@ -100,6 +103,7 @@ def upsample(dtm_key: str,
 
     return next_dtm_key
 
+
 def drape_cloth_filter(input_buffers: list, 
                        input_profiles: list, 
                        params: dict):
@@ -108,9 +112,9 @@ def drape_cloth_filter(input_buffers: list,
     num_inner_iterations: int = params['num_inner_iterations']
     spring_tension: int = params['spring_tension']
     step: float = params['step']
-    dtm = copy.deepcopy(input_buffers[0][0,:,:])
-    dsm = input_buffers[1][0,:,:]
-    predicted_anchors = input_buffers[2][0,:,:]
+    dtm = copy.deepcopy(input_buffers[0][0, :, :])
+    dsm = input_buffers[1][0, :, :]
+    predicted_anchors = input_buffers[2][0, :, :]
     snap_mask = predicted_anchors > 0
 
     for i in range(num_outer_iterations):
@@ -128,40 +132,82 @@ def drape_cloth_filter(input_buffers: list,
             # apply spring tension forces (blur the DTM)
             dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
         
-        
     # One final intersection check
     dtm[snap_mask] = dsm[snap_mask]
     np.minimum(dtm, dsm, out=dtm)
     
     return dtm
 
+
+def drape_cloth_filter_gradient(input_buffers: list,
+                                input_profiles: list,
+                                params: dict):
+    """ """
+    num_outer_iterations: int = params['num_outer_iterations']
+    num_inner_iterations: int = params['num_inner_iterations']
+    spring_tension: int = params['spring_tension']
+    step_scale: float = params['step_scale']
+    dtm = copy.deepcopy(input_buffers[0][0, :, :])
+    dsm = input_buffers[1][0, :, :]
+    predicted_anchors = input_buffers[2][0, :, :]
+    snap_mask = predicted_anchors > 0
+
+    grad = np.abs(np.gradient(dtm))
+
+    step = np.maximum(grad[0, :, :], grad[1, :, :]) * step_scale
+    step = scipy.ndimage.maximum_filter(step, 5)
+
+    for i in range(num_outer_iterations):
+
+        dtm += step
+
+        for j in range(num_inner_iterations):
+            # Snap dtm to anchors point
+            dtm[snap_mask] = dsm[snap_mask]
+
+            # handle DSM intersections
+            np.minimum(dtm, dsm, out=dtm)
+
+            # apply spring tension forces (blur the DTM)
+            dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
+
+    # One final intersection check
+    dtm[snap_mask] = dsm[snap_mask]
+    np.minimum(dtm, dsm, out=dtm)
+
+    return dtm
+
+
 def drape_cloth_profiles(input_profiles: list,
                          params: dict) -> dict:
     return input_profiles[0]
 
+
 def downsample_profile(profile, factor : float) :
-    
-    transform= profile['transform']
+
+    transform = profile['transform']
 
     newprofile = profile.copy()
     dst_transform = Affine.translation(transform[2], transform[5]) * Affine.scale(transform[0]*factor, transform[4]*factor)
-    
+
     newprofile.update({
-    'transform': dst_transform,
+        'transform': dst_transform,
     })
     
     return newprofile
 
+
 def drape_cloth(filled_dsm_key: str,
-                                 predicted_anchorage_mask_key: str,
-                                 eomanager: eom.EOContextManager,
-                                 max_object_size: float,
-                                 dsm_min_z: float,
-                                 dsm_max_z: float,
-                                 prevent_unhook_iter: int,
-                                 spring_tension: int,
-                                 num_outer_iterations: int,
-                                 num_inner_iterations: int) -> str:
+                predicted_anchorage_mask_key: str,
+                eomanager: eom.EOContextManager,
+                max_object_size: float,
+                dsm_min_z: float,
+                dsm_max_z: float,
+                prevent_unhook_iter: int,
+                spring_tension: int,
+                num_outer_iterations: int,
+                num_inner_iterations: int,
+                use_gradient: bool=True) -> str:
     """ """
 
     dsm_profile: dict = eomanager.get_profile(key=filled_dsm_key)
@@ -175,25 +221,26 @@ def drape_cloth(filled_dsm_key: str,
     nb_levels = get_max_pyramid_level(max_object_size_pixels/2) + 1
 
     # Allocate memory for the max dezoomed dtm
-    init_dtm_shape = eomanager.get_array(key=filled_dsm_key)[:,::2**(nb_levels - 1), ::2**(nb_levels - 1)].shape
-    dtm_key = allocate_dezoom_dtm(level = nb_levels - 1,
-                                    dezoom_shape = init_dtm_shape,
-                                    eomanager = eomanager)
+    init_dtm_shape = eomanager.get_array(key=filled_dsm_key)[:, ::2**(nb_levels - 1), ::2**(nb_levels - 1)].shape
+    dtm_key = allocate_dezoom_dtm(level=nb_levels - 1,
+                                  dezoom_shape=init_dtm_shape,
+                                  eomanager=eomanager)
 
-    apply_first_tension(dtm_key = dtm_key,
-                    filled_dsm_key = filled_dsm_key,
-                    predicted_anchorage_mask_key=predicted_anchorage_mask_key,
-                    eomanager = eomanager,
-                    nb_levels = nb_levels,
-                    prevent_unhook_iter = prevent_unhook_iter,
-                    spring_tension = spring_tension)
+    apply_first_tension(dtm_key=dtm_key,
+                        filled_dsm_key=filled_dsm_key,
+                        predicted_anchorage_mask_key=predicted_anchorage_mask_key,
+                        eomanager=eomanager,
+                        nb_levels=nb_levels,
+                        prevent_unhook_iter=prevent_unhook_iter,
+                        spring_tension=spring_tension)
 
-    # Init classical parameters of drap cloth
+    # Init classical parameters of drape cloth
     level = nb_levels - 1
     current_num_outer_iterations = num_outer_iterations
 
     # Determine the gravity step of the cloth
-    step = (dsm_max_z - dsm_min_z) / num_outer_iterations
+    if not use_gradient:
+        step = (dsm_max_z - dsm_min_z) / num_outer_iterations
 
     while level >= 0:
 
@@ -201,56 +248,60 @@ def drape_cloth(filled_dsm_key: str,
 
         # Create the memviews of the filled dsm map of this level
 
-        current_dezoom_profile: dict = downsample_profile(profile = eomanager.get_profile(key=filled_dsm_key), 
-                                                          factor = 2**level)
+        current_dezoom_profile: dict = downsample_profile(profile=eomanager.get_profile(key=filled_dsm_key),
+                                                          factor=2**level)
         
-
-        filled_dsm_memview = eomanager.create_memview(key = filled_dsm_key, 
-                                                         arr_subset = eomanager.get_array(key=filled_dsm_key)[:,::2**level, ::2**level], 
-                                                         arr_subset_profile = current_dezoom_profile)
+        filled_dsm_memview = eomanager.create_memview(
+            key=filled_dsm_key,
+            arr_subset=eomanager.get_array(key=filled_dsm_key)[:, ::2**level, ::2**level],
+            arr_subset_profile=current_dezoom_profile)
         
-        predicted_anchorage_mask_key_memview = eomanager.create_memview(key = predicted_anchorage_mask_key, 
-                                                                        arr_subset = eomanager.get_array(key=predicted_anchorage_mask_key)[:,::2**level, ::2**level], 
-                                                                        arr_subset_profile = current_dezoom_profile)
+        predicted_anchorage_mask_key_memview = \
+            eomanager.create_memview(key=predicted_anchorage_mask_key,
+                                     arr_subset=eomanager.get_array(key=predicted_anchorage_mask_key)[:, ::2**level, ::2**level],
+                                     arr_subset_profile=current_dezoom_profile)
         
-
         if level < nb_levels - 1:
-
-            dtm_key = upsample(dtm_key = dtm_key,
-                               filled_dsm_key = filled_dsm_memview, 
-                               level = level,
-                               dezoom_profile = current_dezoom_profile,
-                               eomanager = eomanager)
-        
+            dtm_key = upsample(dtm_key=dtm_key,
+                               filled_dsm_key=filled_dsm_memview,
+                               level=level,
+                               dezoom_profile=current_dezoom_profile,
+                               eomanager=eomanager)
 
         drape_cloth_parameters: dict = {
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
             'spring_tension': spring_tension,
-            'step': step
+            'step_scale': 1. / (2 ** (nb_levels - level))
         }
 
+        if use_gradient:
+            drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
+        else:
+            drape_cloth_parameters['step'] = 1. / (2 ** (nb_levels - level))
 
-        [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs = [dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview], 
-                                                          image_filter = drape_cloth_filter,
-                                                          generate_output_profiles = drape_cloth_profiles,
-                                                          filter_parameters = drape_cloth_parameters,
-                                                          stable_margin = int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
-                                                          context_manager = eomanager,
-                                                          filter_desc = "Drape cloth simulation...")
-        
+        [new_dtm_key] = eoexe.n_images_to_m_images_filter(
+            inputs=[dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview],
+            image_filter=drape_cloth_filter_gradient if use_gradient else drape_cloth_filter,
+            generate_output_profiles=drape_cloth_profiles,
+            filter_parameters=drape_cloth_parameters,
+            stable_margin=int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
+            context_manager=eomanager,
+            filter_desc="Drape cloth simulation...")
+
         eomanager.release(key=dtm_key)
         dtm_key = new_dtm_key
 
-
         level -= 1
-        step = step / (2 * 2 ** (nb_levels - 1 - level))
+        if not use_gradient:
+            step = step / (2 * 2 ** (nb_levels - 1 - level))
         current_num_outer_iterations = max(1, int(num_outer_iterations / 2**(nb_levels - 1 - level)))
     
     # dtm_key contains the final dtm, we can save it to disk
-    dtm_key = eomanager.update_profile(key = dtm_key, profile = eomanager.get_profile(key=filled_dsm_key))
+    dtm_key = eomanager.update_profile(key=dtm_key, profile=eomanager.get_profile(key=filled_dsm_key))
     
     return dtm_key
+
 
 def reverse_drape_cloth_filter(input_buffers: list, 
                                input_profiles: list, 
@@ -260,9 +311,9 @@ def reverse_drape_cloth_filter(input_buffers: list,
     num_inner_iterations: int = params['num_inner_iterations']
     spring_tension: int = params['spring_tension']
     step: float = params['step']
-    dtm = copy.deepcopy(input_buffers[0][0,:,:])
-    first_pass_dtm = input_buffers[1][0,:,:]
-    post_anchors = input_buffers[2][0,:,:]
+    dtm = copy.deepcopy(input_buffers[0][0, :, :])
+    first_pass_dtm = input_buffers[1][0, :, :]
+    post_anchors = input_buffers[2][0, :, :]
     snap_mask = post_anchors > 0
 
     for i in range(num_outer_iterations):
@@ -276,7 +327,6 @@ def reverse_drape_cloth_filter(input_buffers: list,
 
             # apply spring tension forces (blur the DTM)
             dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
-        
         
     # One final intersection check
     dtm[snap_mask] = first_pass_dtm[snap_mask]

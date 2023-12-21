@@ -65,7 +65,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     """
     # Retrieves Bulldozer settings from the config file, the CLI parameters or the Python API parameters
     params = retrieve_params(config_path, **kwargs)
-
+    use_gradient = False
     # If the target output directory does not exist, creates it
     if not os.path.isdir(params['output_dir']):
         os.makedirs(params['output_dir']) 
@@ -77,16 +77,16 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     with eom.EOContextManager(nb_workers=params['nb_max_workers'], tile_mode=True) as eomanager:
 
         # Open the input dsm that might be noisy and full of nodatas...
-        input_dsm_key = eomanager.open_raster(raster_path = params['dsm_path'])
+        input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
 
         # Step 1
         # Compute the height histogram of the input DSM with a bin width equal to the
         # height dsm precision X 2 and then determine lower height cut to determine
         # the real robust minimum height of the DSM
         BulldozerLogger.log("Detect low height aberrant values: Starting...", logging.INFO)
-        outliers_output = preprocess_histogram_outliers.run( input_dsm_key=input_dsm_key,
-                                                             eomanager=eomanager,
-                                                             dsm_z_precision=params['dsm_z_precision'])
+        outliers_output = preprocess_histogram_outliers.run(input_dsm_key=input_dsm_key,
+                                                            eomanager=eomanager,
+                                                            dsm_z_precision=params['dsm_z_precision'])
         BulldozerLogger.log("Detect low height aberrant values: Done.", logging.INFO)
 
         noisy_mask_key = outliers_output["noisy_mask"]
@@ -169,7 +169,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
                                              prevent_unhook_iter=params["prevent_unhook_iter"],
                                              spring_tension=params["cloth_tension_force"],
                                              num_outer_iterations=params["num_outer_iter"],
-                                             num_inner_iterations=params["num_inner_iter"])
+                                             num_inner_iterations=params["num_inner_iter"],
+                                             use_gradient=use_gradient)
         BulldozerLogger.log("First pass of a drape cloth filter: Done.", logging.INFO)
         
         if params["developer_mode"]:
@@ -219,7 +220,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
                                              prevent_unhook_iter=params["prevent_unhook_iter"],
                                              spring_tension=params["cloth_tension_force"],
                                              num_outer_iterations=params["num_outer_iter"],
-                                             num_inner_iterations=params["num_inner_iter"])
+                                             num_inner_iterations=params["num_inner_iter"],
+                                             use_gradient=use_gradient)
         BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
 
         eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
