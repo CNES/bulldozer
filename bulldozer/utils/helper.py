@@ -45,7 +45,8 @@ from bulldozer.utils.logging_helper import BulldozerLogger
 # - generate_dhm: bool (optional, True by default)
 # - developer_mode : bool (optional, False by default)
 # - dtm_max_error: float (optional, 2 meters)
-# - anchor_points_activation : bool (optional, False by default)
+# - pre_anchor_points_activation : bool (optional, False by default)
+# - post_anchor_points_activation : bool (optional, False by default)
 # - reverse_drape_cloth_activation : bool (optional, False by default)
 
 
@@ -61,7 +62,8 @@ DefaultValues = {
     'FILL_SEARCH_RADIUS': 100,
     'MAX_GROUND_SLOPE': 20.0,
     'DTM_MAX_ERROR': None,
-    'ANCHOR_POINTS_ACTIVATION': False,
+    'PRE_ANCHOR_POINTS_ACTIVATION': False,
+    'POST_ANCHOR_POINTS_ACTIVATION': False,
     'REVERSE_DRAPE_CLOTH_ACTIVATION': False,
     # Bulldozer core settings
     'CLOTH_TENSION_FORCE': 3,

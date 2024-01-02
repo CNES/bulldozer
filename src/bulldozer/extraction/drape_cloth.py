@@ -207,7 +207,7 @@ def drape_cloth(filled_dsm_key: str,
                 spring_tension: int,
                 num_outer_iterations: int,
                 num_inner_iterations: int,
-                use_gradient: bool=True) -> str:
+                use_gradient: bool = True) -> str:
     """ """
 
     dsm_profile: dict = eomanager.get_profile(key=filled_dsm_key)
@@ -272,13 +272,12 @@ def drape_cloth(filled_dsm_key: str,
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
             'spring_tension': spring_tension,
-            'step_scale': 1. / (2 ** (nb_levels - level))
         }
 
         if use_gradient:
             drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
         else:
-            drape_cloth_parameters['step'] = 1. / (2 ** (nb_levels - level))
+            drape_cloth_parameters['step'] = step
 
         [new_dtm_key] = eoexe.n_images_to_m_images_filter(
             inputs=[dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview],
@@ -363,22 +362,16 @@ def reverse_drape_cloth(filled_dsm_key: str,
                                   dezoom_shape=init_dtm_shape,
                                   eomanager=eomanager)
 
-    if pre_anchorage_mask_key is None:
-        anchorage_mask_key = post_anchorage_mask_key
-    else:
-        anchorage_mask_key = pre_anchorage_mask_key
-
     apply_first_tension(dtm_key=dtm_key,
                         filled_dsm_key=filled_dsm_key,
-                        predicted_anchorage_mask_key=anchorage_mask_key,
+                        predicted_anchorage_mask_key=pre_anchorage_mask_key,
                         eomanager=eomanager,
                         nb_levels=nb_levels,
                         prevent_unhook_iter=prevent_unhook_iter,
                         spring_tension=spring_tension)
     
     eomanager.release(key=filled_dsm_key)
-    if pre_anchorage_mask_key is not None:
-        eomanager.release(key=pre_anchorage_mask_key)
+    eomanager.release(key=pre_anchorage_mask_key)
 
     # Init classical parameters of drape cloth
     level = nb_levels - 1

@@ -100,13 +100,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         # Compute the regular area mask
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
-        max_object_size: float = 1.0 / params['min_object_spatial_frequency']
-        anchorage_exploration_size = int(max_object_size + 1)
         regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
                                                           noisy_key=noisy_mask_key,
                                                           eomanager=eomanager,
-                                                          regular_slope=regular_slope,
-                                                          anchorage_exploration_size=anchorage_exploration_size)
+                                                          regular_slope=regular_slope)
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
 
         outliers_output = preprocess_histogram_outliers.run(input_dsm_key=input_dsm_key,
@@ -124,6 +121,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         # Fill the input DSM and compute the uncertainties
         refined_min_z = outliers_output["robust_min_z"]
         refined_max_z = outliers_output["robust_max_z"]
+        max_object_size: float = 1.0 / params['min_object_spatial_frequency']
         print("Refined min max", refined_min_z, refined_max_z)
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
         fill_outputs = prefill_dsm.run(input_dsm_key=input_dsm_key,
@@ -138,7 +136,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
 
         # Step 3.5 - optional
-        if params['anchor_points_activation']:
+        if params['pre_anchor_points_activation']:
             # #TODO if COS then preprocess_anchorage_mask_key initialised to the COS
             BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
             preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key=filled_dsm_key,
@@ -153,10 +151,11 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
                 preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
                 eomanager.write(key=preprocess_anchorage_mask_key, img_path=preprocess_anchorage_mask_path)
         else:
-            preprocess_anchorage_mask_key = None
+            preprocess_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
 
         # Step 4
         # First pass of the drape cloth filter
+
         BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
         # TODO handle Land use map (convert it to reach: ground=1/else=0)
         cos_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
@@ -181,50 +180,54 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
 
         # Step 5
         # Attempt to detect terrain pixels
-        # Brute force post process to minimize a side effet of the drap that often underestimates the terrain height
+        # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
         # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
         # Knowing that the drape cloth will be run again.
-        if params["dtm_max_error"] is None:
-            params["dtm_max_error"] = 2.0 * params['dsm_z_precision']
-        BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
-        post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=dtm_key, 
-                                                          dsm_key=filled_dsm_key, 
-                                                          regular_mask_key=regular_mask_key,
-                                                          error_threshold=params["dtm_max_error"], 
-                                                          eomanager=eomanager)
-        BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
-        
-        post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
+        if params['post_anchor_points_activation']:
+            if params["dtm_max_error"] is None:
+                params["dtm_max_error"] = 2.0 * params['dsm_z_precision']
+            BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
+            post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=dtm_key,
+                                                              dsm_key=filled_dsm_key,
+                                                              regular_mask_key=regular_mask_key,
+                                                              error_threshold=params["dtm_max_error"],
+                                                              eomanager=eomanager)
+            BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
 
-        if preprocess_anchorage_mask_key is not None:
+            post_anchorage_mask_key = post_anchorage_output["post_process_anchorage"]
+
+            if params["developer_mode"]:
+                output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
+                eomanager.write(key=post_anchorage_mask_key, img_path=output_post_anchorage_path)
+        else:
+            post_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+
+        if params['pre_anchor_points_activation'] or params['post_anchor_points_activation']:
+
             # Union of post_anchorage_mask with pre_process_anchorage_mask
             post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
             pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
             np.logical_or(pre_anchors[0, :, :], post_anchors[0, :, :], out=post_anchors[0, :, :])
 
-        if params["developer_mode"]:
-            output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
-            eomanager.write(key=post_anchorage_mask_key, img_path=output_post_anchorage_path)
-        
-        eomanager.release(key=dtm_key)
+            eomanager.release(key=dtm_key)
 
-        # Step 6
-        # Compute final DTM with post processed predicted terrain point
-        BulldozerLogger.log("Second pass of a drape cloth filter: Starting...", logging.INFO)
-        dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
-                                             predicted_anchorage_mask_key=post_anchorage_mask_key,
-                                             eomanager=eomanager,
-                                             max_object_size=max_object_size,
-                                             dsm_min_z=refined_min_z,
-                                             dsm_max_z=dsm_max,
-                                             prevent_unhook_iter=params["prevent_unhook_iter"],
-                                             spring_tension=params["cloth_tension_force"],
-                                             num_outer_iterations=params["num_outer_iter"],
-                                             num_inner_iterations=params["num_inner_iter"],
-                                             use_gradient=use_gradient)
-        BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
+            # Step 6
+            # Compute final DTM with post processed predicted terrain point
+            BulldozerLogger.log("Second pass of a drape cloth filter: Starting...", logging.INFO)
+            dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
+                                                 predicted_anchorage_mask_key=post_anchorage_mask_key,
+                                                 eomanager=eomanager,
+                                                 max_object_size=max_object_size,
+                                                 dsm_min_z=refined_min_z,
+                                                 dsm_max_z=dsm_max,
+                                                 prevent_unhook_iter=params["prevent_unhook_iter"],
+                                                 spring_tension=params["cloth_tension_force"],
+                                                 num_outer_iterations=params["num_outer_iter"],
+                                                 num_inner_iterations=params["num_inner_iter"],
+                                                 use_gradient=use_gradient)
+            BulldozerLogger.log("Second pass of a drape cloth filter: Done.", logging.INFO)
 
-        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
+            eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
 
         # Step 7: reverse drape cloth - optional
         # Needs: dtm_key and post_anchors to snap and dsm_max_z for int
@@ -295,7 +298,8 @@ def retrieve_params(config_path: str = None, **kwargs):
                 - output_resolution: float (optional, null by default)
                 - generate_dhm: bool (optional, True by default)
                 - developer_mode : bool (optional, False by default)
-                - anchor_points_activation : bool (optional, False by default)
+                - pre_anchor_points_activation : bool (optional, False by default)
+                - post_anchor_points_activation : bool (optional, False by default)
                 - reverse_drape_cloth_activation : bool (optional, False by default)
                 refers to the documentation to understand the use of each parameter.
     """

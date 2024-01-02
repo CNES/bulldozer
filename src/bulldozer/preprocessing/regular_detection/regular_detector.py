@@ -26,8 +26,7 @@ def regular_mask_filter(input_buffers : list,
 def run(dsm_key: str,
         noisy_key: str,
         eomanager: eom.EOContextManager,
-        regular_slope: float,
-        anchorage_exploration_size: int):
+        regular_slope: float):
     """ """
 
     regular_parameters: dict = {
