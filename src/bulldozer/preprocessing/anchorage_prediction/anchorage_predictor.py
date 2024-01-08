@@ -1,6 +1,7 @@
 import bulldozer.eoscale.manager as eom
 import bulldozer.preprocessing.anchors_predictor as pred
 
+
 def run(filled_dsm_key: str,
         regular_mask_key: str,
         refined_min_z: float,
@@ -8,7 +9,6 @@ def run(filled_dsm_key: str,
         max_object_size: float,
         eomanager: eom.EOContextManager) -> str :
     
-
     anchors_mask_key = eomanager.create_image(profile = eomanager.get_profile(key = regular_mask_key))
 
     predictor = pred.PyAnchoragePredictor()

@@ -333,6 +333,41 @@ def reverse_drape_cloth_filter(input_buffers: list,
     return dtm
 
 
+def reverse_drape_cloth_filter_gradient(input_buffers: list,
+                                        input_profiles: list,
+                                        params: dict):
+    """ """
+    num_outer_iterations: int = params['num_outer_iterations']
+    num_inner_iterations: int = params['num_inner_iterations']
+    spring_tension: int = params['spring_tension']
+    step_scale: float = params['step_scale']
+    dtm = copy.deepcopy(input_buffers[0][0, :, :])
+    first_pass_dtm = input_buffers[1][0, :, :]
+    post_anchors = input_buffers[2][0, :, :]
+    snap_mask = post_anchors > 0
+
+    grad = np.abs(np.gradient(dtm))
+
+    step = np.maximum(grad[0, :, :], grad[1, :, :]) * step_scale
+    step = scipy.ndimage.maximum_filter(step, 5)
+
+    for i in range(num_outer_iterations):
+
+        dtm -= step
+
+        for j in range(num_inner_iterations):
+            # Snap dtm to anchors point
+            dtm[snap_mask] = first_pass_dtm[snap_mask]
+
+            # apply spring tension forces (blur the DTM)
+            dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
+
+    # One final intersection check
+    dtm[snap_mask] = first_pass_dtm[snap_mask]
+
+    return dtm
+
+
 def reverse_drape_cloth(filled_dsm_key: str,
                         first_pass_dtm_key: str,
                         pre_anchorage_mask_key: str,
@@ -344,7 +379,8 @@ def reverse_drape_cloth(filled_dsm_key: str,
                         prevent_unhook_iter: int,
                         spring_tension: int,
                         num_outer_iterations: int,
-                        num_inner_iterations: int) -> str:
+                        num_inner_iterations: int,
+                        use_gradient: bool) -> str:
     """ """
 
     dsm_profile: dict = eomanager.get_profile(key=filled_dsm_key)
@@ -378,7 +414,8 @@ def reverse_drape_cloth(filled_dsm_key: str,
     current_num_outer_iterations = num_outer_iterations
 
     # Determine the gravity step of the cloth
-    step = (dsm_max_z - dsm_min_z) / num_outer_iterations
+    if not use_gradient:
+        step = (dsm_max_z - dsm_min_z) / num_outer_iterations
 
     while level >= 0:
         print(f"Process level {level} ...")
@@ -407,11 +444,15 @@ def reverse_drape_cloth(filled_dsm_key: str,
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
             'spring_tension': spring_tension,
-            'step': step
         }
 
+        if use_gradient:
+            drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
+        else:
+            drape_cloth_parameters['step'] = step
+
         [new_dtm_key] = eoexe.n_images_to_m_images_filter(inputs=[dtm_key, first_pass_dtm_memview, post_anchorage_mask_key_memview],
-                                                          image_filter=reverse_drape_cloth_filter,
+                                                          image_filter=reverse_drape_cloth_filter_gradient if use_gradient else reverse_drape_cloth_filter,
                                                           generate_output_profiles=drape_cloth_profiles,
                                                           filter_parameters=drape_cloth_parameters,
                                                           stable_margin=int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
@@ -422,7 +463,8 @@ def reverse_drape_cloth(filled_dsm_key: str,
         dtm_key = new_dtm_key
 
         level -= 1
-        step = step / (2 * 2 ** (nb_levels - 1 - level))
+        if not use_gradient:
+            step = step / (2 * 2 ** (nb_levels - 1 - level))
         current_num_outer_iterations = max(1, int(num_outer_iterations / 2**(nb_levels - 1 - level)))
     
     # dtm_key contains the final dtm, we can save it to disk

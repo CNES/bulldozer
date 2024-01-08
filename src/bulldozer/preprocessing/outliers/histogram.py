@@ -73,6 +73,7 @@ def uncertain_profile(input_profiles: list,
     input_profiles[0]['nodata'] = None
     return input_profiles[0]
 
+
 def run(input_dsm_key: str,
         eomanager: eom.EOContextManager,
         dsm_z_precision: float,
@@ -98,7 +99,7 @@ def run(input_dsm_key: str,
                                                      concatenate_filter = minmax_concatenate,
                                                      context_manager = eomanager,
                                                      filter_desc= "Min/Max value processing...")
-    print("min: ",dsm_min,"\nmax:", dsm_max)
+    print("min: ", dsm_min, "\nmax:", dsm_max)
     #  Histogram computation
     nb_bins, bin_width = configure_histogram(min_z = dsm_min, 
                                              max_z = dsm_max, 
