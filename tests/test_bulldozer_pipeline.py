@@ -11,7 +11,9 @@ from bulldozer.pipeline import bulldozer_pipeline
 
 @pytest.fixture
 def input_dsm_path():
-    # return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/in/ARCACHON/dsm_ARCACHON_tuile_6.tif"
+    #return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/in/ARCACHON/dsm_ARCACHON_tuile_6.tif"
+    #return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/MNS_CARS_PHR_Vesubie.tif"
+    #return "/work/scratch/data/otty/bug_denoising.tif"
     return "/work/scratch/data/otty/albertville.tif"
 
 
@@ -46,7 +48,7 @@ def ref_path():
 def test_dsm_to_dtm(input_dsm_path, ref_path):
 
     with tempfile.TemporaryDirectory() as directory:
-        directory = "/work/scratch/data/emiliea/bulldozer/67_benchmark/albertville/min_max/default"
+        directory = "/work/scratch/data/emiliea/bulldozer/67_benchmark/test/clean_version/albertville/100/"
         bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
                                       output_dir=directory,
                                       developer_mode=True,

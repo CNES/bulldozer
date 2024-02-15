@@ -17,8 +17,6 @@ cdef extern from "c_anchorage_prediction.cpp":
 cdef extern from "c_anchorage_prediction.h" namespace "bulldoproto":
 
     void predict_anchorage(float * dsm,
-                           float refined_min_z,
-                           float refined_max_z,
                            float nodata,
                            unsigned char * regular_mask,
                            unsigned char * anchorage_mask,
@@ -41,8 +39,6 @@ cdef class PyAnchoragePredictor:
                 dsm : np.array,
                 regular_mask : np.array,
                 anchors_mask: np.array,
-                refined_min_z: float,
-                refined_max_z: float,
                 nodata: float,
                 max_object_size: float) -> str:
         """ 
@@ -65,8 +61,6 @@ cdef class PyAnchoragePredictor:
 
         # Compute stats
         predict_anchorage(&dsm_memview[0],
-                          refined_min_z,
-                          refined_max_z,
                           nodata,
                           &regular_mask_memview[0], 
                           &anchors_memview[0], 

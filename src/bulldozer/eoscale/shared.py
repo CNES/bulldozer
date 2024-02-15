@@ -80,7 +80,8 @@ class EOShared:
         big_array = numpy.ndarray(shape=(profile["count"]  * profile["height"] * profile["width"]), 
                                          dtype= numpy.dtype(profile["dtype"]), 
                                          buffer=self.shared_array_memory.buf)
-        big_array.fill(0)
+                               
+        big_array[:] = 0
 
         self._create_shared_metadata(profile = profile, key = resource_key)
 

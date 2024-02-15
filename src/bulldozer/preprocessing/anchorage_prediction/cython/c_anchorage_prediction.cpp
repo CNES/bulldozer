@@ -3,8 +3,6 @@
 namespace bulldoproto {
 
     void predict_anchorage(float * dsm,
-                           float refined_min_z,
-                           float refined_max_z,
                            float nodata,
                            unsigned char * regular_mask,
                            unsigned char * anchorage_mask,
@@ -46,9 +44,7 @@ namespace bulldoproto {
                         coords = r * nb_cols + c;
                         if(dsm[coords] < min_z &&
                            regular_mask[coords] > 0 &&
-                           dsm[coords] != nodata &&
-                           dsm[coords] >= refined_min_z &&
-                           dsm[coords] <= refined_max_z){
+                           dsm[coords] != nodata){
                             min_z = dsm[coords];
                             min_coords = coords;
                         }

@@ -6,8 +6,6 @@
 namespace bulldoproto {
 
     void predict_anchorage(float * dsm,
-                           float refined_min_z,
-                           float refined_max_z,
                            float nodata,
                            unsigned char * regular_mask,
                            unsigned char * anchorage_mask,
