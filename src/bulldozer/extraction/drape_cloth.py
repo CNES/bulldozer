@@ -5,7 +5,6 @@ from tqdm import tqdm
 from rasterio import Affine
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.extraction.springforce as sf
 
 
 def next_power_of_2(x: int) -> int:

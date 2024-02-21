@@ -89,7 +89,6 @@ class EOShared:
                                 raster_path: str) -> str :
         
         """ Create a shared memory numpy array from a raster image """
-        
         with rasterio.open(raster_path, "r") as raster_dataset:
 
             # Shared key is made unique

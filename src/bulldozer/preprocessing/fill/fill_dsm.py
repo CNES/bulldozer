@@ -34,9 +34,9 @@ def run(dsm_key: str,
     #struct =  ndimage.generate_binary_structure(2, 1)
     radius = fill_search_radius
     iter = 1
-    if fill_search_radius > 6:
+    if fill_search_radius > 5:
         iter = fill_search_radius // 5
-        radius = 6
+        radius = 5
     
     xx, yy = np.mgrid[:2*radius+1, :2*radius+1]
     circle = (xx - radius) ** 2 + (yy - radius) ** 2
