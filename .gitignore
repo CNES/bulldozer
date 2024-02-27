@@ -9,6 +9,9 @@ __pycache__/
 
 # C extensions
 *.so
+bulldozer/preprocessing/disturbedareas/disturbedareas.cpp
+bulldozer/preprocessing/bordernodata/bordernodata.cpp
+bulldozer/dtm_extraction/springforce/springforce.cpp
 
 # Distribution / packaging
 .Python
