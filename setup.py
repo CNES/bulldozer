@@ -22,9 +22,9 @@ from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 
 extensions = [
-    Extension("bulldozer.disturbedareas", ["src/bulldozer/preprocessing/disturbedareas/disturbedareas.pyx"]),
-    Extension("bulldozer.bordernodata", ["src/bulldozer/preprocessing/bordernodata/bordernodata.pyx"]),
-    Extension("bulldozer.springforce", ["src/bulldozer/dtm_extraction/springforce/springforce.pyx"])
+    Extension("bulldozer.disturbedareas", ["bulldozer/preprocessing/disturbedareas/disturbedareas.pyx"]),
+    Extension("bulldozer.bordernodata", ["bulldozer/preprocessing/bordernodata/bordernodata.pyx"]),
+    Extension("bulldozer.springforce", ["bulldozer/dtm_extraction/springforce/springforce.pyx"])
 ]
 
 compiler_directives = { "language_level": 3, "embedsignature": True}
