@@ -1,0 +1,5 @@
+[run]
+source = bulldozer
+omit =
+    # Omit tests
+    /tests/*
