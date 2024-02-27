@@ -1,0 +1,84 @@
+# Bulldozer Gitlab-CI configuration file
+
+# Workflow to allow no duplicated pipeline between branch and MR : https://docs.gitlab.com/ee/ci/yaml/workflow.html#switch-between-branch-pipelines-and-merge-request-pipelines
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+
+# Defines groups of steps
+stages:
+  - init
+  - quality
+
+# Default configuration for all jobs (CNES specificity)
+default:
+  tags:
+    - Usine_Logicielle
+  timeout: 30 minutes
+
+# Variable definition for all jobs
+variables:
+  # Variable to show more logs
+  # Allows to have predefined variables for manual pipelines: https://docs.gitlab.com/ee/ci/pipelines/index.html#prefill-variables-in-manual-pipelines
+  DEBUG:
+    value: "false"
+    description: "Show more logs"
+  # Allow to minimize useless logs (example downloads logs)
+  CI: "true"
+  # Needed to download pip through CNES internal artifactory without internet
+  PIP_INDEX_URL: "https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@${ARTIFACTORY_HOST}/artifactory/api/pypi/pypi/simple"
+  PIP_CERT: "${CNES_CERTIFICATE}"
+  # TAGS for images if each stages: base python
+  TAG_IMAGE_PYTHON: "python:3.10.8"
+  # Can be used to move pip cache in local directory
+  PIP_CACHE_DIR: "${WORKSPACE}/.pip-cache/"
+  # Local artifactory Dockerhub URL containing copies of docker hub images
+  ARTIFACTORY_URL: "${ARTIFACTORY_HOST}/docker"
+
+# Steps:
+#    - build (stage, init)
+#    - test (stage, quality)
+
+build:
+  stage: init
+  image:
+    ${ARTIFACTORY_URL}/${TAG_IMAGE_PYTHON}
+    #  before_script:
+    # set up proxy (CNES specificity)
+    #- export HTTP_PROXY=http://${PROXY_USER}:${PROXY_PWD}@proxy-tech-web.cnes.fr:8060
+    #- export HTTPS_PROXY=http://${PROXY_USER}:${PROXY_PWD}@proxy-tech-web.cnes.fr:8060
+  script:
+    # Install bulldozer + requirements in venv
+    - VENV="venv" make install
+    # Activate virtualenv
+    - source venv/bin/activate
+    # Test quickly bulldozer
+    - bulldozer -h
+    - deactivate
+  artifacts:
+    # keeps the artifact for next steps (e.g.: venv)
+    untracked: true
+    expire_in: 1 day
+
+test:
+  stage: quality
+  image: ${ARTIFACTORY_URL}/${TAG_IMAGE_PYTHON}
+  needs:
+    - build
+  script:
+    # Load previous python venv
+    - source venv/bin/activate
+
+    # Run test
+    # only with local python3
+    - make test
+    - deactivate
+    - make clean
+  artifacts:
+    untracked: false
+    expire_in: 1 day
+
+
