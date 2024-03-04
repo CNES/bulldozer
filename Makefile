@@ -166,9 +166,7 @@ clean-notebook: ## clean notebooks cache
 	@find . -type d -name ".ipynb_checkpoints" -exec rm -fr {} +
 
 .PHONY: clean-libs
-clean-libs: ## clean .so compiled files
+clean-libs: ## clean .so compiled files and cpp files (except ones starting with "c_<myfile>.cpp")
 	@echo "+ $@"
 	@find . -type f -name "*.so" -exec rm -fr {} +
-	@rm -f bulldozer/dtm_extraction/springforce/springforce.cpp
-	@rm -f bulldozer/preprocessing/bordernodata/bordernodata.cpp
-	@rm -f bulldozer/preprocessing/disturbedareas/disturbedareas.cpp
+	@find . -type f -name "*.cpp"  -not -name "c_*.cpp" -exec rm -fr {} +
