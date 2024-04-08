@@ -68,7 +68,7 @@ DefaultValues = {
     # Bulldozer core settings
     'CLOTH_TENSION_FORCE': 3,
     'PREVENT_UNHOOK_ITER': 10,
-    'NUM_OUTER_ITER': 100,
+    'NUM_OUTER_ITER': 50,
     'NUM_INNER_ITER': 10,
 }
 

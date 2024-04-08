@@ -3,11 +3,9 @@ import copy
 import numpy as np
 from tqdm import tqdm
 from rasterio import Affine
-import logging
 
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-from bulldozer.utils.logging_helper import BulldozerLogger
 
 
 def next_power_of_2(x: int) -> int:
@@ -146,7 +144,6 @@ def drape_cloth_filter_gradient(input_buffers: list,
                                 input_profiles: list,
                                 params: dict):
     """ """
-    BulldozerLogger.log("Enter drape_cloth_filter_gradient", logging.INFO)
     num_outer_iterations: int = params['num_outer_iterations']
     num_inner_iterations: int = params['num_inner_iterations']
     spring_tension: int = params['spring_tension']
@@ -158,15 +155,11 @@ def drape_cloth_filter_gradient(input_buffers: list,
     predicted_anchors = input_buffers[2][0, :, :]
     snap_mask = predicted_anchors > 0
 
-    BulldozerLogger.log("Finish preparing data", logging.INFO)
-
     grad = np.abs(np.gradient(dtm))
-    BulldozerLogger.log("Finish grad", logging.INFO)
 
     step = np.maximum(grad[0, :, :], grad[1, :, :]) * step_scale
     step = scipy.ndimage.maximum_filter(step, 5)
     #bfilters = sf.PyBulldozerFilters()
-    BulldozerLogger.log("Before loop", logging.INFO)
     for i in range(num_outer_iterations):
 
 
@@ -185,10 +178,8 @@ def drape_cloth_filter_gradient(input_buffers: list,
             #dtm = bfilters.run(dtm, spring_tension, no_data)
 
     # One final intersection check
-    BulldozerLogger.log("After loop", logging.INFO)
     dtm[snap_mask] = dsm[snap_mask]
     np.minimum(dtm, dsm, out=dtm)
-    BulldozerLogger.log("Exit drape_cloth_filter_gradient", logging.INFO)
     return dtm
 
 
@@ -284,7 +275,6 @@ def drape_cloth(filled_dsm_key: str,
 
         drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
 
-        BulldozerLogger.log("Before n_images_to_m_images_filter", logging.INFO)
         [new_dtm_key] = eoexe.n_images_to_m_images_filter(
             inputs=[dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview],
             image_filter=drape_cloth_filter_gradient,
@@ -293,7 +283,6 @@ def drape_cloth(filled_dsm_key: str,
             stable_margin=int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
             context_manager=eomanager,
             filter_desc="Drape cloth simulation...")
-        BulldozerLogger.log("After n_images_to_m_images_filter", logging.INFO)
 
         eomanager.release(key=dtm_key)
         dtm_key = new_dtm_key
