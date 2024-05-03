@@ -22,6 +22,7 @@
     This module is used to postprocess the DTM in order to improve its quality. It required a DTM generated from Bulldozer.
 """
 import os
+from typing import List
 import sys
 import logging
 from shutil import copy
@@ -30,6 +31,8 @@ from sys import stdout
 import argparse
 import multiprocessing
 import argcomplete
+from copy import copy
+
 import numpy as np
 from pylint import run_pylint
 import rasterio
@@ -54,6 +57,49 @@ import bulldozer.postprocessing.ground_detection.post_anchorage_detection as pos
 import bulldozer.postprocessing.fill_pits as fill_pits
 
 __version__ = "2.0.0"
+
+
+def write_quality_mask(keys_to_write: List[str],
+                       quality_mask_path: str,
+                       eomanager: eom.EOContextManager):
+    """
+    Writes quality mask. Each key given in the input list will be a specific boolean band in the final quality mask.
+
+    :param keys_to_write: List of the eomanager's masks keys to write in the quality mask
+    :param quality_mask_path: path of the quality mask to write
+    :param eomanager: EOContextManager instance in which to retrieve the different masks to write
+    """
+    quality_ds_profile = None
+    for key in keys_to_write:
+        profile = eomanager.get_profile(key)
+        # check input mask consistency
+        if profile['dtype'] != np.uint8:
+            BulldozerLogger.log(f"Mask to write dtype is not set to uint8", logging.ERROR)
+        elif profile['count'] != 1:
+            BulldozerLogger.log(f"Mask to write has several layers", logging.ERROR)
+        elif profile['nodata'] is not None:
+            BulldozerLogger.log(f"Mask to write has a no data value provided", logging.ERROR)
+
+        if quality_ds_profile is None:
+            quality_ds_profile = copy(profile)
+        else:
+            # check consistency with previous mask
+            if profile["height"] != quality_ds_profile["height"] or profile["width"] != quality_ds_profile["width"]:
+                BulldozerLogger.log(f"Masks to write have different shape", logging.ERROR)
+            elif profile["transform"] != quality_ds_profile["transform"]:
+                BulldozerLogger.log(f"Masks to write have different transform", logging.ERROR)
+            elif profile["crs"] != quality_ds_profile["crs"]:
+                BulldozerLogger.log(f"Masks to write have different crs code", logging.ERROR)
+            quality_ds_profile["count"] += 1
+
+    # write quality mask
+    quality_ds_profile['interleave'] = 'band'
+    quality_ds_profile['driver'] = 'GTiff'
+    with rasterio.open(quality_mask_path, 'w', nbits=1, **quality_ds_profile) as q_mask_dataset:
+        idx = 1
+        for key in keys_to_write:
+            q_mask_dataset.write_band(idx, eomanager.shared_resources[key].get_array()[0, :, :])
+            idx += 1
 
 
 @Runtime
@@ -258,6 +304,11 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
 
         # write final dtm
         eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "final_dtm.tif"))
+
+        # write quality mask
+        write_quality_mask([regular_mask_key, pits_mask_key],
+                           os.path.join(params["output_dir"], "quality_mask.tif"),
+                           eomanager)
 
         # final releases
         eomanager.release(key=dtm_key)

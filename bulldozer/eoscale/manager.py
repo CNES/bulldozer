@@ -123,9 +123,9 @@ class EOContextManager:
         if key in self.shared_resources:
             profile = self.shared_resources[key].get_profile()
             profile['driver'] = 'GTiff'
-            profile['interleave'] =  'band'
+            profile['interleave'] = 'band'
             img_buffer = self.shared_resources[key].get_array()
-            with rasterio.open( img_path, "w", **profile) as out_dataset:
+            with rasterio.open(img_path, "w", **profile) as out_dataset:
                 out_dataset.write(img_buffer)
         else:
             print(f"WARNING: the key {key} to write is not known by the context manager")
