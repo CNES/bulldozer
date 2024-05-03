@@ -51,6 +51,7 @@ import bulldozer.extraction.drape_cloth as dtm_extraction
 
 # Postprocessing steps of Bulldozer
 import bulldozer.postprocessing.ground_detection.post_anchorage_detection as postprocess_anchorage
+import bulldozer.postprocessing.fill_pits as fill_pits
 
 __version__ = "2.0.0"
 
@@ -108,10 +109,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         no_data_mask_key = eomanager.create_image(eomanager.get_profile(input_dsm_key))
 
         fill_outputs = fill_dsm.run(dsm_key=input_dsm_key,
-                                          mask_key=regular_mask_key,
-                                          no_data_mask_key=no_data_mask_key,
-                                          fill_search_radius=params["fill_search_radius"],
-                                          eomanager=eomanager)
+                                    mask_key=regular_mask_key,
+                                    no_data_mask_key=no_data_mask_key,
+                                    fill_search_radius=params["fill_search_radius"],
+                                    eomanager=eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
@@ -228,6 +229,13 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             final_dtm[0, :, :] /= 2.0
             eomanager.release(key=reverse_dtm_key)
             BulldozerLogger.log("Reverse pass of a drape cloth filter: Done...", logging.INFO)
+
+        # Step 8: remove pits
+        BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
+        dtm_key, pits_mask_key = fill_pits.run(dtm_key, eomanager)
+        if params["developer_mode"]:
+            eomanager.write(key=pits_mask_key, img_path=os.path.join(params["output_dir"], "fill_pits_mask.tif"))
+        BulldozerLogger.log("Pits removal: Done.", logging.INFO)
 
         # Step 7: Apply no_data_mask
         BulldozerLogger.log("Applying no data: Starting...", logging.INFO)

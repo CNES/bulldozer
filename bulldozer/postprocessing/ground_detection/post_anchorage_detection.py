@@ -3,7 +3,7 @@ import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 
 
-def post_anchorage_filter(input_buffers : list, 
+def post_anchorage_filter(input_buffers: list,
                           input_profiles: list, 
                           filter_parameters: dict) -> np.ndarray:
 
