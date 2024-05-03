@@ -1,0 +1,31 @@
+site_name: Bulldozer
+theme: 
+  # Readthedocs template
+  name: readthedocs
+  # Enables highlighting of source code in code blocks
+  highlightjs: true
+  hljs_languages:
+    - yaml
+    - python
+  logo: docs/source/images/bulldozer_logo.png
+
+markdown_extensions:
+  - def_list
+      
+docs_dir: docs/source/
+nav:
+    - Home: INTRODUCTION.md
+    - Installation: INSTALLATION.md
+    - User guide:
+      - Input data preprocessing: INPUT_DATA_PREPROCESSING.md 
+      - Run Bulldozer: RUN_BULLDOZER.md 
+        - Using CLI: RUN_BULLDOZER_CLI.md 
+        - Using Python API: RUN_BULLDOZER_PYTHON_API.md 
+        - Using QGIS Plugin: RUN_BULLDOZER_QGIS_PLUGIN.md
+      - Configuration: BULLDOZER_OPTIONS.md
+    - Tutorials:
+      - From LiDAR data to DTM: tutorials/FROM_LIDAR_DATA_TO_DTM.md 
+      - From Satellites data to DTM: tutorials/FROM_SATELLITES_DATA_TO_DTM.md
+    - About:
+      - Contributing: CONTRIBUTING.md
+      - Licence: CONTRIBUTING.md
