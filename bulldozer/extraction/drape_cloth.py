@@ -397,7 +397,6 @@ def reverse_drape_cloth(filled_dsm_key: str,
                         prevent_unhook_iter=prevent_unhook_iter,
                         spring_tension=spring_tension)
     
-    eomanager.release(key=filled_dsm_key)
     eomanager.release(key=pre_anchorage_mask_key)
 
     # Init classical parameters of drape cloth

@@ -239,14 +239,14 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
 
         # Write final outputs
         # optional - write final dhm
-        # if params["generate_dhm"]:
-        #     BulldozerLogger.log("Generating DHM: Starting...", logging.INFO)
-        #     dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
-        #     dtm = eomanager.get_array(key=dtm_key)[0, :, :]
-        #     dhm = dsm - dtm
-        #     with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
-        #         dhm_out.write(dhm, 1)
-        #     BulldozerLogger.log("Generating DHM: Done.", logging.INFO)
+        if params["generate_dhm"]:
+            BulldozerLogger.log("Generating DHM: Starting...", logging.INFO)
+            dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
+            dtm = eomanager.get_array(key=dtm_key)[0, :, :]
+            dhm = dsm - dtm
+            with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
+                dhm_out.write(dhm, 1)
+            BulldozerLogger.log("Generating DHM: Done.", logging.INFO)
 
         # write final dtm
         eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "final_dtm.tif"))
