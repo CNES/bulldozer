@@ -19,6 +19,17 @@ def ref_path():
     return "/work/scratch/data/emiliea/bulldozer/ref/tuile6/"
 
 
+def compare_dataset(path, ref_path):
+    with rio.open(path) as ds:
+        with rio.open(ref_path) as ref_ds:
+            assert ds.profile['count'] == ref_ds.profile['count']
+
+            for band in range(ref_ds.profile['count']):
+                np.testing.assert_allclose(
+                    ds.read(band+1), ref_ds.read(band+1)
+                )
+
+
 def test_dsm_to_dtm(input_dsm_path, ref_path):
 
     with tempfile.TemporaryDirectory() as directory:
@@ -28,14 +39,14 @@ def test_dsm_to_dtm(input_dsm_path, ref_path):
                                       nb_max_workers=16)
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
+        mask_path = os.path.join(directory, "quality_mask.tif")
         ref_dtm_path = os.path.join(ref_path, "final_dtm.tif")
-        #shutil.copyfile(dtm_path, ref_dtm_path)
+        ref_masks_path = os.path.join(ref_path, "quality_mask.tif")
+        # shutil.copyfile(dtm_path, ref_dtm_path)
+        # shutil.copyfile(mask_path, ref_masks_path)
         
-        with rio.open(dtm_path) as dtm:
-            with rio.open(ref_dtm_path) as ref:
-                np.testing.assert_allclose(
-                    dtm.read(), ref.read()
-                )
+        compare_dataset(dtm_path, ref_dtm_path)
+        compare_dataset(mask_path, ref_masks_path)
 
 
 def test_dsm_to_dtm_pre_anchor(input_dsm_path, ref_path):
@@ -49,12 +60,8 @@ def test_dsm_to_dtm_pre_anchor(input_dsm_path, ref_path):
         dtm_path = os.path.join(directory, "final_dtm.tif")
         ref_dtm_path = os.path.join(ref_path, "final_dtm_pre_anchor.tif")
         #shutil.copyfile(dtm_path, ref_dtm_path)
-        
-        with rio.open(dtm_path) as dtm:
-            with rio.open(ref_dtm_path) as ref:
-                np.testing.assert_allclose(
-                    dtm.read(), ref.read()
-                )
+
+        compare_dataset(dtm_path, ref_dtm_path)
 
 
 def test_dsm_to_dtm_post_anchor(input_dsm_path, ref_path):
@@ -68,11 +75,7 @@ def test_dsm_to_dtm_post_anchor(input_dsm_path, ref_path):
         ref_dtm_path = os.path.join(ref_path, "final_dtm_post_anchor.tif")
         #shutil.copyfile(dtm_path, ref_dtm_path)
         
-        with rio.open(dtm_path) as dtm:
-            with rio.open(ref_dtm_path) as ref:
-                np.testing.assert_allclose(
-                    dtm.read(), ref.read()
-                )
+        compare_dataset(dtm_path, ref_dtm_path)
 
 
 def test_dsm_to_dtm_reverse_drape(input_dsm_path, ref_path):
@@ -86,11 +89,7 @@ def test_dsm_to_dtm_reverse_drape(input_dsm_path, ref_path):
         ref_dtm_path = os.path.join(ref_path, "final_dtm_reverse.tif")
         #shutil.copyfile(dtm_path, ref_dtm_path)
         
-        with rio.open(dtm_path) as dtm:
-            with rio.open(ref_dtm_path) as ref:
-                np.testing.assert_allclose(
-                    dtm.read(), ref.read()
-                )
+        compare_dataset(dtm_path, ref_dtm_path)
 
 
 def test_dsm_to_dtm_all_option(input_dsm_path, ref_path):
@@ -106,8 +105,4 @@ def test_dsm_to_dtm_all_option(input_dsm_path, ref_path):
         ref_dtm_path = os.path.join(ref_path, "final_dtm_all_options.tif")
         #shutil.copyfile(dtm_path, ref_dtm_path)
 
-        with rio.open(dtm_path) as dtm:
-            with rio.open(ref_dtm_path) as ref:
-                np.testing.assert_allclose(
-                    dtm.read(), ref.read()
-                )
+        compare_dataset(dtm_path, ref_dtm_path)
