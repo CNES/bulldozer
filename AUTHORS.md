@@ -12,13 +12,12 @@ This file keeps track of authors contributions.
 
 ## Development Lead
 
-* Dimitri Lallement <dimitri.lallement@cnes.fr>
 * Pierre Lassalle <pierre.lassalle@cnes.fr>
+* Dimitri Lallement <dimitri.lallement@cnes.fr>
 
 ## Contributors
 
 * Yannick Ott <yannick.ott@thalesgroup.com>
-* Rémi Demortier
 
 Update here with new contributors.
 

@@ -22,9 +22,10 @@ from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 
 extensions = [
-    Extension("bulldozer.disturbedareas", ["bulldozer/preprocessing/disturbedareas/disturbedareas.pyx"]),
-    Extension("bulldozer.bordernodata", ["bulldozer/preprocessing/bordernodata/bordernodata.pyx"]),
-    Extension("bulldozer.springforce", ["bulldozer/dtm_extraction/springforce/springforce.pyx"])
+    Extension( "bulldozer.preprocessing.outliers.hist", ["bulldozer/preprocessing/outliers/cython/hist/hist.pyx"]),
+    Extension( "bulldozer.preprocessing.outliers.stats", ["bulldozer/preprocessing/outliers/cython/stats/stats.pyx"]),
+    Extension( "bulldozer.preprocessing.regular", ["bulldozer/preprocessing/regular_detection/cython/regular/regular.pyx"]),
+    Extension( "bulldozer.preprocessing.anchors_predictor", ["bulldozer/preprocessing/anchorage_prediction/cython/anchorage_prediction.pyx"])
 ]
 
 compiler_directives = { "language_level": 3, "embedsignature": True}

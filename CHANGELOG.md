@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0 New Pipeline (October 2023)
+
+### Added
+
+- New pipeline with new parameters
+- In memory Pipeline using EOScale
+
 ## 1.0.1 New interface (July 2023)
 
 ### Added
@@ -8,6 +15,7 @@
 - New API: It is possible to launch Bulldozer without a configuration file, simply by supplying the values of the parameters
 - Adding default values for input parameters (except DSM path and output directory)
 - New option: store intermediate DTM
+
 
 ### Changed
 
