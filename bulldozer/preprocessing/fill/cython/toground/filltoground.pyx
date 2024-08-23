@@ -331,11 +331,11 @@ cpdef iterative_filling(floating[:,:] dsm,
         if has_nodata==False :
             break
 
-        print(nb_pass, "corrected", corected, '/', tocorrect)
+        #print(nb_pass, "corrected", corected, '/', tocorrect)
         nb_pass += 1     
                
     end = time.time()
-    print("DSM Correction : done in {} s".format(end - start))
+    print("DSM Correction : done in {} s ({} passes performed)".format(end - start, nb_pass))
     
     return dsm
 

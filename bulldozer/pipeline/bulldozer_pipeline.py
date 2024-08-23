@@ -91,6 +91,8 @@ def write_quality_mask(keys_to_write: List[str],
             quality_ds_profile["count"] += 1
 
     # write quality mask
+    quality_ds_profile['interleave'] = 'band'
+    quality_ds_profile['driver'] = 'GTiff'
     quality_ds_profile['nodata'] = 255
 
     with rasterio.open(quality_mask_path, 'w', nbits=1, **quality_ds_profile) as q_mask_dataset:
@@ -151,8 +153,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         # Step 2b : Inner and Border no data masks
         BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
 
-        nodata_value = retrieve_nodata(params['dsm_path'])
-
+        nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
 
         inner_outer_result = border.run(dsm_key=input_dsm_key,
                                         eomanager=eomanager,
@@ -302,7 +303,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         final_dtm = eomanager.get_array(key=dtm_key)[0]
         border_no_data_mask = eomanager.get_array(key=border_no_data_mask_key)[0]
         final_dtm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
-        eomanager.release(key=border_no_data_mask_key)
         BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
