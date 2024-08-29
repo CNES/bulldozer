@@ -23,18 +23,14 @@
 """
 import os
 from typing import List
-import sys
 import logging
 from shutil import copy
 from datetime import datetime
-from sys import stdout
 import argparse
 import multiprocessing
 import argcomplete
 from copy import copy
-
 import numpy as np
-from pylint import run_pylint
 import rasterio
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.logging_helper import BulldozerLogger
@@ -48,6 +44,8 @@ import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_
 import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
 import bulldozer.preprocessing.fill.fill_dsm as fill_dsm
 import bulldozer.preprocessing.anchorage_prediction.anchorage_predictor as preprocess_anchors_detector
+import bulldozer.preprocessing.bordernodata as bn
+import bulldozer.preprocessing.bordernodata.border as border
 
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
@@ -95,6 +93,8 @@ def write_quality_mask(keys_to_write: List[str],
     # write quality mask
     quality_ds_profile['interleave'] = 'band'
     quality_ds_profile['driver'] = 'GTiff'
+    quality_ds_profile['nodata'] = 255
+
     with rasterio.open(quality_mask_path, 'w', nbits=1, **quality_ds_profile) as q_mask_dataset:
         idx = 1
         for key in keys_to_write:
@@ -150,26 +150,41 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             regular_mask_path: str = os.path.join(params["output_dir"], "regular_mask.tif")
             eomanager.write(key=regular_mask_key, img_path=regular_mask_path)
 
+        # Step 2b : Inner and Border no data masks
+        BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
+
+        nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
+
+        inner_outer_result = border.run(dsm_key=input_dsm_key,
+                                        eomanager=eomanager,
+                                        nodata=nodata_value)
+        
+        inner_no_data_mask_key = inner_outer_result["inner_no_data_mask"]
+        border_no_data_mask_key = inner_outer_result["border_no_data_mask"]
+
+        if params["developer_mode"]:
+            border_no_data_mask_path: str = os.path.join(params["output_dir"], "border_no_data.tif")
+            eomanager.write(key=border_no_data_mask_key, img_path=border_no_data_mask_path)
+
+            inner_no_data_mask_path: str = os.path.join(params["output_dir"], "inner_no_data.tif")
+            eomanager.write(key=inner_no_data_mask_key, img_path=inner_no_data_mask_path)
+
+        BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
+
         # Step 3: Fill the input DSM and compute the uncertainties
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
-        no_data_mask_key = eomanager.create_image(eomanager.get_profile(input_dsm_key))
-
         fill_outputs = fill_dsm.run(dsm_key=input_dsm_key,
                                     mask_key=regular_mask_key,
-                                    no_data_mask_key=no_data_mask_key,
-                                    fill_search_radius=params["fill_search_radius"],
                                     eomanager=eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
-        no_data_mask_key = fill_outputs["no_data_mask"]
 
         if params["developer_mode"]:
             filled_dsm_path: str = os.path.join(params["output_dir"], "filled_dsm.tif")
             eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
 
-            no_data_mask_path: str = os.path.join(params["output_dir"], "no_data_mask.tif")
-            eomanager.write(key=no_data_mask_key, img_path=no_data_mask_path)
+        BulldozerLogger.log("End fill dsm", logging.INFO)
 
         # Step 4 - optional: pre anchor mask computation
         if params['pre_anchor_points_activation']:
@@ -283,13 +298,12 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             eomanager.write(key=pits_mask_key, img_path=os.path.join(params["output_dir"], "fill_pits_mask.tif"))
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
 
-        # Step 7: Apply no_data_mask
-        BulldozerLogger.log("Applying no data: Starting...", logging.INFO)
+        # last step: Apply border_no_data_mask
+        BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
         final_dtm = eomanager.get_array(key=dtm_key)[0]
-        no_data_mask = eomanager.get_array(key=no_data_mask_key)[0]
-        final_dtm[no_data_mask == 1] = eomanager.get_profile(key=dtm_key)["nodata"]
-        eomanager.release(key=no_data_mask_key)
-        BulldozerLogger.log("Applying no data: Done...", logging.INFO)
+        border_no_data_mask = eomanager.get_array(key=border_no_data_mask_key)[0]
+        final_dtm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
+        BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
         # optional - write final dhm
@@ -306,9 +320,12 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "final_dtm.tif"))
 
         # write quality mask
-        write_quality_mask([regular_mask_key, pits_mask_key],
+        BulldozerLogger.log("Starting write_quality_mask...", logging.INFO)
+        write_quality_mask([regular_mask_key, pits_mask_key, inner_no_data_mask_key, border_no_data_mask_key],
                            os.path.join(params["output_dir"], "quality_mask.tif"),
                            eomanager)
+        
+        BulldozerLogger.log("write_quality_mask generation: Done", logging.INFO)
 
         # final releases
         eomanager.release(key=dtm_key)
