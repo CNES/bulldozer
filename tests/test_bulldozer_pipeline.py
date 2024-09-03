@@ -11,7 +11,7 @@ from bulldozer.pipeline import bulldozer_pipeline
 
 @pytest.fixture
 def input_dsm_path():
-    return "/work/scratch/data/lallemd/RT_bulldozer_large_scale/data/in/ARCACHON/dsm_ARCACHON_tuile_6.tif"
+    return "/work/scratch/data/emiliea/bulldozer/ref/input/dsm_ARCACHON_tuile_6.tif"
 
 
 @pytest.fixture
