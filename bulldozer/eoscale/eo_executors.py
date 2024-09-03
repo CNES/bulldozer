@@ -295,7 +295,7 @@ def n_images_to_m_images_filter(inputs: list = None,
     #     default_reduce(outputs, chunk_output_buffers, tile )
 
     # # Multi processing execution
-    with concurrent.futures.ProcessPoolExecutor(max_workers= min(context_manager.nb_workers, len(tiles))) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers= min(context_manager.nb_workers, len(tiles))) as executor:
 
         futures = { executor.submit(execute_filter_n_images_to_n_images,
                                     image_filter,
