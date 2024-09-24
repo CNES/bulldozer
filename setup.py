@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -19,6 +19,7 @@
 # limitations under the License.
 
 from setuptools import setup, Extension, find_packages
+from distutils.util import convert_path
 from Cython.Build import cythonize
 import numpy
 
@@ -34,8 +35,14 @@ extensions = [
 compiler_directives = { "language_level": 3, "embedsignature": True}
 extensions = cythonize(extensions, compiler_directives=compiler_directives)
 
+main_ns = {}
+ver_path = convert_path("bulldozer/_version.py")
+with open(ver_path) as ver_file:
+    exec(ver_file.read(), main_ns)
+
 try:
     setup(
+        version = main_ns['__version__'],
         ext_modules=extensions,
         packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
     )

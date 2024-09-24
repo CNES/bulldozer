@@ -19,6 +19,6 @@
 # limitations under the License.
 
 """
-Bulldozer module init file
+    This module is used to centralize the current version of Bulldozer.
 """
-from ._version import __version__
+__version__ = "1.0.2"

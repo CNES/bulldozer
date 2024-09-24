@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -35,6 +35,7 @@ import rasterio
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.utils.helper import Runtime, DefaultValues
+from bulldozer._version import __version__
 
 import bulldozer.eoscale.manager as eom
 
@@ -53,8 +54,6 @@ import bulldozer.extraction.drape_cloth as dtm_extraction
 # Postprocessing steps of Bulldozer
 import bulldozer.postprocessing.ground_detection.post_anchorage_detection as postprocess_anchorage
 import bulldozer.postprocessing.fill_pits as fill_pits
-
-__version__ = "2.0.0"
 
 
 def write_quality_mask(keys_to_write: List[str],
