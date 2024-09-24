@@ -118,7 +118,10 @@ class BulldozerLogger:
             except InvalidGitRepositoryError as e:
                 info['commit_sha'] = "No git repo found ({})".format(e)
                 info['branch'] = "No git repo found ({})".format(e)
-                
+            except:
+                info['commit_sha'] = "unknown"
+                info['branch'] = "unknown"  
+    
             # Node info
             try:
                 info['user'] = getpass.getuser()
