@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -19,16 +19,19 @@
 # limitations under the License.
 
 import pytest
+import logging
 import os.path
 import numpy as np
 from pathlib import Path
+from yaml import YAMLError
 
+from bulldozer.utils.logging_helper import BulldozerLogger
 from bulldozer.utils.config_parser import ConfigParser
     
 @pytest.fixture
 def setup():
     parser = ConfigParser(False)
-    path = Path(__file__).parent / 'data/'
+    path = Path(__file__).parent / 'data/config_parser/'
     print("\nSetting up resources...")
     # Setting-up ressources
     yield {'parser': parser, 'path': path}  # Provide the data to the test
@@ -52,10 +55,9 @@ def test_existence_check(setup):
     path = str(setup['path']) + "/test.yaml"
     pytest.raises(FileNotFoundError, lambda: parser.read(path))
     
-    # Shouldnt raise FileNotFoundException, if it raises an exception the unit test framework will flag this as an error
+    # Shouldn't raise FileNotFoundException, if it raises an exception the unit test framework will flag this as an error
     path = str(setup['path']) + "/parser_test.yaml"
     parser.read(path)
-
 
 def test_read(setup):
     path = str(setup['path']) + "/parser_test.yaml"
@@ -88,3 +90,17 @@ def test_read(setup):
     assert np.isnan(float(cfg['nan_test']))
     assert cfg['none_test'] is None
     assert not cfg['none_test']
+    
+    path = str(setup['path']) + "/wrong_syntax.yaml"
+    # Should raise YAMLError due to the wrong YAML data format in the file
+    pytest.raises(YAMLError, lambda: setup['parser'].read(path))
+
+
+def test_verbose():
+    non_verbose_parser = ConfigParser(verbose = False)
+    # Check logging level value
+    assert non_verbose_parser.level == logging.INFO
+    
+    verbose_parser = ConfigParser(verbose = True)
+    # Check logging level value
+    assert verbose_parser.level == logging.DEBUG

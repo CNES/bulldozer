@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -36,7 +36,7 @@ class ConfigParser(object):
             Parser constructor.
 
             Args:
-                verbose (defaults=False): increase output verbosity if true.
+                verbose (default=False): increase output verbosity if true.
         """
         if verbose:
             self.level=logging.DEBUG
@@ -62,22 +62,22 @@ class ConfigParser(object):
         """
         # input file format check
         if not (isinstance(path, str) and (path.endswith('.yaml') or path.endswith('.yml'))) :
-            BulldozerLogger.log('\'path\' argument should be a path to the YAML config file (here: {})'.format(path), logging.WARNING)
+            BulldozerLogger.log('\'path\' argument should be a path to the YAML config file (here: {})'.format(path), logging.ERROR)
             raise ValueError()
         # input file existence check
         if not os.path.isfile(path):
-            BulldozerLogger.log('The input config file \'{}\' doesn\'t exist'.format(path), logging.WARNING)
+            BulldozerLogger.log('The input config file \'{}\' doesn\'t exist'.format(path), logging.ERROR)
             raise FileNotFoundError()
         
         if self.level == logging.DEBUG:
-            BulldozerLogger.log('Check input config file => Passed')
+            BulldozerLogger.log('Check input config file => Passed', self.level)
 
         with open(path, 'r') as stream:
             try:
                 cfg = safe_load(stream)
                 if self.level == logging.DEBUG:
-                    logger.debug('Retrieved data: {}'.format(cfg), logging.DEBUG)
+                    BulldozerLogger.log('Retrieved data: {}'.format(cfg), self.level)
             except YAMLError as e:
-                BulldozerLogger.log('Exception occured while reading the configuration file: {}\nException: {}'.format(path, str(e)), logging.WARNING)
+                BulldozerLogger.log('Exception occured while reading the configuration file: {}\nException: {}'.format(path, str(e)), logging.ERROR)
                 raise YAMLError()
         return cfg
