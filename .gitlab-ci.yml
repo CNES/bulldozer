@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -18,7 +18,7 @@
 
 # Bulldozer Gitlab-CI configuration file
 
-# Workflow to allow no duplicated pipeline between branch and MR : https://docs.gitlab.com/ee/ci/yaml/workflow.html#switch-between-branch-pipelines-and-merge-request-pipelines
+# Workflow to avoid pipeline duplication between branch and MR: https://docs.gitlab.com/ee/ci/yaml/workflow.html#switch-between-branch-pipelines-and-merge-request-pipelines
 workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
@@ -46,7 +46,7 @@ variables:
     description: "Show more logs"
   # Allow to minimize useless logs (example downloads logs)
   CI: "true"
-  # Needed to download pip through CNES internal artifactory without internet
+  # Needed to download pip through CNES internal artifactory without internet connection
   PIP_INDEX_URL: "https://${ARTIFACTORY_USER}:${ARTIFACTORY_TOKEN}@${ARTIFACTORY_HOST}/artifactory/api/pypi/pypi/simple"
   PIP_CERT: "${CNES_CERTIFICATE}"
   # TAGS for images if each stages: base python
@@ -69,11 +69,11 @@ build:
     #- export HTTP_PROXY=http://${PROXY_USER}:${PROXY_PWD}@proxy-tech-web.cnes.fr:8060
     #- export HTTPS_PROXY=http://${PROXY_USER}:${PROXY_PWD}@proxy-tech-web.cnes.fr:8060
   script:
-    # Install bulldozer + requirements in venv
-    - VENV="venv" make install
+    # Install bulldozer + requirements in virtual environment
+    - VENV="bulldozer_venv" make install
     # Activate virtualenv
-    - source venv/bin/activate
-    # Test quickly bulldozer
+    - source bulldozer_venv/bin/activate
+    # Test Bulldozer basic command
     - bulldozer -h
     - deactivate
   artifacts:
@@ -87,8 +87,8 @@ test:
   needs:
     - build
   script:
-    # Load previous python venv
-    - source venv/bin/activate
+    # Load previous python virtual environment
+    - source bulldozer_venv/bin/activate
 
     # Run test
     # only with local python3

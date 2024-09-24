@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -26,13 +26,13 @@
 !c_*.cpp
 
 ### Python ###
+# Virtual env
+*venv*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
-*.so
 
 # cython generated files
 src/bulldozer/preprocessing/anchorage_prediction/cython/anchorage_prediction.cpp

@@ -1,4 +1,21 @@
-# Autodocumented Makefile
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Initially based on Autodocumented Makefile
 # see: https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 # Dependencies : python3 venv
 # Some Makefile global variables can be set in make command line
@@ -12,7 +29,7 @@ SHELL := /bin/bash
 # Set Virtualenv directory name
 # Example: VENV="other-venv/" make install
 ifndef VENV
-	VENV = "venv"
+	VENV = "bulldozer_venv"
 endif
 
 # Python global variables definition
@@ -41,23 +58,23 @@ endif
 
 ################ MAKE targets by sections ######################
 .PHONY: help
-help: ## this help
+help: ## help on Bulldozer command line usage
 	@echo "      BULLDOZER MAKE HELP"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: venv
-venv: ## create virtualenv in "venv" dir if not exists
+venv: ## create virtualenv in "bulldozer_venv" directory if it doesn't exist
 	@test -d ${VENV} || $(PYTHON_CMD) -m venv ${VENV}
 	@touch ${VENV}/bin/activate
 	@${VENV}/bin/python -m pip install --upgrade wheel setuptools pip # no check to upgrade each time
 
 
 .PHONY: install
-install: venv  ## install environment for development target (depends venv)
+install: venv  ## install environment for development target (depends bulldozer_venv)
 	@test -f ${VENV}/bin/bulldozer || echo "Install bulldozer package from local directory"
 	@test -f ${VENV}/bin/bulldozer || ${VENV}/bin/pip install -e .[dev,docs,notebook]
 	@echo "Bulldozer installed in dev mode in virtualenv ${VENV}"
-	@echo "Bulldozer venv usage : source ${VENV}/bin/activate; bulldozer -h"
+	@echo "Bulldozer virtual environment usage: source ${VENV}/bin/activate; bulldozer -h"
 
 ## Test section
 
@@ -118,11 +135,11 @@ clean-venv: ## clean venv
 .PHONY: clean-build
 clean-build: ## clean build artifacts
 	@echo "+ $@"
-	@rm -fr build/
-	@rm -fr dist/
-	@rm -fr .eggs/
-	@find . -name '*.egg-info' -exec rm -fr {} +
-	@find . -name '*.egg' -exec rm -f {} +
+	@rm -rf build/
+	@rm -rf dist/
+	@rm -rf .eggs/
+	@find . -name '*.egg-info' -exec rm -rf {} +
+	@find . -name '*.egg' -exec rm -rf {} +
 
 .PHONY: clean-precommit
 clean-precommit: ## clean precommit hooks in .git/hooks
@@ -132,21 +149,21 @@ clean-precommit: ## clean precommit hooks in .git/hooks
 .PHONY: clean-pyc
 clean-pyc: ## clean Python file artifacts
 	@echo "+ $@"
-	@find . -type f -name "*.py[co]" -exec rm -fr {} +
-	@find . -type d -name "__pycache__" -exec rm -fr {} +
-	@find . -name '*~' -exec rm -fr {} +
+	@find . -type f -name "*.py[co]" -exec rm -rf {} +
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -name '*~' -exec rm -rf {} +
 
 .PHONY: clean-test
 clean-test: ## clean test and coverage artifacts
 	@echo "+ $@"
-	@rm -fr .tox/
+	@rm -rf .tox/
 	@rm -f .coverage
 	@rm -rf .coverage.*
 	@rm -rf coverage.xml
-	@rm -fr htmlcov/
-	@rm -fr .pytest_cache
+	@rm -rf htmlcov/
+	@rm -rf .pytest_cache
 	@rm -f pytest-report.xml
-	@find . -type f -name "debug.log" -exec rm -fr {} +
+	@find . -type f -name "debug.log" -exec rm -rf {} +
 
 .PHONY: clean-lint
 clean-lint: ## clean linting artifacts
@@ -163,10 +180,10 @@ clean-docs: ## clean builded documentations
 .PHONY: clean-notebook
 clean-notebook: ## clean notebooks cache
 	@echo "+ $@"
-	@find . -type d -name ".ipynb_checkpoints" -exec rm -fr {} +
+	@find . -type d -name ".ipynb_checkpoints" -exec rm -rf {} +
 
 .PHONY: clean-libs
 clean-libs: ## clean .so compiled files and cpp files (except ones starting with "c_<myfile>.cpp")
 	@echo "+ $@"
-	@find . -type f -name "*.so" -exec rm -fr {} +
-	@find . -type f -name "*.cpp"  -not -name "c_*.cpp" -exec rm -fr {} +
+	@find . -type f -name "*.so" -exec rm -rf {} +
+	@find . -type f -name "*.cpp"  -not -name "c_*.cpp" -exec rm -rf {} +

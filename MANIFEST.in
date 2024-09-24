@@ -1,3 +1,4 @@
+# Include Cython files in the package
 global-include *.pyx
 global-include *.pxd
 global-include c_*.cpp
