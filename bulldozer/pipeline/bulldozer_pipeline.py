@@ -33,7 +33,7 @@ from copy import copy
 import numpy as np
 import rasterio
 from bulldozer.utils.config_parser import ConfigParser
-from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import BulldozerLogger
 from bulldozer.utils.helper import Runtime, DefaultValues
 from bulldozer._version import __version__
 
@@ -118,7 +118,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     if not os.path.isdir(params['output_dir']):
         os.makedirs(params['output_dir']) 
 
-    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") + ".log"))
+    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
@@ -411,6 +411,7 @@ def retrieve_params(config_path: str = None, **kwargs):
         bulldozer_params['nb_max_workers'] = multiprocessing.cpu_count()
     
     # Retrieves ignored provided ipunt parameters
+    #TODO remove it when it's empty 
     bulldozer_params['ignored_params'] = set(input_params.keys()).difference(set([key.lower() for key in DefaultValues.keys()] + ['dsm_path', 'output_dir']))
 
     return bulldozer_params

@@ -28,7 +28,7 @@ import logging
 import numpy as np
 from git import Repo
 from rasterio import Affine
-from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import BulldozerLogger
 
 # - dsm_path: str (required)
 # - output_dir: str (required)

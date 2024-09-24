@@ -5,7 +5,7 @@ from copy import copy
 import numpy as np
 import scipy.ndimage as ndimage
 
-from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import BulldozerLogger
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 

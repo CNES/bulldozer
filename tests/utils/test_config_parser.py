@@ -25,7 +25,7 @@ import numpy as np
 from pathlib import Path
 from yaml import YAMLError
 
-from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import BulldozerLogger
 from bulldozer.utils.config_parser import ConfigParser
     
 @pytest.fixture

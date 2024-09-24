@@ -24,7 +24,7 @@
 from yaml import safe_load,YAMLError
 import os.path
 import logging
-from bulldozer.utils.logging_helper import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import BulldozerLogger
 
 class ConfigParser(object):
     """

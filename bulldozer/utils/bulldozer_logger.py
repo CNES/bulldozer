@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -61,8 +61,8 @@ class BulldozerLogger:
             fh = logging.FileHandler(filename=logger_file_path, mode='w')
             fh.setLevel(logging.DEBUG)
 
-            LOG_FORMAT = '%(asctime)s [%(levelname)s]: %(message)s'
-            logger_formatter = logging.Formatter(LOG_FORMAT, datefmt="%Y-%m-%d,%H:%M:%S")
+            LOG_FORMAT = '%(asctime)s [%(levelname)s] %(module)s - %(funcName)s (line %(lineno)d): %(message)s'
+            logger_formatter = logging.Formatter(LOG_FORMAT, datefmt="%Y-%m-%dT%H:%M:%S")
             fh.setFormatter(logger_formatter)
 
             logger.addHandler(fh)
@@ -70,7 +70,7 @@ class BulldozerLogger:
             sh = logging.StreamHandler(sys.stdout)
             sh.setLevel(logging.INFO)
 
-            STREAM_FORMAT = '=%(asctime)s [%(levelname)s] %(module)s - %(message)s'
+            STREAM_FORMAT = '%(asctime)s [%(levelname)s] - %(message)s'
             logger_formatter = logging.Formatter(STREAM_FORMAT, datefmt="%H:%M:%S")
             sh.setFormatter(logger_formatter)
 
