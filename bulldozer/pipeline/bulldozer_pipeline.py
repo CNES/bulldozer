@@ -75,7 +75,7 @@ def write_quality_mask(keys_to_write: List[str],
         elif profile['count'] != 1:
             BulldozerLogger.log(f"Mask to write has several layers", logging.ERROR)
         elif profile['nodata'] is not None:
-            BulldozerLogger.log(f"Mask to write has a no data value provided", logging.ERROR)
+            BulldozerLogger.log(f"Mask to write has a nodata value provided", logging.ERROR)
 
         if quality_ds_profile is None:
             quality_ds_profile = copy(profile)
@@ -121,6 +121,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "trace_" + datetime.now().strftime("%d.%m.%Y_%H:%M:%S") + ".log"))
 
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
+
+    # Warns the user that he/she provides parameters that are not used
+    if params['ignored_params']:
+        BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(', '.join(params['ignored_params'])), logging.WARNING)
 
     with eom.EOContextManager(nb_workers=params['nb_max_workers'], tile_mode=True) as eomanager:
 
@@ -406,6 +410,9 @@ def retrieve_params(config_path: str = None, **kwargs):
     if bulldozer_params['nb_max_workers'] is None:
         bulldozer_params['nb_max_workers'] = multiprocessing.cpu_count()
     
+    # Retrieves ignored provided ipunt parameters
+    bulldozer_params['ignored_params'] = set(input_params.keys()).difference(set([key.lower() for key in DefaultValues.keys()] + ['dsm_path', 'output_dir']))
+
     return bulldozer_params
     
 
