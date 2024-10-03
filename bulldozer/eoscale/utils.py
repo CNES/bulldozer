@@ -6,6 +6,7 @@ MpTile = namedtuple('MpTile', ["start_x", "start_y", "end_x", "end_y", "top_marg
 
 JSON_NONE: str = "none"
 
+
 def rasterio_profile_to_dict(profile: rasterio.DatasetReader.profile) -> dict:
     """
         Convert a rasterio profile to a serializable python dictionnary
@@ -37,6 +38,7 @@ def rasterio_profile_to_dict(profile: rasterio.DatasetReader.profile) -> dict:
         else:
             metadata[key] = value
     return metadata
+
 
 def dict_to_rasterio_profile(metadata: dict) -> rasterio.DatasetReader.profile :
     """
