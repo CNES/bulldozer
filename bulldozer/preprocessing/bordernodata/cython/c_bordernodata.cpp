@@ -17,9 +17,8 @@ namespace bulldoproto
                                             unsigned int nb_cols,
                                             float nodata_value) 
     {
-        
 
-        unsigned int c, l;
+        unsigned int c;
         for(unsigned int r = 0; r < nb_rows; r++) {
             // extracts border nodata for the left side of the input DSM
             c = r * nb_cols;
@@ -34,25 +33,6 @@ namespace bulldoproto
                 border_nodata_mask[c] = true;
                 // std::cout << "Right side, index: " << c << std::endl;
                 c--;
-            }
-        }
-
-
-        for(unsigned int k = 0; k < nb_cols; k++) {
-            // Extracts border nodata for the top side of the input DSM
-            l = k;
-            while(l < (nb_rows * nb_cols) && dsm[l] == nodata_value) {
-                border_nodata_mask[l] = true;
-                // std::cout << "Top side, index: " << l << std::endl;
-                l += nb_cols;
-            }
-
-            // Extracts border nodata for the bottom side of the input DSM
-            l = (nb_rows - 1) * nb_cols + k;
-            while(l >= 0 && l < nb_rows * nb_cols && dsm[l] == nodata_value) {
-                border_nodata_mask[l] = true;
-                // std::cout << "Bottom side, index: " << l << std::endl;
-                l -= nb_cols;
             }
         }
     }
