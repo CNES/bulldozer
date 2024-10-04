@@ -21,7 +21,7 @@ np.import_array()
 cpdef iterative_filling(floating[:,:] dsm,
                   unsigned char[:,:] disturbance_mask,
                   float nodata_val,
-                  int num_iterations = 50000):
+                  int num_iterations = 10000):
 
     cdef:
         int dsm_h = dsm.shape[0]
