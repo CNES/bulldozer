@@ -31,7 +31,7 @@ cpdef iterative_filling(floating[:,:] dsm,
         int good_neighbor
         bool has_nodata = True
         double total_weight
-        int corected, tocorrect
+        int corrected, tocorrect
         int nb_pass = 0
 
     print("Iterative...")
@@ -46,7 +46,7 @@ cpdef iterative_filling(floating[:,:] dsm,
     
     for k in range(num_iterations):
         tocorrect = 0
-        corected = 0
+        corrected = 0
         has_nodata = False
         
         for i in range(1, dsm_h-1):
@@ -71,7 +71,7 @@ cpdef iterative_filling(floating[:,:] dsm,
 
                     if(good_neighbor >= 3) :
                         
-                        corected += 1
+                        corrected += 1
                         
                         weights[0] = goods[0] * diag_weight
                         weights[1] = goods[1]
@@ -99,7 +99,7 @@ cpdef iterative_filling(floating[:,:] dsm,
         if has_nodata==False :
             break
 
-        #print(nb_pass, "corrected", corected, '/', tocorrect)
+        #print(nb_pass, "corrected", corrected, '/', tocorrect)
         nb_pass += 1     
                
     end = time.time()
