@@ -310,6 +310,9 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
             dtm = eomanager.get_array(key=dtm_key)[0, :, :]
             dhm = dsm - dtm
+            BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
+            dhm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
+            BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
                 dhm_out.write(dhm, 1)
             BulldozerLogger.log("Generating DHM: Done.", logging.INFO)

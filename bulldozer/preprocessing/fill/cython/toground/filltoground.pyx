@@ -34,7 +34,7 @@ cpdef iterative_filling(floating[:,:] dsm,
         int corrected, tocorrect
         int nb_pass = 0
 
-    print("Iterative...")
+    print("Iterative filling...")
     start = time.time()
     
     # v8 neighborhood indexing 
