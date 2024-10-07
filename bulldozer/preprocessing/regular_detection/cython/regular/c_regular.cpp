@@ -5,7 +5,6 @@ namespace bulldoproto {
 
 	
 	void buildRegularMask(float * dsm,
-						  unsigned char * noisyMask,
 						  unsigned char * regularMask,
                           unsigned int nb_rows,
                           unsigned int nb_cols,
@@ -37,7 +36,7 @@ namespace bulldoproto {
 				sum = 0;
 				used = 0;
 
-				if (dsm[pos] > nodata_dsm && noisyMask[pos] < 1) {
+				if (dsm[pos] > nodata_dsm) {
 					for(int v=0; v<nb_neigbhors; v++) {
 						if(dsm[pos+v8_off[v]] >  nodata_dsm) {
 							sum += std::fabs(dsm[pos+v8_off[v]] - dsm[pos]);

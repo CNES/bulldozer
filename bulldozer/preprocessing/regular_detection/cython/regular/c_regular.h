@@ -11,7 +11,6 @@
 namespace bulldoproto
 {
     void buildRegularMask(float * dsm,
-                            unsigned char * noisyMask,
                             unsigned char * regularMask,
                             unsigned int nb_rows,
                             unsigned int nb_cols,

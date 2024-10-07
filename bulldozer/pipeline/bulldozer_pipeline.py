@@ -40,7 +40,6 @@ from bulldozer._version import __version__
 import bulldozer.eoscale.manager as eom
 
 # Preprocessing steps of Bulldozer
-import bulldozer.preprocessing.outliers.histogram as preprocess_histogram_outliers
 import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_regular_detector
 import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
 import bulldozer.preprocessing.fill.fill_dsm as fill_dsm
@@ -132,18 +131,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
         max_object_size: float = 1.0 / params['min_object_spatial_frequency']
 
-        # Step 1: TODO local denoising
-        noisy_mask_key = eomanager.create_image(eomanager.get_profile(input_dsm_key))
-
-        if params["developer_mode"]:
-            noisy_mask_path: str = os.path.join(params["output_dir"], "noisy_mask.tif")
-            eomanager.write(key=noisy_mask_key, img_path=noisy_mask_path)
-
         # Step 2: Compute the regular area mask
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
         regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
-                                                          noisy_key=noisy_mask_key,
                                                           eomanager=eomanager,
                                                           regular_slope=regular_slope)
         regular_mask_key = regular_outputs["regular_mask"]

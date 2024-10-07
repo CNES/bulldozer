@@ -24,8 +24,6 @@ from Cython.Build import cythonize
 import numpy
 
 extensions = [
-    Extension( "bulldozer.preprocessing.outliers.hist", ["bulldozer/preprocessing/outliers/cython/hist/hist.pyx"]),
-    Extension( "bulldozer.preprocessing.outliers.stats", ["bulldozer/preprocessing/outliers/cython/stats/stats.pyx"]),
     Extension( "bulldozer.preprocessing.regular", ["bulldozer/preprocessing/regular_detection/cython/regular/regular.pyx"]),
     Extension( "bulldozer.preprocessing.anchors_predictor", ["bulldozer/preprocessing/anchorage_prediction/cython/anchorage_prediction.pyx"]),
     Extension( "bulldozer.preprocessing.fill.filltoground", ["bulldozer/preprocessing/fill/cython/toground/filltoground.pyx"], include_dirs=[numpy.get_include()]),

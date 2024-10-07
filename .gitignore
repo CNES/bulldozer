@@ -36,8 +36,6 @@ __pycache__/
 
 # cython generated files
 src/bulldozer/preprocessing/anchorage_prediction/cython/anchorage_prediction.cpp
-src/bulldozer/preprocessing/outliers/cython/hist/hist.cpp
-src/bulldozer/preprocessing/outliers/cython/stats/stats.cpp
 src/bulldozer/preprocessing/regular_detection/cython/regular/regular.cpp
 
 # Distribution / packaging
