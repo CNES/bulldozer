@@ -36,7 +36,7 @@ from bulldozer.utils.bulldozer_logger import BulldozerLogger
 # - dsm_z_precision: float (optional, 1.0 by default)
 # - fill_search_radius: int (optional, 100 by default)
 # - max_ground_slope: float (optional, 20.0 % by default)
-# - min_object_spatial_frequency: float (optional, 0.0625 m^-1 by default)
+# - max_object_size: int (optional, 16 meters by default)
 # - cloth_tension_force: int (optional, 3 by default)
 # - prevent_unhook_iter: int (optional, 10 by default)
 # - num_outer_iter: int (optional, 100 by default)
@@ -54,7 +54,7 @@ from bulldozer.utils.bulldozer_logger import BulldozerLogger
 DefaultValues = {
     # Basic parameters
     'GENERATE_DHM': True,
-    'MIN_OBJECT_SPATIAL_FREQUENCY': 0.0625,
+    'MAX_OBJECT_SIZE': 16,
     'NB_MAX_WORKERS': 8,
     # Advanced settings
     'DSM_Z_PRECISION': 1.0,

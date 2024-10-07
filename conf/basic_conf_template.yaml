@@ -19,5 +19,5 @@ developer_mode : True
 # [Optional] - The maximum slope of the terrain of the observed landscape in percentage
 max_ground_slope: 20.0
 
-# [Optional] - Minimal frequency of an object on the ground in the observed landscape
-min_object_spatial_frequency: 0.0625
+# [Optional] - Foreground max object size (in meter)
+max_object_size : 16

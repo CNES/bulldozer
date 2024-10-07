@@ -2,9 +2,9 @@
 #       Parameters        #
 #-------------------------#
 # [Required] - Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>") 
-dsm_path : "input_dsm_path/dsm.tif"
+dsm_path : "/work/scratch/data/lallemd/to_delete/bulldozer_v1.0.2/dsm.tif"
 # [Required] - Output directory path (if the directory doesn't exist, create it)
-output_dir : "output_dir_path"
+output_dir : "/work/scratch/data/lallemd/to_delete/bulldozer_v1.0.2/output"
 
 #-------------------------#
 #         Options         #
@@ -13,8 +13,8 @@ output_dir : "output_dir_path"
 generate_dhm : True
 # [Optional] - If null, bulldozer will use the maximum number of available CPU on your system
 nb_max_workers : 8
-# [Optional] - Minimal frequency of an object on the ground in the observed landscape
-min_object_spatial_frequency: 0.0625
+# [Optional] - Foreground max object size (in meter)
+max_object_size : 16
 
 #-------------------------#
 #    Advanced settings    #
@@ -39,5 +39,5 @@ dtm_max_error: 2.0
 # [Optional] - DtmExtraction parameters
 cloth_tension_force : 3
 prevent_unhook_iter : 10
-num_outer_iter : 100
-num_inner_iter : 10
+num_outer_iter : 25
+num_inner_iter : 5

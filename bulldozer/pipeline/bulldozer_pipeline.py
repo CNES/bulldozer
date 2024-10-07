@@ -129,9 +129,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
 
         # Open the input dsm that might be noisy and full of nodatas...
         input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
-        max_object_size: float = 1.0 / params['min_object_spatial_frequency']
 
-        # Step 2: Compute the regular area mask
+        # Step 1 : Compute the regular area mask
         BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
         regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
@@ -144,7 +143,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             regular_mask_path: str = os.path.join(params["output_dir"], "regular_mask.tif")
             eomanager.write(key=regular_mask_key, img_path=regular_mask_path)
 
-        # Step 2b : Inner and Border no data masks
+        # Step 2 : Inner and Border no data masks
         BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
 
         nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
@@ -186,7 +185,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
             preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key=filled_dsm_key,
                                                                             regular_mask_key=regular_mask_key,
-                                                                            max_object_size=max_object_size,
+                                                                            max_object_size=params["max_object_size"],
                                                                             eomanager=eomanager)
             BulldozerLogger.log("Predicting anchorage points : Done", logging.INFO)
 
@@ -207,7 +206,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
                                                  predicted_anchorage_mask_key=cos_mask_key,
                                                  eomanager=eomanager,
-                                                 max_object_size=max_object_size,
+                                                 max_object_size=params["max_object_size"],
                                                  prevent_unhook_iter=params["prevent_unhook_iter"],
                                                  spring_tension=params["cloth_tension_force"],
                                                  num_outer_iterations=params["num_outer_iter"],
@@ -250,7 +249,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
                                              predicted_anchorage_mask_key=post_anchorage_mask_key,
                                              eomanager=eomanager,
-                                             max_object_size=max_object_size,
+                                             max_object_size=params["max_object_size"],
                                              prevent_unhook_iter=params["prevent_unhook_iter"],
                                              spring_tension=params["cloth_tension_force"],
                                              num_outer_iterations=params["num_outer_iter"],
@@ -269,7 +268,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
                                                                  pre_anchorage_mask_key=preprocess_anchorage_mask_key,
                                                                  post_anchorage_mask_key=post_anchorage_mask_key,
                                                                  eomanager=eomanager,
-                                                                 max_object_size=max_object_size,
+                                                                 max_object_size=params["max_object_size"],
                                                                  prevent_unhook_iter=params["prevent_unhook_iter"],
                                                                  spring_tension=params["cloth_tension_force"],
                                                                  num_outer_iterations=params["num_outer_iter"],
@@ -343,7 +342,7 @@ def retrieve_params(config_path: str = None, **kwargs):
                 - dsm_z_precision: float (optional, 1.0 by default)
                 - fill_search_radius: int (optional, 100 by default)
                 - max_ground_slope: float (optional, 20.0 % by default)
-                - min_object_spatial_frequency: float (optional, 0.0625 by default)
+                - max_object_size: int (optional, 16 meters by default)
                 - dtm_max_error: float (optional, 2.0 meters by default)
                 - cloth_tension_force: int (optional, 3 by default)
                 - prevent_unhook_iter: int (optional, 10 by default)
