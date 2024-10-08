@@ -79,5 +79,5 @@ class ConfigParser(object):
                     BulldozerLogger.log('Retrieved data: {}'.format(cfg), self.level)
             except YAMLError as e:
                 BulldozerLogger.log('Exception occured while reading the configuration file: {}\nException: {}'.format(path, str(e)), logging.ERROR)
-                raise YAMLError()
+                raise YAMLError(str(e))
         return cfg

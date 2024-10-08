@@ -92,6 +92,7 @@ class BulldozerLogger:
                 DEBUG
                 INFO
                 WARNING
+                ERROR
 
             Args:
                 msg: log message.
@@ -104,6 +105,8 @@ class BulldozerLogger:
                 BulldozerLogger.__instance.info(msg)
            if level == logging.WARNING:
                 BulldozerLogger.__instance.warning(msg)
+           if level == logging.ERROR:
+                BulldozerLogger.__instance.error(msg)
     
     @staticmethod
     def init_logger() -> None:
@@ -182,7 +185,6 @@ class Runtime:
         BulldozerLogger.log("{}: Starting...".format(self.function.__name__), logging.DEBUG)
         # Function run
         result = self.function(*args, **kwargs)
-        print(type(result))
         func_end = time.perf_counter()
         BulldozerLogger.log("{}: Done (Runtime: {}s)".format(self.function.__name__, round(func_end-func_start,2)), logging.INFO)
         return result
