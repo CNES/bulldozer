@@ -21,10 +21,12 @@
 """
 This module aims to centralize the use of the logger in Bullodzer.
 """
+from __future__ import annotations
 import sys
 import os
 import getpass
 import platform
+import time
 import psutil
 import multiprocessing
 import logging
@@ -39,7 +41,7 @@ class BulldozerLogger:
     __instance = None
 
     @staticmethod
-    def getInstance(logger_file_path: str = None):
+    def getInstance(logger_file_path: str = None) -> BulldozerLogger:
         """
             Return the logger or create it if the instance does not exist.
 
@@ -86,7 +88,7 @@ class BulldozerLogger:
     def log(msg : str, level : any) -> None:
         """
             Bulldozer logger log function.
-            We use the following levels:
+            The following logging levels are used:
                 DEBUG
                 INFO
                 WARNING
@@ -150,3 +152,37 @@ class BulldozerLogger:
 
         except Exception as e:
             BulldozerLogger.log("Error occured during logger init: \n" + str(e), logging.DEBUG)
+
+class Runtime:
+    """
+    This class is used as decorator to monitor the runtime.
+    """
+    
+    def __init__(self, function) -> None:
+        """
+            Decorator constructor.
+
+            Args:
+                function: the function to call.
+        """
+        self.function = function
+
+    def __call__(self, *args, **kwargs) -> Any:
+        """
+            Log the start and end of the function with the associated runtime.
+
+            Args:
+                args: function arguments.
+                kwargs: function key arguments.
+
+            Returns:
+                the function output.
+        """
+        func_start = time.perf_counter()
+        BulldozerLogger.log("{}: Starting...".format(self.function.__name__), logging.DEBUG)
+        # Function run
+        result = self.function(*args, **kwargs)
+        print(type(result))
+        func_end = time.perf_counter()
+        BulldozerLogger.log("{}: Done (Runtime: {}s)".format(self.function.__name__, round(func_end-func_start,2)), logging.INFO)
+        return result

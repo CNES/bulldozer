@@ -4,7 +4,8 @@ import bulldozer.preprocessing.bordernodata.bordernodata as bnodata
 
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-from bulldozer.utils.helper import Runtime, DefaultValues
+from bulldozer.utils.helper import DefaultValues
+from bulldozer.utils.bulldozer_logger import Runtime
 
 
 def generate_output_profile_for_mask(input_profile: list,

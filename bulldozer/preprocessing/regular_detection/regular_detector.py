@@ -3,7 +3,7 @@ import rasterio
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.regular as reg
-
+from bulldozer.utils.bulldozer_logger import Runtime
 
 def regular_mask_profile(input_profiles: list,
                          params: dict) -> dict:
@@ -23,7 +23,7 @@ def regular_mask_filter(input_buffers: list,
                                            no_data_value=filter_parameters["nodata"])
     return reg_mask     
 
-
+@Runtime
 def run(dsm_key: str,
         eomanager: eom.EOContextManager,
         regular_slope: float):

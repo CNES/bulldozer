@@ -21,14 +21,9 @@
 """
     This module groups different generic methods used in Bulldozer.
 """
-import time
-import os
 import rasterio
-import logging
 import numpy as np
-from git import Repo
 from rasterio import Affine
-from bulldozer.utils.bulldozer_logger import BulldozerLogger
 
 # - dsm_path: str (required)
 # - output_dir: str (required)
@@ -101,20 +96,3 @@ def downsample_profile(profile, factor: float):
     })
     
     return newprofile
-
-
-class Runtime:
-    """
-    This class is used as decorator to monitor the runtime .
-    """
-    
-    def __init__(self, function):
-        self.function = function
-
-    def __call__(self, *args, **kwargs):
-        func_start = time.perf_counter()
-        result = self.function(*args, **kwargs)
-        func_end = time.perf_counter()
-        # %(module)s - %(funcName)s
-        BulldozerLogger.log("{}-{}: Done (Runtime: {}s)".format(self.function.__module__, self.function.__name__, round(func_end-func_start,2)), logging.INFO)
-        return result

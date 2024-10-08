@@ -33,8 +33,8 @@ from copy import copy
 import numpy as np
 import rasterio
 from bulldozer.utils.config_parser import ConfigParser
-from bulldozer.utils.bulldozer_logger import BulldozerLogger
-from bulldozer.utils.helper import Runtime, DefaultValues
+from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.helper import DefaultValues
 from bulldozer._version import __version__
 
 import bulldozer.eoscale.manager as eom
@@ -131,7 +131,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
 
         # Step 1 : Compute the regular area mask
-        BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
+        #BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
+        # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm precision 
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
         regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
                                                           eomanager=eomanager,
