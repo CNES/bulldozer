@@ -96,7 +96,7 @@ cpdef iterative_filling(floating[:,:] dsm,
                 if disturbance_mask[l,m] == 2 :
                     disturbance_mask[l,m] = 0 
         
-        if has_nodata==False :
+        if has_nodata==False or corrected==0 :
             break
 
         #print(nb_pass, "corrected", corrected, '/', tocorrect)

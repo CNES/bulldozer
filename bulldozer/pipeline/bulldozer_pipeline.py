@@ -173,6 +173,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
         fill_outputs = fill_dsm.run(dsm_key=input_dsm_key,
                                     mask_key=regular_mask_key,
+                                    border_no_data_key=border_no_data_mask_key,
                                     eomanager=eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
 
