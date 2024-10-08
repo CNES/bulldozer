@@ -117,6 +117,12 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     if not os.path.isdir(params['output_dir']):
         os.makedirs(params['output_dir']) 
 
+    # In the developer mode, if the developer directory does not exist, creates it
+    if params["developer_mode"]:
+        developer_dir = os.path.join(params["output_dir"], "developer")
+        if not os.path.isdir(developer_dir):
+            os.makedirs(developer_dir)
+
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
@@ -130,19 +136,18 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         # Open the input dsm that might be noisy and full of nodatas...
         input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
 
-        # Step 1 : Compute the regular area mask
-        #BulldozerLogger.log("Regular mask computation: Starting...", logging.INFO)
+        # Step 1: Compute the regular area mask 
         # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm precision 
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
-        regular_outputs = preprocess_regular_detector.run(dsm_key=input_dsm_key,
-                                                          eomanager=eomanager,
-                                                          regular_slope=regular_slope)
+        regular_outputs = preprocess_regular_detector.detect_regular_areas(dsm_key=input_dsm_key,
+                                                                           eomanager=eomanager,
+                                                                           regular_slope=regular_slope)
         regular_mask_key = regular_outputs["regular_mask"]
         BulldozerLogger.log("Regular mask computation: Done...", logging.INFO)
 
         if params["developer_mode"]:
-            regular_mask_path: str = os.path.join(params["output_dir"], "regular_mask.tif")
-            eomanager.write(key=regular_mask_key, img_path=regular_mask_path)
+            regular_mask_path: str = os.path.join(developer_dir, "regular_mask.tif")
+            eomanager.write(key=regular_mask_key, img_path=regular_mask_path, binary=True)
 
         # Step 2 : Inner and Border no data masks
         BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
