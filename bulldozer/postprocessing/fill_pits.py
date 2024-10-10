@@ -16,7 +16,7 @@ def fill_pits_filter(inputBuffers: list,
     """
     Perform pits removal and create pits detection mask.
 
-    :param inputBuffers: DTM buffer
+    :param inputBuffers: DTM buffer, border no data
     :return: a List composed of the processed dtm without pits and the pits mask
     """
     dtm = inputBuffers[0][0, :, :]
@@ -24,6 +24,8 @@ def fill_pits_filter(inputBuffers: list,
 
     # Generates the low frequency DTM
     # bfilters = sf.PyBulldozerFilters()
+    border_mask_expanded = ndimage.binary_dilation(inputBuffers[1][0, :, :], structure=ndimage.generate_binary_structure(2, 2), iterations=round(params["filter_size"]))
+    
     dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
 
     # Retrieves the high frequencies in the input DTM
@@ -31,10 +33,11 @@ def fill_pits_filter(inputBuffers: list,
 
     # Tags the pits
     pits_mask[dtm_HF < 0.] = 1
+    pits_mask[border_mask_expanded] = 0
 
     # fill pits
     #dtm[pits_mask] = dtm_LF
-    dtm = np.where( (pits_mask) & (dtm != params["nodata"]), dtm_LF, dtm)
+    dtm = np.where( (pits_mask) & (dtm != params["nodata"]) & (dtm != np.nan), dtm_LF, dtm)
 
     return [dtm, pits_mask]
 

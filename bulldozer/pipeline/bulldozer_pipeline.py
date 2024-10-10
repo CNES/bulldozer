@@ -292,7 +292,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 8: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
-        dtm_key, pits_mask_key = fill_pits.run(dtm_key, eomanager)
+        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_no_data_mask_key, eomanager)
         if params["developer_mode"]:
             eomanager.write(key=pits_mask_key, img_path=os.path.join(params["output_dir"], "fill_pits_mask.tif"))
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
