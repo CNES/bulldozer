@@ -19,8 +19,6 @@
 
 namespace bulldozer {
 
-
-	
 	void buildRegularMask(float * dsm,
 						  unsigned char * regularMask,
                           unsigned int nb_rows,

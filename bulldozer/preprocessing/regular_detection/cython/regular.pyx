@@ -19,7 +19,6 @@
 # limitations under the License.
 
 import numpy as np
-
 from bulldozer.utils.helper import npAsContiguousArray
 
 # Begin PXD

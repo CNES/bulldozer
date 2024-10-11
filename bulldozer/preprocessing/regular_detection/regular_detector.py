@@ -25,7 +25,7 @@ import numpy as np
 import rasterio
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.preprocessing.regular as reg
+import bulldozer.preprocessing.regular as regular
 from bulldozer.utils.bulldozer_logger import Runtime
 
 def regular_mask_profile(input_profiles: list,
@@ -41,9 +41,10 @@ def regular_mask_profile(input_profiles: list,
         Returns:
             updated profile.
     """
-    input_profiles[0]['dtype'] = np.uint8
-    input_profiles[0]['nodata'] = None
-    return input_profiles[0]
+    output_profile = input_profiles[0]
+    output_profile['dtype'] = np.ubyte
+    output_profile['nodata'] = None
+    return output_profile
 
 
 def regular_mask_filter(input_buffers: list,
@@ -61,12 +62,12 @@ def regular_mask_filter(input_buffers: list,
         Returns:
             regular areas mask.
     """
-    reg_filter = reg.PyRegularAreas()
+    reg_filter = regular.PyRegularAreas()
     # the input_buffers[0] corresponds to the input DSM raster
     reg_mask = reg_filter.buildRegularMask(input_buffers[0][0, :, :],
                                            slope_threshold=filter_parameters["regular_slope"],
                                            nodata_value=filter_parameters["nodata"])
-    return reg_mask     
+    return reg_mask.astype(np.ubyte)     
 
 @Runtime
 def detect_regular_areas(dsm_key: str,

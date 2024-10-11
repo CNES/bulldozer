@@ -25,6 +25,10 @@ import rasterio
 import numpy as np
 from rasterio import Affine
 
+
+# This value is used if the provided nodata value is None or NaN
+DEFAULT_NODATA = -32768.0
+
 # - dsm_path: str (required)
 # - output_dir: str (required)
 # - nb_max_workers: int (optionnal, 8 by default)

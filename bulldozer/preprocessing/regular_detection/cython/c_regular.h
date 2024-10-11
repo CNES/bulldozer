@@ -25,6 +25,9 @@
 #include <fstream>
 #include <algorithm>
 
+/*
+    This class is used to build a mask that flags the pixels considered as "regular" meaning not disturbed from an altimetric perspective.
+*/
 namespace bulldozer
 {
     void buildRegularMask(float * dsm,

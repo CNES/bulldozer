@@ -1,7 +1,7 @@
 # distutils: language = c++
 # coding: utf8
 #
-# Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 #
 # This file is part of Bulldozer
 # (see https://github.com/CNES/bulldozer).
@@ -17,17 +17,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import numpy as np
 from bulldozer.utils.helper import npAsContiguousArray
 
 # Begin PXD
 
 # Necessary to include the C++ code
-cdef extern from "c_bordernodata.cpp":
+cdef extern from "c_border.cpp":
     pass
 
 # Declare the class with cdef
-cdef extern from "c_bordernodata.h" namespace "bulldoproto":
+cdef extern from "c_border.h" namespace "bulldozer":
 
     cdef cppclass BorderNodata:
         
@@ -36,9 +37,6 @@ cdef extern from "c_bordernodata.h" namespace "bulldoproto":
 
 # End PXD
 
-# Create a Cython extension type which holds a C++ instance
-# as an attribute and create a bunch of forwarding methods
-# Python extension type.
 cdef class PyBorderNodata:
 
     cdef BorderNodata border_nodata # Hold a C++ instance wich we're wrapping

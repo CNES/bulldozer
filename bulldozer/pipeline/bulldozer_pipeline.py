@@ -41,11 +41,10 @@ import bulldozer.eoscale.manager as eom
 
 # Preprocessing steps of Bulldozer
 import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_regular_detector
+import bulldozer.preprocessing.border_detection.border_detector as preprocess_border_detector
 import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
 import bulldozer.preprocessing.fill.fill_dsm as fill_dsm
 import bulldozer.preprocessing.anchorage_prediction.anchorage_predictor as preprocess_anchors_detector
-import bulldozer.preprocessing.bordernodata as bn
-import bulldozer.preprocessing.bordernodata.border as border
 
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
@@ -114,8 +113,13 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     params = retrieve_params(config_path, **kwargs)
 
     # If the target output directory does not exist, creates it
-    if not os.path.isdir(params['output_dir']):
-        os.makedirs(params['output_dir']) 
+    if not os.path.isdir(params["output_dir"]):
+        os.makedirs(params["output_dir"]) 
+
+    # If the target output directory does not exist, creates it
+    output_masks_dir = os.path.join(params["output_dir"], "masks")
+    if not os.path.isdir(output_masks_dir):
+        os.makedirs(output_masks_dir)
 
     # In the developer mode, if the developer directory does not exist, creates it
     if params["developer_mode"]:
@@ -123,52 +127,47 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         if not os.path.isdir(developer_dir):
             os.makedirs(developer_dir)
 
-    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params['output_dir'], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
+    logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params["output_dir"], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
     # Warns the user that he/she provides parameters that are not used
-    if params['ignored_params']:
-        BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(', '.join(params['ignored_params'])), logging.WARNING)
+    if params["ignored_params"]:
+        BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(", ".join(params["ignored_params"])), logging.WARNING)
 
-    with eom.EOContextManager(nb_workers=params['nb_max_workers'], tile_mode=True) as eomanager:
+    with eom.EOContextManager(nb_workers=params["nb_max_workers"], tile_mode=True) as eomanager:
 
         # Open the input dsm that might be noisy and full of nodatas...
-        input_dsm_key = eomanager.open_raster(raster_path=params['dsm_path'])
+        input_dsm_key = eomanager.open_raster(raster_path=params["dsm_path"])
 
         # Step 1: Compute the regular area mask 
         # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm precision 
-        regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params['dsm_z_precision'])
+        regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params["dsm_z_precision"])
         regular_outputs = preprocess_regular_detector.detect_regular_areas(dsm_key=input_dsm_key,
                                                                            eomanager=eomanager,
                                                                            regular_slope=regular_slope)
         regular_mask_key = regular_outputs["regular_mask"]
-        BulldozerLogger.log("Regular mask computation: Done...", logging.INFO)
 
         if params["developer_mode"]:
             regular_mask_path: str = os.path.join(developer_dir, "regular_mask.tif")
             eomanager.write(key=regular_mask_key, img_path=regular_mask_path, binary=True)
 
         # Step 2 : Inner and Border no data masks
-        BulldozerLogger.log("Starting inner_nodata_mask and border_nodata_mask building", logging.DEBUG)
-
+        #TODO: check if user provide specific noadata value otherwise retrieve the nodata value from DSM profile. If None/null replace it by default value -32768
         nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
 
-        inner_outer_result = border.run(dsm_key=input_dsm_key,
+        inner_outer_result = preprocess_border_detector.detect_border_nodata(dsm_key=input_dsm_key,
                                         eomanager=eomanager,
                                         nodata=nodata_value)
         
         inner_no_data_mask_key = inner_outer_result["inner_no_data_mask"]
         border_no_data_mask_key = inner_outer_result["border_no_data_mask"]
 
-        if params["developer_mode"]:
-            border_no_data_mask_path: str = os.path.join(params["output_dir"], "border_no_data.tif")
-            eomanager.write(key=border_no_data_mask_key, img_path=border_no_data_mask_path)
+        border_no_data_mask_path: str = os.path.join(output_masks_dir, "border_no_data.tif")
+        eomanager.write(key=border_no_data_mask_key, img_path=border_no_data_mask_path, binary=True)
 
-            inner_no_data_mask_path: str = os.path.join(params["output_dir"], "inner_no_data.tif")
-            eomanager.write(key=inner_no_data_mask_key, img_path=inner_no_data_mask_path)
-
-        BulldozerLogger.log("inner_nodata_mask and border_nodata_mask generation: Done", logging.INFO)
+        inner_no_data_mask_path: str = os.path.join(output_masks_dir, "inner_no_data.tif")
+        eomanager.write(key=inner_no_data_mask_key, img_path=inner_no_data_mask_path, binary=True)
 
         # Step 3: Fill the input DSM and compute the uncertainties
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)

@@ -1,44 +1,75 @@
+#!/usr/bin/env python
+# coding: utf8
+#
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+This module is used to detect border and inner nodata in the input DSM.
+"""
 import numpy as np
-
-import bulldozer.preprocessing.bordernodata.bordernodata as bnodata
-
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-from bulldozer.utils.helper import DefaultValues
+from bulldozer.utils.helper import DEFAULT_NODATA
 from bulldozer.utils.bulldozer_logger import Runtime
+import bulldozer.preprocessing.border as border
 
 
 def generate_output_profile_for_mask(input_profile: list,
                                      params: dict) -> dict:
+    """
+        This method is used in the main `detect_border_nodata` 
+        method to provide the output mask profile (binary profile).
+
+        Args:
+            input_profiles: input profile.
+            params: extra parameters.
+        
+        Returns:
+            updated profile.
+    """
     output_profile = input_profile[0]
     output_profile['dtype'] = np.ubyte
     output_profile['nodata'] = None
     return output_profile
 
 
-def border_nodata_computer(input_buffers: list,
+def border_nodata_filter(input_buffers: list,
                            input_profiles: list,
                            filter_parameters: dict) -> np.ndarray:
     """ 
-    This method computes the border nodata mask in a given window of the input DSM.
+        This method is used in the main `detect_border_nodata`.
+        It calls the Cython method to extract border nodata along an axis (vertical or horizontal).
 
     Args:
-        input_buffers: contain just one DSM buffer.
-        filter_parameters:  dictionary containing:
-            nodata value: DSM potentially custom nodata 
-            doTranspose: boolean flag to computer either horizontally or vertically the border no data.
+        input_buffers: input DSM.
+        filter_parameters: dictionary containing nodata value and the axis for the detection (True: vertical or False: horizontal).
+    
     Returns:
-        mask flagging the border nodata areas
+        border nodata mask along specified axis.
     """
     dsm = input_buffers[0]
     nodata = filter_parameters['nodata']
 
     if np.isnan(nodata):
-        dsm = np.nan_to_num(dsm, False, nan=DefaultValues['NODATA'])
-        nodata = DefaultValues['NODATA']
+        dsm = np.nan_to_num(dsm, False, nan=DEFAULT_NODATA)
+        nodata = DEFAULT_NODATA
 
-    # We're using our C++ implementation to perform this computation
-    border_nodata = bnodata.PyBorderNodata()
+    border_nodata = border.PyBorderNodata()
 
     if filter_parameters["doTranspose"]:
         # Vertical border nodata detection case
@@ -49,19 +80,19 @@ def border_nodata_computer(input_buffers: list,
         return border_nodata.build_border_nodata_mask(dsm, nodata, False).astype(np.ubyte)
 
 
-def inner_nodata_computer(input_buffers: list,
+def inner_nodata_filter(input_buffers: list,
                           input_profiles: list,
                           filter_parameters: dict) -> np.ndarray:
     """ 
-    This method computes the inner nodata mask in a given window of the input DSM.
+        This method is used in the main `detect_border_nodata`.
+        It calls the Cython method to extract inner nodata.
 
     Args:
-        inputBuffers: contain one DSM buffer and the border no data buffer.
-        filter_parameters:  dictionary containing:
-            nodata value: DSM potentially custom nodata 
-            doTranspose: boolean flag to computer either horizontally or vertically the border no data.
+        input_buffers: input DSM.
+        filter_parameters: dictionary containing nodata value.
+
     Returns:
-        mask flagging the inner nodata areas
+        inner nodata mask along specified axis.
     """
     
     dsm = input_buffers[0]
@@ -74,13 +105,13 @@ def inner_nodata_computer(input_buffers: list,
 
 
 @Runtime
-def run(dsm_key: str,
+def detect_border_nodata(dsm_key: str,
         eomanager: eom.EOContextManager,
         nodata: float) -> np.ndarray:
     
     """
-    This method builds a mask corresponding to the inner and border nodata values.
-    Those areas correpond to the nodata points on the edges if the DSM is skewed.
+    This method returns the binary masks of the borrder and inner nodata.
+    The border nodata correpond to the nodata points on the edges if the DSM is skewed and the inner nodata correspond to the other nodata points.
 
     Args:
         dsm_path: path to the input DSM.
@@ -88,7 +119,7 @@ def run(dsm_key: str,
         nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
 
     Returns:
-        border nodata boolean masks.
+        border and inner nodata masks.
     """
     # horizontal border no data
     border_nodata_parameters: dict = {
@@ -96,12 +127,12 @@ def run(dsm_key: str,
         'doTranspose': False
     }
     [hor_border_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key],
-                                                                      image_filter=border_nodata_computer,
+                                                                      image_filter=border_nodata_filter,
                                                                       filter_parameters=border_nodata_parameters,
                                                                       generate_output_profiles=generate_output_profile_for_mask,
                                                                       context_manager=eomanager,
                                                                       stable_margin=0,
-                                                                      filter_desc="Build Border NoData Mask",
+                                                                      filter_desc="Horizontal nodata mask processing...",
                                                                       tile_mode=False)
     # vertical border no data
     border_nodata_parameters: dict = {
@@ -109,12 +140,12 @@ def run(dsm_key: str,
         'doTranspose': True
     }
     [border_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key],
-                                                                 image_filter=border_nodata_computer,
+                                                                 image_filter=border_nodata_filter,
                                                                  filter_parameters=border_nodata_parameters,
                                                                  generate_output_profiles=generate_output_profile_for_mask,
                                                                  context_manager=eomanager,
                                                                  stable_margin=0,
-                                                                 filter_desc="Build Border NoData Mask",
+                                                                 filter_desc="Vertical nodata mask processing...",
                                                                  tile_mode=False,
                                                                  strip_along_lines=True)
 
@@ -125,7 +156,7 @@ def run(dsm_key: str,
 
     # inner no data
     [inner_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_mask_key],
-                                                                image_filter=inner_nodata_computer,
+                                                                image_filter=inner_nodata_filter,
                                                                 filter_parameters=border_nodata_parameters,
                                                                 generate_output_profiles=generate_output_profile_for_mask,
                                                                 context_manager=eomanager,
