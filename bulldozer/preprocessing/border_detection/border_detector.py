@@ -24,7 +24,7 @@ This module is used to detect border and inner nodata in the input DSM.
 import numpy as np
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-from bulldozer.utils.helper import DEFAULT_NODATA
+from bulldozer.pipeline.bulldozer_parameters import DEFAULT_NODATA
 from bulldozer.utils.bulldozer_logger import Runtime
 import bulldozer.preprocessing.border as border
 

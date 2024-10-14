@@ -34,7 +34,7 @@ import numpy as np
 import rasterio
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
-from bulldozer.utils.helper import DefaultValues
+from bulldozer.pipeline.bulldozer_parameters import bulldozer_pipeline_params
 from bulldozer._version import __version__
 
 import bulldozer.eoscale.manager as eom
@@ -56,7 +56,7 @@ import bulldozer.postprocessing.fill_pits as fill_pits
 
 def write_quality_mask(keys_to_write: List[str],
                        quality_mask_path: str,
-                       eomanager: eom.EOContextManager):
+                       eomanager: eom.EOContextManager) -> None:
     """
     Writes quality mask. Each key given in the input list will be a specific boolean band in the final quality mask.
 
@@ -68,11 +68,11 @@ def write_quality_mask(keys_to_write: List[str],
     for key in keys_to_write:
         profile = eomanager.get_profile(key)
         # check input mask consistency
-        if profile['dtype'] != np.uint8:
+        if profile["dtype"] != np.uint8:
             BulldozerLogger.log(f"Mask to write dtype is not set to uint8", logging.ERROR)
-        elif profile['count'] != 1:
+        elif profile["count"] != 1:
             BulldozerLogger.log(f"Mask to write has several layers", logging.ERROR)
-        elif profile['nodata'] is not None:
+        elif profile["nodata"] is not None:
             BulldozerLogger.log(f"Mask to write has a nodata value provided", logging.ERROR)
 
         if quality_ds_profile is None:
@@ -88,11 +88,11 @@ def write_quality_mask(keys_to_write: List[str],
             quality_ds_profile["count"] += 1
 
     # write quality mask
-    quality_ds_profile['interleave'] = 'band'
-    quality_ds_profile['driver'] = 'GTiff'
-    quality_ds_profile['nodata'] = 255
+    quality_ds_profile["interleave"] = "band"
+    quality_ds_profile["driver"] = "GTiff"
+    quality_ds_profile["nodata"] = 255
 
-    with rasterio.open(quality_mask_path, 'w', nbits=1, **quality_ds_profile) as q_mask_dataset:
+    with rasterio.open(quality_mask_path, "w", nbits=1, **quality_ds_profile) as q_mask_dataset:
         idx = 1
         for key in keys_to_write:
             q_mask_dataset.write_band(idx, eomanager.shared_resources[key].get_array()[0, :, :])
@@ -100,7 +100,7 @@ def write_quality_mask(keys_to_write: List[str],
 
 
 @Runtime
-def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
+def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
     """
         Main pipeline orchestrator.
         
@@ -132,7 +132,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
     # Warns the user that he/she provides parameters that are not used
-    if params["ignored_params"]:
+    if "ignored_params" in params.keys():
         BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(", ".join(params["ignored_params"])), logging.WARNING)
 
     with eom.EOContextManager(nb_workers=params["nb_max_workers"], tile_mode=True) as eomanager:
@@ -185,7 +185,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         BulldozerLogger.log("End fill dsm", logging.INFO)
 
         # Step 4 - optional: pre anchor mask computation
-        if params['pre_anchor_points_activation']:
+        if params["pre_anchor_points_activation"]:
             # TODO if COS then preprocess_anchorage_mask_key initialised to the COS
             BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
             preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key=filled_dsm_key,
@@ -204,7 +204,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
         # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
         # Knowing that the drape cloth will be run again.
-        if params['post_anchor_points_activation']:
+        if params["post_anchor_points_activation"]:
             BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
             # TODO handle Land use map (convert it to reach: ground=1/else=0)
             cos_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
@@ -225,7 +225,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
             # TODO for steps 4.5: add a conditional statement to activate the second pass
             # Attempt to detect terrain pixels
             if params["dtm_max_error"] is None:
-                params["dtm_max_error"] = 2.0 * params['dsm_z_precision']
+                params["dtm_max_error"] = 2.0 * params["dsm_z_precision"]
             BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
             post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=dtm_key,
                                                               dsm_key=filled_dsm_key,
@@ -243,7 +243,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         else:
             post_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
 
-        if params['pre_anchor_points_activation']:
+        if params["pre_anchor_points_activation"]:
             # Union of post_anchorage_mask with pre_process_anchorage_mask
             post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
             pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
@@ -266,7 +266,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
 
         # Step 6: optional - reverse drape cloth
         # Needs: dtm_key and post_anchors to snap and dsm_max_z for int
-        if params['reverse_drape_cloth_activation']:
+        if params["reverse_drape_cloth_activation"]:
             BulldozerLogger.log("Reverse pass of a drape cloth filter: Starting...", logging.INFO)
             reverse_dtm_key = dtm_extraction.reverse_drape_cloth(filled_dsm_key=filled_dsm_key,
                                                                  first_pass_dtm_key=dtm_key,
@@ -333,33 +333,17 @@ def dsm_to_dtm(config_path: str = None, **kwargs) -> None:
         BulldozerLogger.log("And finally we are done ! It is exhausting to extract a DTM don't you think ?", logging.INFO)
 
 
-def retrieve_params(config_path: str = None, **kwargs):
+def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
     """
         Defines the input parameters based on the provided configuration file (if provided), or the kwargs (CLI or Python API).
-        For the missing parameters the Bulldozer default values are set.
+        For the missing parameters the Bulldozer default values are used.
         
         Args:
             config_path: path to the config file (YAML file expected, refers to the provided template in /conf).
-            **kwargs: list of expected arguments if the user don't provide a configuration file:
-                - dsm_path: str (required)
-                - output_dir: str (required)
-                - nb_max_workers: int (optional, 8 by default)
-                - dsm_z_precision: float (optional, 1.0 by default)
-                - fill_search_radius: int (optional, 100 by default)
-                - max_ground_slope: float (optional, 20.0 % by default)
-                - max_object_size: int (optional, 16 meters by default)
-                - dtm_max_error: float (optional, 2.0 meters by default)
-                - cloth_tension_force: int (optional, 3 by default)
-                - prevent_unhook_iter: int (optional, 10 by default)
-                - num_outer_iter: int (optional, 100 by default)
-                - num_inner_iter: int (optional, 10 by default)
-                - output_resolution: float (optional, null by default)
-                - generate_dhm: bool (optional, True by default)
-                - developer_mode : bool (optional, False by default)
-                - pre_anchor_points_activation : bool (optional, False by default)
-                - post_anchor_points_activation : bool (optional, False by default)
-                - reverse_drape_cloth_activation : bool (optional, False by default)
-                refers to the documentation to understand the use of each parameter.
+            **kwargs: list of expected arguments if the user doesn't provide a configuration file. Refers to the documentation to get the full parameter list.
+            
+        Returns:
+            the dict containing the input parameters.
     """
     bulldozer_params = dict()
     # Config path provided case
@@ -368,46 +352,47 @@ def retrieve_params(config_path: str = None, **kwargs):
 
     if config_path:
         # Configuration file format check
-        if not (config_path.endswith('.yaml') or config_path.endswith('.yml')):
-            raise ValueError('Expected yaml configuration file: \'config_path\' argument should be a path to a Yaml file (here: {})'.format(config_path))
+        if not (config_path.endswith(".yaml") or config_path.endswith(".yml")):
+            raise ValueError("Expected yaml configuration file: \"config_path\" argument should be a path to a Yaml file (here: {})".format(config_path))
 
         # Configuration file existence check
         if not os.path.isfile(config_path):
-            raise FileNotFoundError('The input configuration file \'{}\' doesn\'t exist'.format(config_path))
+            raise FileNotFoundError("The input configuration file \"{}\" doesn't exist".format(config_path))
         
         # Retrieves all the settings
         parser = ConfigParser(False)
         input_params = parser.read(config_path)
-        if 'dsm_path' not in input_params.keys():
-            raise ValueError('No DSM path provided or invalid YAML key syntax. Expected: dsm_path="<path>/<dsm_file>.<[tif/tiff]>"')
-        else:
-            bulldozer_params['dsm_path'] = input_params['dsm_path']
+        if "dsm_path" not in input_params.keys() or input_params["dsm_path"] is None:
+            raise ValueError("No DSM path provided or invalid YAML key syntax. Expected: dsm_path=\"<path>/<dsm_file>.<[tif/tiff]>\"")
+        bulldozer_params["dsm_path"] = input_params["dsm_path"]
 
-        if 'output_dir' not in input_params.keys():
-            raise ValueError('No output diectory path provided or invalid YAML key syntax. Expected: output_dir="<path>")')
-        else:
-            bulldozer_params['output_dir'] = input_params['output_dir']
-    else:
+        if "output_dir" not in input_params.keys() or input_params["output_dir"] is None:
+            raise ValueError("No output directory path provided or invalid YAML key syntax. Expected: output_dir=\"<path>\")")
+        bulldozer_params["output_dir"] = input_params["output_dir"]
+    else :
         # User directly provides the input parameters (kwargs)
         input_params = kwargs
-        if 'dsm_path' not in input_params:
-            raise ValueError('No DSM path provided or invalid argument syntax. Expected: \n\t-Python API: dsm_to_dtm(dsm_path="<path>")\n\t-CLI: bulldozer -in <path>')
-        bulldozer_params['dsm_path'] = input_params['dsm_path']
-        if 'output_dir' not in input_params:
-            raise ValueError('No output diectory path provided or invalid argument syntax. Expected: \n\t-Python API:  dsm_to_dtm(dsm_path="<path>, output_dir="<path>")\n\t-CLI: bulldozer -in <path> -out path')
-        bulldozer_params['output_dir'] = input_params['output_dir']
-
-    # For each optional parameters of Bulldozer check if the user provide a specific value, otherwise retrieve the default value from DefaultValues enum
-    for key, value in DefaultValues.items():
-        bulldozer_params[key.lower()] = input_params[key.lower()] if key.lower() in input_params.keys() else value
+        if not "dsm_path" in input_params or input_params["dsm_path"] is None:
+            raise ValueError("No DSM path provided or invalid argument syntax. Expected: \n\t-Python API: dsm_to_dtm(dsm_path=\"<path>\")\n\t-CLI: bulldozer -dsm <path>")
+        bulldozer_params["dsm_path"] = input_params["dsm_path"]
+        if not "output_dir" in input_params or input_params["output_dir"] is None:
+            raise ValueError("No output directory path provided or invalid argument syntax. Expected: \n\t-Python API:  dsm_to_dtm(dsm_path=\"<path>\", output_dir=\"<path>\")\n\t-CLI: bulldozer -dsm <path> -out <path>")
+        bulldozer_params["output_dir"] = input_params["output_dir"]
     
+    # For each optional parameters of Bulldozer check if the user provide a specific value, otherwise retrieve the default value from bulldozer_pipeline_params
+    for group_name, list_params in bulldozer_pipeline_params.items():
+        if "SETTINGS" in group_name:
+            for param in list_params:
+                bulldozer_params[param.name] = input_params[param.name] if param.name in input_params.keys() else param.default_value
+ 
     # Retrieves the number of CPU if the number of available workers if the user didn't provide a specific value
-    if bulldozer_params['nb_max_workers'] is None:
-        bulldozer_params['nb_max_workers'] = multiprocessing.cpu_count()
+    if bulldozer_params["nb_max_workers"] is None:
+        bulldozer_params["nb_max_workers"] = multiprocessing.cpu_count()
     
-    # Retrieves ignored provided ipunt parameters
-    #TODO remove it when it's empty 
-    bulldozer_params['ignored_params'] = set(input_params.keys()).difference(set([key.lower() for key in DefaultValues.keys()] + ['dsm_path', 'output_dir']))
+    # Retrieves ignored provided parameters (parameters not used by bulldozer)
+    ignored_params = set(input_params.keys()).difference(set(bulldozer_pipeline_params[group][param].name for group in bulldozer_pipeline_params.keys() for param in range(len(bulldozer_pipeline_params[group]))))
+    if len(ignored_params) > 0:
+        bulldozer_params["ignored_params"] = ignored_params
 
     return bulldozer_params
     
@@ -419,20 +404,22 @@ def get_parser():
     Returns:
         the parser.
     """
-    parser = argparse.ArgumentParser(description="Bulldozer")
-
-    parser.add_argument(
-        "--conf", required=True, type=str, help="Bulldozer config file"
-    )
-
-    parser.add_argument(
-        "--version",
-        "-v",
-        action="version",
-        version="%(prog)s {version}".format(version=__version__),
-    )
+    parser = argparse.ArgumentParser(description="Bulldozer: CNES pipeline designed to extract DTM from DSM")
     
-    # TODO add all the parameters
+    parser.add_argument("config_path", type=str, nargs="?", help="Input configuration file")
+    parser.add_argument("-v", "--version", action="version", 
+                        version="%(prog)s {version}".format(version=__version__))
+    
+    for group_name, list_params in bulldozer_pipeline_params.items():
+        group = parser.add_argument_group(description=f"*** {group_name} ***")
+        for param in list_params:
+            if param.param_type == bool:
+                param_action = "store_true" if param.default_value is False else "store_false"
+                group.add_argument(f"-{param.alias}", f"--{param.name}", action=param_action, help=param.description)
+            else:
+                group.add_argument(f"-{param.alias}", f"--{param.name}", type=param.param_type, metavar="VALUE",
+                                   default=param.default_value, action="store", help=param.description)
+
     return parser
 
 
@@ -444,10 +431,7 @@ def bulldozer_cli() -> None:
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
-    # The first parameter should be the path to the configuration file
-    config_path = args.conf
-
-    dsm_to_dtm(config_path)
+    dsm_to_dtm(**vars(args))
 
 
 if __name__ == "__main__":

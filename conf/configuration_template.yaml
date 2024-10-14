@@ -2,16 +2,16 @@
 #       Parameters        #
 #-------------------------#
 # [Required] - Input DSM path (expected format: "<folder_1>/<folder_2>/<file>.<[tif/tiff]>") 
-dsm_path : "/work/scratch/data/lallemd/to_delete/bulldozer_v1.0.2/dsm.tif"
+dsm_path : "input_dsm_path/dsm.tif"
 # [Required] - Output directory path (if the directory doesn't exist, create it)
-output_dir : "/work/scratch/data/lallemd/to_delete/bulldozer_v1.0.2/output"
+output_dir : "output_dir_path"
 
 #-------------------------#
 #         Options         #
 #-------------------------#
 # [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
 generate_dhm : True
-# [Optional] - If null, bulldozer will use the maximum number of available CPU on your system
+# [Optional] - If null, use the maximum number of available CPU core of your system
 nb_max_workers : 8
 # [Optional] - Foreground max object size (in meter)
 max_object_size : 16
@@ -21,8 +21,6 @@ max_object_size : 16
 #-------------------------#
 # [Optional] - planimetric height error of the input DSM
 dsm_z_precision: 1.0
-# [Optional] - If True, keep the intermediate results
-developer_mode : False
 # [Optional] - Exploration window to find a minimum height to fill an uncertain pixel
 fill_search_radius: 100
 # [Optional] - The maximum slope of the terrain of the observed landscape in percentage
@@ -30,6 +28,14 @@ max_ground_slope: 20.0
 # [Optional] - The absolute maximum error of the first pass drape cloth filter between the
 # ground height estimation and the real ground height
 dtm_max_error: 2.0
+# [Optional] - If True, activate pre anchro points
+pre_anchor_points_activation : False
+# [Optional] - If True, activate post anchor points
+post_anchor_points_activation : False
+# [Optional] - If True, activate reverse drape cloth
+reverse_drape_cloth_activation : False
+# [Optional] - If True, keep the intermediate results
+developer_mode : False
 
 #-------------------------#
 # Bulldozer core settings #
