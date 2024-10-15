@@ -173,6 +173,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
         fill_outputs = fill_dsm.run(dsm_key=input_dsm_key,
                                     mask_key=regular_mask_key,
+                                    border_no_data_key=border_no_data_mask_key,
                                     eomanager=eomanager)
         BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
 
@@ -291,7 +292,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 8: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
-        dtm_key, pits_mask_key = fill_pits.run(dtm_key, eomanager)
+        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_no_data_mask_key, eomanager)
         if params["developer_mode"]:
             eomanager.write(key=pits_mask_key, img_path=os.path.join(params["output_dir"], "fill_pits_mask.tif"))
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
@@ -310,6 +311,9 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
             dtm = eomanager.get_array(key=dtm_key)[0, :, :]
             dhm = dsm - dtm
+            BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
+            dhm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
+            BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
                 dhm_out.write(dhm, 1)
             BulldozerLogger.log("Generating DHM: Done.", logging.INFO)

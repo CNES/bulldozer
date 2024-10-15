@@ -16,7 +16,7 @@ def fill_pits_filter(inputBuffers: list,
     """
     Perform pits removal and create pits detection mask.
 
-    :param inputBuffers: DTM buffer
+    :param inputBuffers: DTM buffer, border no data
     :return: a List composed of the processed dtm without pits and the pits mask
     """
     dtm = inputBuffers[0][0, :, :]
@@ -24,6 +24,8 @@ def fill_pits_filter(inputBuffers: list,
 
     # Generates the low frequency DTM
     # bfilters = sf.PyBulldozerFilters()
+    border_mask_expanded = ndimage.binary_dilation(inputBuffers[1][0, :, :], structure=ndimage.generate_binary_structure(2, 2), iterations=round(params["filter_size"]))
+    
     dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
 
     # Retrieves the high frequencies in the input DTM
@@ -31,6 +33,7 @@ def fill_pits_filter(inputBuffers: list,
 
     # Tags the pits
     pits_mask[dtm_HF < 0.] = 1
+    pits_mask[border_mask_expanded] = 0
 
     # fill pits
     #dtm[pits_mask] = dtm_LF
@@ -51,11 +54,13 @@ def fill_pits_profile(input_profiles: list,
 
 
 def run(dtm_key: str,
+        border_no_data_key: str,
         eomanager: eom.EOContextManager):
     """
     Performs the pit removal process using EOScale.
 
     :param dtm_key: the dtm to process key in the eo manager
+    :param border_no_data_key: Border no data
     :return : The processed dtm and the pits mask keys
     """
     resolution = eomanager.get_profile(dtm_key)['transform'][0]
@@ -67,7 +72,7 @@ def run(dtm_key: str,
     }
 
     [filled_dtm_key, pits_mask_key] = \
-        eoexe.n_images_to_m_images_filter(inputs=[dtm_key],
+        eoexe.n_images_to_m_images_filter(inputs=[dtm_key, border_no_data_key],
                                           image_filter=fill_pits_filter,
                                           filter_parameters=fill_pits_parameters,
                                           generate_output_profiles=fill_pits_profile,
