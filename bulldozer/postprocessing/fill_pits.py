@@ -37,7 +37,7 @@ def fill_pits_filter(inputBuffers: list,
 
     # fill pits
     #dtm[pits_mask] = dtm_LF
-    dtm = np.where( (pits_mask) & (dtm != params["nodata"]) & (dtm != np.nan), dtm_LF, dtm)
+    dtm = np.where( (pits_mask) & (dtm != params["nodata"]), dtm_LF, dtm)
 
     return [dtm, pits_mask]
 
