@@ -26,7 +26,6 @@ import numpy
 extensions = [
     Extension( "bulldozer.preprocessing.regular", ["bulldozer/preprocessing/regular_detection/cython/regular.pyx"]),
     Extension( "bulldozer.preprocessing.border", ["bulldozer/preprocessing/border_detection/cython/border.pyx"]),
-    Extension( "bulldozer.preprocessing.anchors_predictor", ["bulldozer/preprocessing/anchorage_prediction/cython/anchorage_prediction.pyx"]),
     Extension( "bulldozer.preprocessing.fill.filltoground", ["bulldozer/preprocessing/fill/cython/toground/filltoground.pyx"], include_dirs=[numpy.get_include()])
 ]
 

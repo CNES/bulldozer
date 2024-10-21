@@ -44,7 +44,6 @@ import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_
 import bulldozer.preprocessing.border_detection.border_detector as preprocess_border_detector
 import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
 import bulldozer.preprocessing.fill.fill_dsm as fill_dsm
-import bulldozer.preprocessing.anchorage_prediction.anchorage_predictor as preprocess_anchors_detector
 
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
@@ -106,7 +105,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             regular_mask_path: str = os.path.join(developer_dir, "regular_mask.tif")
             eomanager.write(key=regular_mask_key, img_path=regular_mask_path, binary=True)
 
-        # Step 2 : Inner and Border no data masks
+        # Step 2: Detect inner and border nodata masks
         #TODO: check if user provide specific noadata value otherwise retrieve the nodata value from DSM profile. If None/null replace it by default value -32768
         nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
 
@@ -142,20 +141,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
 
         BulldozerLogger.log("End fill dsm", logging.INFO)
-
-        # Step 4 - optional: pre anchor mask computation
-        if params["pre_anchor_points_activation"]:
-            # TODO if COS then preprocess_anchorage_mask_key initialised to the COS
-            BulldozerLogger.log("Predicting anchorage points : Starting...", logging.INFO)
-            preprocess_anchorage_mask_key = preprocess_anchors_detector.run(filled_dsm_key=filled_dsm_key,
-                                                                            regular_mask_key=regular_mask_key,
-                                                                            max_object_size=params["max_object_size"],
-                                                                            eomanager=eomanager)
-            BulldozerLogger.log("Predicting anchorage points : Done", logging.INFO)
-
-            if params["developer_mode"]:
-                preprocess_anchorage_mask_path: str = os.path.join(params["output_dir"], "preprocess_anchorage_mask.tif")
-                eomanager.write(key=preprocess_anchorage_mask_key, img_path=preprocess_anchorage_mask_path)
 
         # Step 4.5 - optional: post anchor mask computation (first drape cloth + terrain pixel detection)
         # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
@@ -210,12 +195,12 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
 
         #TODO Copier le même foncionnement pour le COS et anchor points
-        if params["pre_anchor_points_activation"]:
-            # Union of post_anchorage_mask with pre_process_anchorage_mask
-            post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
-            pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
-            np.logical_or(pre_anchors[0, :, :], post_anchors[0, :, :], out=post_anchors[0, :, :])
-            eomanager.release(key=preprocess_anchorage_mask_key)
+        # if params["pre_anchor_points_activation"]:
+        #     # Union of post_anchorage_mask with pre_process_anchorage_mask
+        #     post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
+        #     pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
+        #     np.logical_or(pre_anchors[0, :, :], post_anchors[0, :, :], out=post_anchors[0, :, :])
+        #     eomanager.release(key=preprocess_anchorage_mask_key)
 
 
         # Step 5: Compute final DTM with post processed predicted terrain point
