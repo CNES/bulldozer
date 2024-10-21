@@ -32,8 +32,6 @@ dtm_max_error: 2.0
 pre_anchor_points_activation : False
 # [Optional] - If True, activate post anchor points
 post_anchor_points_activation : False
-# [Optional] - If True, activate reverse drape cloth
-reverse_drape_cloth_activation : False
 # [Optional] - If True, keep the intermediate results
 developer_mode : False
 

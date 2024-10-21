@@ -86,7 +86,6 @@ bulldozer_pipeline_params = {
         BulldozerParam("dtm_max_error", "dtm_error", "DTM max error", "The absolute maximum error of the first pass drape cloth filter between the ground height estimation and the real ground height", float, None),
         BulldozerParam("pre_anchor_points_activation", "pre_anchor", "Pre anchor points", "Activate pre anchro points", bool, False),
         BulldozerParam("post_anchor_points_activation", "post_anchor", "Post anchor points", "Activate post anchor points", bool, False),
-        BulldozerParam("reverse_drape_cloth_activation", "reverse_cloth", "Reverse drape cloth", "Activate reverse drape cloth", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False)
     ],
     "BULLDOZER CORE SETTINGS": [

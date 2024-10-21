@@ -77,29 +77,13 @@ def test_dsm_to_dtm_post_anchor(input_dsm_path, ref_path):
         
         compare_dataset(dtm_path, ref_dtm_path)
 
-
-def test_dsm_to_dtm_reverse_drape(input_dsm_path, ref_path):
-
-    with tempfile.TemporaryDirectory() as directory:
-        bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
-                                      output_dir=directory,
-                                      reverse_drape_cloth_activation=True)
-
-        dtm_path = os.path.join(directory, "final_dtm.tif")
-        ref_dtm_path = os.path.join(ref_path, "final_dtm_reverse.tif")
-        #shutil.copyfile(dtm_path, ref_dtm_path)
-        
-        compare_dataset(dtm_path, ref_dtm_path)
-
-
 def test_dsm_to_dtm_all_option(input_dsm_path, ref_path):
 
     with tempfile.TemporaryDirectory() as directory:
         bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
                                       output_dir=directory,
                                       pre_anchor_points_activation=True,
-                                      post_anchor_points_activation=True,
-                                      reverse_drape_cloth_activation=True)
+                                      post_anchor_points_activation=True)
 
         dtm_path = os.path.join(directory, "final_dtm.tif")
         ref_dtm_path = os.path.join(ref_path, "final_dtm_all_options.tif")

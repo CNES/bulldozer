@@ -271,31 +271,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         if params["developer_mode"]:
             eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
 
-        # Step 6: optional - reverse drape cloth
-        # Needs: dtm_key and post_anchors to snap and dsm_max_z for int
-        if params["reverse_drape_cloth_activation"]:
-            BulldozerLogger.log("Reverse pass of a drape cloth filter: Starting...", logging.INFO)
-            reverse_dtm_key = dtm_extraction.reverse_drape_cloth(filled_dsm_key=filled_dsm_key,
-                                                                 first_pass_dtm_key=dtm_key,
-                                                                 pre_anchorage_mask_key=preprocess_anchorage_mask_key,
-                                                                 post_anchorage_mask_key=post_anchorage_mask_key,
-                                                                 eomanager=eomanager,
-                                                                 max_object_size=params["max_object_size"],
-                                                                 prevent_unhook_iter=params["prevent_unhook_iter"],
-                                                                 spring_tension=params["cloth_tension_force"],
-                                                                 num_outer_iterations=params["num_outer_iter"],
-                                                                 num_inner_iterations=params["num_inner_iter"])
-
-            if params["developer_mode"]:
-                eomanager.write(key=reverse_dtm_key, img_path=os.path.join(params["output_dir"], "reverse_dtm.tif"))
-
-            final_dtm = eomanager.get_array(key=dtm_key)
-            reverse_dtm = eomanager.get_array(key=reverse_dtm_key)
-            final_dtm[0, :, :] += reverse_dtm[0, :, :]
-            final_dtm[0, :, :] /= 2.0
-            eomanager.release(key=reverse_dtm_key)
-            BulldozerLogger.log("Reverse pass of a drape cloth filter: Done...", logging.INFO)
-
         # Step 8: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
         dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_no_data_mask_key, eomanager)
