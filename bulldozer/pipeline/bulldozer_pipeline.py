@@ -205,6 +205,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
         # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
         # Knowing that the drape cloth will be run again.
+        #TODO if cos:
+        #    cos_mask_key = data)
+        #else:
+        #    create image profile à 0
         if params["post_anchor_points_activation"]:
             BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
             # TODO handle Land use map (convert it to reach: ground=1/else=0)
@@ -225,6 +229,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
             # TODO for steps 4.5: add a conditional statement to activate the second pass
             # Attempt to detect terrain pixels
+            #TODO remplacer max error par dsm_z_precision
             if params["dtm_max_error"] is None:
                 params["dtm_max_error"] = 2.0 * params["dsm_z_precision"]
             BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
@@ -244,6 +249,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         else:
             post_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
 
+        #TODO Copier le même foncionnement pour le COS et anchor points
         if params["pre_anchor_points_activation"]:
             # Union of post_anchorage_mask with pre_process_anchorage_mask
             post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
@@ -313,6 +319,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             dhm = dsm - dtm
             BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
             dhm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
+            inner_no_data_mask = eomanager.get_array(key=inner_no_data_mask_key)[0]
+            dhm[inner_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
             BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
                 dhm_out.write(dhm, 1)
@@ -330,7 +338,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         BulldozerLogger.log("write_quality_mask generation: Done", logging.INFO)
 
         # final releases
+        #TODO Release au fur et à mesure?
         eomanager.release(key=dtm_key)
+        eomanager.release(key=inner_no_data_mask_key)
+        eomanager.release(key=border_no_data_mask_key)
         eomanager.release(key=filled_dsm_key)
 
         # And finally we are done ! It is exhausting to extract a DTM dont you think ?
