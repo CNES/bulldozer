@@ -16,16 +16,54 @@ def fill_pits_filter(inputBuffers: list,
     """
     Perform pits removal and create pits detection mask.
 
-    :param inputBuffers: DTM buffer, border no data
+    :param inputBuffers: DTM buffer
     :return: a List composed of the processed dtm without pits and the pits mask
     """
     dtm = inputBuffers[0][0, :, :]
     pits_mask = np.zeros(dtm.shape, dtype=np.ubyte)
 
-    # Generates the low frequency DTM
-    # bfilters = sf.PyBulldozerFilters()
-    border_mask_expanded = ndimage.binary_dilation(inputBuffers[1][0, :, :], structure=ndimage.generate_binary_structure(2, 2), iterations=round(params["filter_size"]))
-    
+    border_mask = inputBuffers[1][0, :, :]
+
+    dtm[border_mask==1] = params["nodata"]
+
+    no_data_mask = np.where(border_mask==1, 0, 1)
+    no_data_mask_new = np.zeros(border_mask.shape, dtype=np.ubyte)
+
+    # Retrieves the first and last rows and columns with valid data
+    valid_rows = np.any(no_data_mask, axis=1)
+    valid_cols = np.any(no_data_mask, axis=0)
+
+    first_valid_row = np.argmax(valid_rows)
+    last_valid_row = len(valid_rows) - 1 - np.argmax(valid_rows[::-1])
+
+    first_valid_col = np.argmax(valid_cols)
+    last_valid_col = len(valid_cols) - 1 - np.argmax(valid_cols[::-1])
+
+    # Computes the first and last rows and columns to fill for the uniform filter
+    first_fill_col = first_valid_col - round(params["filter_size"])-1
+    last_fill_col = last_valid_col + round(params["filter_size"])+1
+    first_fill_row = first_valid_row - round(params["filter_size"])-1
+    last_fill_row = last_valid_row + round(params["filter_size"])+1
+
+    if first_fill_col>=0:
+        no_data_mask[:, :first_fill_col] = 1
+        no_data_mask_new[:, :first_fill_col] = 1
+
+    if last_fill_col<=np.shape(no_data_mask)[0]:
+        no_data_mask[:, last_fill_col:] = 1
+        no_data_mask_new[:, last_fill_col:] = 1
+
+    if first_fill_row>=0:
+        no_data_mask[:first_fill_row, :] = 1
+        no_data_mask_new[:first_fill_row, :] = 1
+
+    if last_fill_row<=np.shape(no_data_mask)[1]:
+        no_data_mask[last_fill_row:, :] = 1
+        no_data_mask_new[last_fill_row:, :] = 1
+
+    # Fill dtm for the uniform filter
+    dtm = fillnodata(dtm, no_data_mask, 250)
+
     dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
 
     # Retrieves the high frequencies in the input DTM
@@ -33,10 +71,9 @@ def fill_pits_filter(inputBuffers: list,
 
     # Tags the pits
     pits_mask[dtm_HF < 0.] = 1
-    pits_mask[border_mask_expanded] = 0
+    pits_mask[border_mask==1] = 0
 
     # fill pits
-    #dtm[pits_mask] = dtm_LF
     dtm = np.where( (pits_mask) & (dtm != params["nodata"]), dtm_LF, dtm)
 
     return [dtm, pits_mask]
