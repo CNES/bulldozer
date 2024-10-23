@@ -49,21 +49,6 @@ def test_dsm_to_dtm(input_dsm_path, ref_path):
         compare_dataset(mask_path, ref_masks_path)
 
 
-def test_dsm_to_dtm_pre_anchor(input_dsm_path, ref_path):
-
-    with tempfile.TemporaryDirectory() as directory:
-        bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
-                                      output_dir=directory,
-                                      pre_anchor_points_activation=True,
-                                      nb_max_workers=16)
-
-        dtm_path = os.path.join(directory, "final_dtm.tif")
-        ref_dtm_path = os.path.join(ref_path, "final_dtm_pre_anchor.tif")
-        #shutil.copyfile(dtm_path, ref_dtm_path)
-
-        compare_dataset(dtm_path, ref_dtm_path)
-
-
 def test_dsm_to_dtm_post_anchor(input_dsm_path, ref_path):
     with tempfile.TemporaryDirectory() as directory:
         bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
@@ -82,7 +67,6 @@ def test_dsm_to_dtm_all_option(input_dsm_path, ref_path):
     with tempfile.TemporaryDirectory() as directory:
         bulldozer_pipeline.dsm_to_dtm(dsm_path=input_dsm_path,
                                       output_dir=directory,
-                                      pre_anchor_points_activation=True,
                                       post_anchor_points_activation=True)
 
         dtm_path = os.path.join(directory, "final_dtm.tif")

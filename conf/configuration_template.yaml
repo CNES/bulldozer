@@ -21,15 +21,11 @@ max_object_size : 16
 #-------------------------#
 # [Optional] - planimetric height error of the input DSM
 dsm_z_precision: 1.0
-# [Optional] - Exploration window to find a minimum height to fill an uncertain pixel
-fill_search_radius: 100
 # [Optional] - The maximum slope of the terrain of the observed landscape in percentage
 max_ground_slope: 20.0
 # [Optional] - The absolute maximum error of the first pass drape cloth filter between the
 # ground height estimation and the real ground height
 dtm_max_error: 2.0
-# [Optional] - If True, activate pre anchro points
-pre_anchor_points_activation : False
 # [Optional] - If True, activate post anchor points
 post_anchor_points_activation : False
 # [Optional] - If True, keep the intermediate results

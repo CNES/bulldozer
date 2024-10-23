@@ -81,10 +81,8 @@ bulldozer_pipeline_params = {
     ],
     "ADVANCED SETTINGS": [
         BulldozerParam("dsm_z_precision", "dsm_z", "DSM altimetric resolution", "Altimetric height resolution of the input DSM", float, 1.0),
-        BulldozerParam("fill_search_radius", "search_rad", "Search radius", "Exploration window to find an elevation to fill an uncertain pixel", int, 100),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%)", "The maximum slope of the terrain of the observed landscape in percentage", float, 20.0),
         BulldozerParam("dtm_max_error", "dtm_error", "DTM max error", "The absolute maximum error of the first pass drape cloth filter between the ground height estimation and the real ground height", float, None),
-        BulldozerParam("pre_anchor_points_activation", "pre_anchor", "Pre anchor points", "Activate pre anchro points", bool, False),
         BulldozerParam("post_anchor_points_activation", "post_anchor", "Post anchor points", "Activate post anchor points", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False)
     ],
