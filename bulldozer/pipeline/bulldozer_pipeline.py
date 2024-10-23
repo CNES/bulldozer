@@ -42,9 +42,7 @@ import bulldozer.eoscale.manager as eom
 # Preprocessing steps of Bulldozer
 import bulldozer.preprocessing.regular_detection.regular_detector as preprocess_regular_detector
 import bulldozer.preprocessing.border_detection.border_detector as preprocess_border_detector
-import bulldozer.preprocessing.fill.prefill_dsm as prefill_dsm
-import bulldozer.preprocessing.fill.fill_dsm as fill_dsm
-
+import bulldozer.preprocessing.dsm_filling.dsm_filler as preprocess_dsm_filler
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
 
@@ -110,8 +108,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
 
         inner_outer_result = preprocess_border_detector.detect_border_nodata(dsm_key=input_dsm_key,
-                                        eomanager=eomanager,
-                                        nodata=nodata_value)
+                                                                             eomanager=eomanager,
+                                                                             nodata=nodata_value)
         
         inner_no_data_mask_key = inner_outer_result["inner_no_data_mask"]
         border_no_data_mask_key = inner_outer_result["border_no_data_mask"]
@@ -127,20 +125,16 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=inner_no_data_mask_key)
 
         # Step 3: Fill the input DSM and compute the uncertainties
-        BulldozerLogger.log("Filling the DSM : Starting...", logging.INFO)
-        fill_outputs = fill_dsm.run(dsm_key=input_dsm_key,
-                                    mask_key=regular_mask_key,
-                                    border_no_data_key=border_no_data_mask_key,
-                                    eomanager=eomanager)
-        BulldozerLogger.log("Filling the DSM and computing the uncertainties: Done", logging.INFO)
+        fill_outputs = preprocess_dsm_filler.fill_dsm(dsm_key=input_dsm_key,
+                                                      regular_key=regular_mask_key,
+                                                      border_no_data_key=border_no_data_mask_key,
+                                                      eomanager=eomanager)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
 
         if params["developer_mode"]:
-            filled_dsm_path: str = os.path.join(params["output_dir"], "filled_dsm.tif")
+            filled_dsm_path: str = os.path.join(developer_dir, "filled_dsm.tif")
             eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
-
-        BulldozerLogger.log("End fill dsm", logging.INFO)
 
         # Step 4.5 - optional: post anchor mask computation (first drape cloth + terrain pixel detection)
         # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
@@ -166,7 +160,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=cos_mask_key)
 
             if params["developer_mode"]:
-                inter_dtm_path: str = os.path.join(params["output_dir"], "dtm_first_pass.tif")
+                inter_dtm_path: str = os.path.join(developer_dir, "dtm_first_pass.tif")
                 eomanager.write(key=dtm_key, img_path=inter_dtm_path)
 
             # TODO for steps 4.5: add a conditional statement to activate the second pass
@@ -186,7 +180,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=dtm_key)
 
             if params["developer_mode"]:
-                output_post_anchorage_path: str = os.path.join(params["output_dir"], "post_anchorage_mask.tif")
+                output_post_anchorage_path: str = os.path.join(developer_dir, "post_anchorage_mask.tif")
                 eomanager.write(key=post_anchorage_mask_key, img_path=output_post_anchorage_path)
         else:
             post_anchorage_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
@@ -217,13 +211,13 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         eomanager.release(key=post_anchorage_mask_key)
 
         if params["developer_mode"]:
-            eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm_second_pass.tif"))
+            eomanager.write(key=dtm_key, img_path=os.path.join(developer_dir, "dtm_second_pass.tif"))
 
         # Step 8: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
         dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_no_data_mask_key, eomanager)
         if params["developer_mode"]:
-            eomanager.write(key=pits_mask_key, img_path=os.path.join(params["output_dir"], "fill_pits_mask.tif"))
+            eomanager.write(key=pits_mask_key, img_path=os.path.join(developer_dir, "fill_pits_mask.tif"))
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
         eomanager.release(key=pits_mask_key)
 
@@ -258,14 +252,9 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         eomanager.release(key=filled_dsm_key)
 
         # write final dtm
-        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "final_dtm.tif"))
+        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm.tif"))
         eomanager.release(key=input_dsm_key)
         eomanager.release(key=dtm_key)
-        
-
-
-        # And finally we are done ! It is exhausting to extract a DTM dont you think ?
-        BulldozerLogger.log("And finally we are done ! It is exhausting to extract a DTM don't you think ?", logging.INFO)
 
 
 def retrieve_params(config_path: str = None, **kwargs: int) -> dict:

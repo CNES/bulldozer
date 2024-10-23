@@ -108,7 +108,6 @@ def inner_nodata_filter(input_buffers: list,
 def detect_border_nodata(dsm_key: str,
         eomanager: eom.EOContextManager,
         nodata: float) -> np.ndarray:
-    
     """
     This method returns the binary masks of the borrder and inner nodata.
     The border nodata correpond to the nodata points on the edges if the DSM is skewed and the inner nodata correspond to the other nodata points.
