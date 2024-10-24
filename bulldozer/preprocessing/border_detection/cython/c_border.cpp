@@ -18,15 +18,12 @@
 #include "c_border.h"
 
 namespace bulldozer {
-        BorderNodata::BorderNodata()
-    {
-    }
 
-    void BorderNodata::buildBorderNodataMask(float * dsm,
-                                            unsigned char * border_nodata_mask,
-                                            unsigned int nb_rows,
-                                            unsigned int nb_cols,
-                                            float nodata_value) {
+    void buildBorderNodataMask(float * dsm,
+                                unsigned char * border_nodata_mask,
+                                unsigned int nb_rows,
+                                unsigned int nb_cols,
+                                float nodata_value) {
 
         unsigned int c;
         for(unsigned int r = 0; r < nb_rows; r++) {

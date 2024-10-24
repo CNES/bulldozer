@@ -48,10 +48,10 @@ cdef class PyRegularAreas:
         """
         pass
 
-    def buildRegularMask(self, 
-                         dsm_strip : np.array, 
-                         slope_threshold : float, 
-                         nodata_value : float) -> np.array:
+    def build_regular_mask(self, 
+                           dsm_strip : np.array, 
+                           slope_threshold : float, 
+                           nodata_value : float) -> np.array:
         """ 
         This method detects regular areas using average slope from the 8 neighbors.
 

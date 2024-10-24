@@ -64,9 +64,9 @@ def regular_mask_filter(input_buffers: list,
     """
     reg_filter = regular.PyRegularAreas()
     # the input_buffers[0] corresponds to the input DSM raster
-    reg_mask = reg_filter.buildRegularMask(input_buffers[0][0, :, :],
-                                           slope_threshold=filter_parameters["regular_slope"],
-                                           nodata_value=filter_parameters["nodata"])
+    reg_mask = reg_filter.build_regular_mask(input_buffers[0][0, :, :],
+                                             slope_threshold=filter_parameters["regular_slope"],
+                                             nodata_value=filter_parameters["nodata"])
     return reg_mask.astype(np.ubyte)     
 
 @Runtime

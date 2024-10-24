@@ -29,19 +29,11 @@
 */
 namespace bulldozer 
 {
-
-    class BorderNodata
-    {
-        public:
-
-            BorderNodata();
-
-            void buildBorderNodataMask(float * dsm_strip,
-                                       unsigned char * disturbance_mask,
-                                       unsigned int nb_rows,
-                                       unsigned int nb_cols,
-                                       float nodata_value);
-    };
+    void buildBorderNodataMask(float * dsm_strip,
+                                unsigned char * disturbance_mask,
+                                unsigned int nb_rows,
+                                unsigned int nb_cols,
+                                float nodata_value);
 
 } // end of namespace bulldozer
 
