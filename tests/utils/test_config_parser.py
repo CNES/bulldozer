@@ -18,6 +18,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Test module for bulldozer/utils/config_parser.py
+"""
 import pytest
 import logging
 import os.path
@@ -29,18 +32,24 @@ from bulldozer.utils.bulldozer_logger import BulldozerLogger
 from bulldozer.utils.config_parser import ConfigParser
     
 @pytest.fixture
-def setup():
+def setup() -> None:
+    """
+        Setup function that will be provide to tests that require an input file          
+    """
     parser = ConfigParser(False)
-    path = Path(__file__).parent / 'data/config_parser/'
+    path = Path(__file__).parent / "data/config_parser/"
     print("\nSetting up resources...")
     # Setting-up ressources
-    yield {'parser': parser, 'path': path}  # Provide the data to the test
+    yield {"parser": parser, "path": path}  # Provide the data to the test
     # Teardown: Clean up resources (if any) after the test
 
-def test_format_check(setup):
+def test_format_check(setup) -> None:
+    """
+        config_parser input file format checker test            
+    """
     # Should raise exception because it's not an YAML file
     path = "test.txt"
-    parser = setup['parser']
+    parser = setup["parser"]
     pytest.raises(ValueError, lambda: parser.read(path))
     # Should raise exception for file not found but should pass the format check
     path = "test.yaml"
@@ -49,19 +58,25 @@ def test_format_check(setup):
     path = "test.yml"
     pytest.raises(FileNotFoundError, lambda:parser.read(path))
 
-def test_existence_check(setup):
-    parser = setup['parser']
+def test_existence_check(setup) -> None:
+    """
+        config_parser input file checker test            
+    """
+    parser = setup["parser"]
     # Should raise FileNotFoundException since the file doesn't exist
-    path = str(setup['path']) + "/test.yaml"
+    path = str(setup["path"]) + "/test.yaml"
     pytest.raises(FileNotFoundError, lambda: parser.read(path))
     
     # Shouldn't raise FileNotFoundException, if it raises an exception the unit test framework will flag this as an error
-    path = str(setup['path']) + "/parser_test.yaml"
+    path = str(setup["path"]) + "/parser_test.yaml"
     parser.read(path)
 
-def test_read(setup):
-    path = str(setup['path']) + "/parser_test.yaml"
-    cfg = setup['parser'].read(path)
+def test_read(setup) -> None:
+    """
+        config_parser read function test with several data types            
+    """
+    path = str(setup["path"]) + "/parser_test.yaml"
+    cfg = setup["parser"].read(path)
     # Check data type
     assert isinstance(cfg, dict)
 
@@ -69,34 +84,37 @@ def test_read(setup):
     assert len(cfg) == 6
 
     # Check string element read
-    assert isinstance(cfg['str_test'], str)
-    assert cfg['str_test'] == 'test'
+    assert isinstance(cfg["str_test"], str)
+    assert cfg["str_test"] == "test"
 
     # Check integer element read
-    assert isinstance(cfg['int_test'], int)
-    assert cfg['int_test'] == 100
+    assert isinstance(cfg["int_test"], int)
+    assert cfg["int_test"] == 100
 
     # Check boolean element read
-    assert isinstance(cfg['boolean_test'], bool)
-    assert cfg['boolean_test'] == True
+    assert isinstance(cfg["boolean_test"], bool)
+    assert cfg["boolean_test"] == True
 
     # Check float sub-element read
-    assert isinstance(cfg['parent'], dict)
-    assert isinstance(cfg['parent']['child'], float)
-    assert cfg['parent']['child'] == 10.3
-    assert cfg['parent']['child2'] == 13
+    assert isinstance(cfg["parent"], dict)
+    assert isinstance(cfg["parent"]["child"], float)
+    assert cfg["parent"]["child"] == 10.3
+    assert cfg["parent"]["child2"] == 13
     
     # Check nan reading
-    assert np.isnan(float(cfg['nan_test']))
-    assert cfg['none_test'] is None
-    assert not cfg['none_test']
+    assert np.isnan(float(cfg["nan_test"]))
+    assert cfg["none_test"] is None
+    assert not cfg["none_test"]
     
-    path = str(setup['path']) + "/wrong_syntax.yaml"
+    path = str(setup["path"]) + "/wrong_syntax.yaml"
     # Should raise YAMLError due to the wrong YAML data format in the file
-    pytest.raises(YAMLError, lambda: setup['parser'].read(path))
+    pytest.raises(YAMLError, lambda: setup["parser"].read(path))
 
 
-def test_verbose():
+def test_verbose() -> None:
+    """
+        Verbosity level test
+    """
     non_verbose_parser = ConfigParser(verbose = False)
     # Check logging level value
     assert non_verbose_parser.level == logging.INFO
