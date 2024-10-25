@@ -26,7 +26,8 @@ import numpy
 extensions = [
     Extension( "bulldozer.preprocessing.regular", ["bulldozer/preprocessing/regular_detection/cython/regular.pyx"]),
     Extension( "bulldozer.preprocessing.border", ["bulldozer/preprocessing/border_detection/cython/border.pyx"]),
-    Extension( "bulldozer.preprocessing.fill", ["bulldozer/preprocessing/dsm_filling/cython/fill.pyx"], include_dirs=[numpy.get_include()])
+    Extension( "bulldozer.preprocessing.fill", ["bulldozer/preprocessing/dsm_filling/cython/fill.pyx"], include_dirs=[numpy.get_include()]),
+    Extension( "bulldozer.springforce", ["bulldozer/dtm_extraction/springforce/springforce.pyx"])
 ]
 
 compiler_directives = { "language_level": 3, "embedsignature": True}

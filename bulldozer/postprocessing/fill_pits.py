@@ -8,6 +8,7 @@ import scipy.ndimage as ndimage
 from bulldozer.utils.bulldozer_logger import BulldozerLogger
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
+import bulldozer.springforce as sf
 
 
 def fill_pits_filter(inputBuffers: list,
@@ -26,46 +27,13 @@ def fill_pits_filter(inputBuffers: list,
 
     dtm[border_mask==1] = params["nodata"]
 
-    no_data_mask = np.where(border_mask==1, 0, 1)
-    no_data_mask_new = np.zeros(border_mask.shape, dtype=np.ubyte)
+    nb_rows = dtm.shape[0]
+    nb_cols = dtm.shape[1]
+    bfilters = sf.PyBulldozerFilters()
 
-    # Retrieves the first and last rows and columns with valid data
-    valid_rows = np.any(no_data_mask, axis=1)
-    valid_cols = np.any(no_data_mask, axis=0)
-
-    first_valid_row = np.argmax(valid_rows)
-    last_valid_row = len(valid_rows) - 1 - np.argmax(valid_rows[::-1])
-
-    first_valid_col = np.argmax(valid_cols)
-    last_valid_col = len(valid_cols) - 1 - np.argmax(valid_cols[::-1])
-
-    # Computes the first and last rows and columns to fill for the uniform filter
-    first_fill_col = first_valid_col - round(params["filter_size"])-1
-    last_fill_col = last_valid_col + round(params["filter_size"])+1
-    first_fill_row = first_valid_row - round(params["filter_size"])-1
-    last_fill_row = last_valid_row + round(params["filter_size"])+1
-
-    if first_fill_col>=0:
-        no_data_mask[:, :first_fill_col] = 1
-        no_data_mask_new[:, :first_fill_col] = 1
-
-    if last_fill_col<=np.shape(no_data_mask)[0]:
-        no_data_mask[:, last_fill_col:] = 1
-        no_data_mask_new[:, last_fill_col:] = 1
-
-    if first_fill_row>=0:
-        no_data_mask[:first_fill_row, :] = 1
-        no_data_mask_new[:first_fill_row, :] = 1
-
-    if last_fill_row<=np.shape(no_data_mask)[1]:
-        no_data_mask[last_fill_row:, :] = 1
-        no_data_mask_new[last_fill_row:, :] = 1
-
-    # Fill dtm for the uniform filter
-    dtm = fillnodata(dtm, no_data_mask, 250)
-
-    dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
-
+    # dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
+    dtm_LF = bfilters.run(dtm, nb_rows, nb_cols, round(params["filter_size"]), params["nodata"])
+    
     # Retrieves the high frequencies in the input DTM
     dtm_HF = dtm - dtm_LF
 
