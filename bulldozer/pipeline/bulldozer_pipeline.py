@@ -34,7 +34,7 @@ import numpy as np
 import rasterio
 from bulldozer.utils.config_parser import ConfigParser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
-from bulldozer.pipeline.bulldozer_parameters import bulldozer_pipeline_params
+from bulldozer.pipeline.bulldozer_parameters import bulldozer_pipeline_params, DEFAULT_NODATA
 from bulldozer._version import __version__
 
 import bulldozer.eoscale.manager as eom
@@ -91,12 +91,24 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         # Open the input dsm that might be noisy and full of nodatas...
         input_dsm_key = eomanager.open_raster(raster_path=params["dsm_path"])
 
+        # Nodata value handling
+        input_nodata = eomanager.get_profile(key=input_dsm_key)["nodata"]
+        if np.isnan(input_nodata):
+            BulldozerLogger.log("The provided nodata value is NaN. Bulldozer will use it's own nodata default value ({}) during the pipeline run (Cython constraint).".format(DEFAULT_NODATA), logging.DEBUG)
+            dsm = eomanager.get_array(key=input_dsm_key)[0]
+            dsm = np.nan_to_num(dsm, copy=False, nan=DEFAULT_NODATA)
+            pipeline_nodata = DEFAULT_NODATA
+        else:
+            pipeline_nodata = input_nodata
+            BulldozerLogger.log("Nodata retrieved and used in the pipeline: {}".format(pipeline_nodata), logging.DEBUG)    
+
         # Step 1: Compute the regular area mask 
         # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm precision 
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params["dsm_z_precision"])
         regular_outputs = preprocess_regular_detector.detect_regular_areas(dsm_key=input_dsm_key,
                                                                            eomanager=eomanager,
-                                                                           regular_slope=regular_slope)
+                                                                           regular_slope=regular_slope,
+                                                                           nodata=pipeline_nodata)
         regular_mask_key = regular_outputs["regular_mask"]
 
         if params["developer_mode"]:
@@ -104,30 +116,28 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.write(key=regular_mask_key, img_path=regular_mask_path, binary=True)
 
         # Step 2: Detect inner and border nodata masks
-        #TODO: check if user provide specific noadata value otherwise retrieve the nodata value from DSM profile. If None/null replace it by default value -32768
-        nodata_value = eomanager.get_profile(key=input_dsm_key)["nodata"]
-
         inner_outer_result = preprocess_border_detector.detect_border_nodata(dsm_key=input_dsm_key,
                                                                              eomanager=eomanager,
-                                                                             nodata=nodata_value)
+                                                                             nodata=pipeline_nodata)
         
-        inner_no_data_mask_key = inner_outer_result["inner_no_data_mask"]
-        border_no_data_mask_key = inner_outer_result["border_no_data_mask"]
+        inner_nodata_mask_key = inner_outer_result["inner_nodata_mask"]
+        border_nodata_mask_key = inner_outer_result["border_nodata_mask"]
 
-        border_no_data_mask_path: str = os.path.join(output_masks_dir, "border_no_data.tif")
-        eomanager.write(key=border_no_data_mask_key, img_path=border_no_data_mask_path, binary=True)
+        border_nodata_mask_path: str = os.path.join(output_masks_dir, "border_nodata.tif")
+        eomanager.write(key=border_nodata_mask_key, img_path=border_nodata_mask_path, binary=True)
 
-        inner_no_data_mask_path: str = os.path.join(output_masks_dir, "inner_no_data.tif")
-        eomanager.write(key=inner_no_data_mask_key, img_path=inner_no_data_mask_path, binary=True)
+        inner_nodata_mask_path: str = os.path.join(output_masks_dir, "inner_nodata.tif")
+        eomanager.write(key=inner_nodata_mask_key, img_path=inner_nodata_mask_path, binary=True)
 
         if not params["generate_dhm"]:
             # Release the memory of inner nodata mask if the DHM is not generated
-            eomanager.release(key=inner_no_data_mask_key)
+            eomanager.release(key=inner_nodata_mask_key)
 
         # Step 3: Fill the input DSM and compute the uncertainties
         fill_outputs = preprocess_dsm_filler.fill_dsm(dsm_key=input_dsm_key,
                                                       regular_key=regular_mask_key,
-                                                      border_no_data_key=border_no_data_mask_key,
+                                                      border_nodata_key=border_nodata_mask_key,
+                                                      nodata=pipeline_nodata,
                                                       eomanager=eomanager)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
@@ -206,7 +216,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
                                              prevent_unhook_iter=params["prevent_unhook_iter"],
                                              spring_tension=params["cloth_tension_force"],
                                              num_outer_iterations=params["num_outer_iter"],
-                                             num_inner_iterations=params["num_inner_iter"])
+                                             num_inner_iterations=params["num_inner_iter"],
+                                             nodata=pipeline_nodata)
         BulldozerLogger.log("Main pass of a drape cloth filter: Done.", logging.INFO)
         eomanager.release(key=post_anchorage_mask_key)
 
@@ -215,17 +226,17 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 8: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
-        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_no_data_mask_key, eomanager)
+        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_nodata_mask_key, eomanager)
         eomanager.write(key=pits_mask_key, img_path=os.path.join(output_masks_dir, "filled_pits.tif"), binary=True)
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
         eomanager.release(key=pits_mask_key)
 
 
-        # last step: Apply border_no_data_mask
+        # last step: Apply border_nodata_mask
         BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
         final_dtm = eomanager.get_array(key=dtm_key)[0]
-        border_no_data_mask = eomanager.get_array(key=border_no_data_mask_key)[0]
-        final_dtm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
+        border_nodata_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
+        final_dtm[border_nodata_mask==1] = input_nodata
         BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
@@ -236,18 +247,18 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             dtm = eomanager.get_array(key=dtm_key)[0, :, :]
             dhm = dsm - dtm
             BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
-            dhm[border_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
-            eomanager.release(key=border_no_data_mask_key)
-            inner_no_data_mask = eomanager.get_array(key=inner_no_data_mask_key)[0]
-            dhm[inner_no_data_mask==1] = eomanager.get_profile(key=dtm_key)["nodata"]
-            eomanager.release(key=inner_no_data_mask_key)
+            dhm[border_nodata_mask==1] = input_nodata
+            eomanager.release(key=border_nodata_mask_key)
+            inner_nodata_mask = eomanager.get_array(key=inner_nodata_mask_key)[0]
+            dhm[inner_nodata_mask==1] = input_nodata
+            eomanager.release(key=inner_nodata_mask_key)
             BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
                 dhm_out.write(dhm, 1)
             BulldozerLogger.log("Generating DHM: Done.", logging.INFO)
         else:
             # if the DHM is not generated, release the border_nodata_mask memory
-            eomanager.release(key=border_no_data_mask_key)
+            eomanager.release(key=border_nodata_mask_key)
         eomanager.release(key=filled_dsm_key)
 
         # write final dtm

@@ -24,7 +24,6 @@ This module is used to detect border and inner nodata in the input DSM.
 import numpy as np
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-from bulldozer.pipeline.bulldozer_parameters import DEFAULT_NODATA
 from bulldozer.utils.bulldozer_logger import Runtime
 import bulldozer.preprocessing.border as border
 
@@ -49,14 +48,15 @@ def generate_output_profile_for_mask(input_profile: list,
 
 
 def border_nodata_filter(input_buffers: list,
-                           input_profiles: list,
-                           filter_parameters: dict) -> np.ndarray:
+                         input_profiles: list,
+                         filter_parameters: dict) -> np.ndarray:
     """ 
         This method is used in the main `detect_border_nodata`.
         It calls the Cython method to extract border nodata along an axis (vertical or horizontal).
 
     Args:
         input_buffers: input DSM.
+        input_profiles: DSM profile.
         filter_parameters: dictionary containing nodata value and the axis for the detection (True: vertical or False: horizontal).
     
     Returns:
@@ -64,10 +64,6 @@ def border_nodata_filter(input_buffers: list,
     """
     dsm = input_buffers[0]
     nodata = filter_parameters['nodata']
-
-    if np.isnan(nodata):
-        dsm = np.nan_to_num(dsm, False, nan=DEFAULT_NODATA)
-        nodata = DEFAULT_NODATA
 
     border_nodata = border.PyBorderNodata()
 
@@ -81,14 +77,15 @@ def border_nodata_filter(input_buffers: list,
 
 
 def inner_nodata_filter(input_buffers: list,
-                          input_profiles: list,
-                          filter_parameters: dict) -> np.ndarray:
+                        input_profiles: list,
+                        filter_parameters: dict) -> np.ndarray:
     """ 
         This method is used in the main `detect_border_nodata`.
         It calls the Cython method to extract inner nodata.
 
     Args:
         input_buffers: input DSM.
+        input_profiles: DSM profile.
         filter_parameters: dictionary containing nodata value.
 
     Returns:
@@ -106,21 +103,21 @@ def inner_nodata_filter(input_buffers: list,
 
 @Runtime
 def detect_border_nodata(dsm_key: str,
-        eomanager: eom.EOContextManager,
-        nodata: float) -> np.ndarray:
+                         eomanager: eom.EOContextManager,
+                         nodata: float) -> np.ndarray:
     """
-    This method returns the binary masks of the borrder and inner nodata.
+    This method returns the binary masks of the border and inner nodata.
     The border nodata correpond to the nodata points on the edges if the DSM is skewed and the inner nodata correspond to the other nodata points.
 
     Args:
-        dsm_path: path to the input DSM.
-        nb_max_workers: number of available workers (multiprocessing).
-        nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
+        dsm_key: path to the input DSM.
+        eomanager: eoscale context manager.
+        nodata: DSM nodata value (if nan, the nodata is set to default value: -32768.0).
 
     Returns:
         border and inner nodata masks.
     """
-    # horizontal border no data
+    # Horizontal border nodata detection
     border_nodata_parameters: dict = {
         'nodata': nodata,
         'doTranspose': False
@@ -133,7 +130,7 @@ def detect_border_nodata(dsm_key: str,
                                                                       stable_margin=0,
                                                                       filter_desc="Horizontal nodata mask processing...",
                                                                       tile_mode=False)
-    # vertical border no data
+    # Vertical border nodata detection
     border_nodata_parameters: dict = {
         'nodata': nodata,
         'doTranspose': True
@@ -153,7 +150,7 @@ def detect_border_nodata(dsm_key: str,
     border_mask[hor_mask == 1] = 1
     eomanager.release(key=hor_border_nodata_mask_key)
 
-    # inner no data
+    # Inner nodata detection
     [inner_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_mask_key],
                                                                 image_filter=inner_nodata_filter,
                                                                 filter_parameters=border_nodata_parameters,
@@ -163,6 +160,6 @@ def detect_border_nodata(dsm_key: str,
                                                                 filter_desc="Build Inner NoData Mask")
 
     return {
-        "border_no_data_mask": border_nodata_mask_key,
-        "inner_no_data_mask": inner_nodata_mask_key
+        "border_nodata_mask": border_nodata_mask_key,
+        "inner_nodata_mask": inner_nodata_mask_key
     }

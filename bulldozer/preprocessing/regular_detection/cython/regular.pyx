@@ -58,7 +58,7 @@ cdef class PyRegularAreas:
         Args:
             dsm_strip: part of the DSM analyzed.
             slope_threshold: if the average slope is lower than this threshold then it's considered as a regular area.
-            no_data_value: nodata value.
+            nodata_value: nodata value.
         Return:
             mask of the regular / disturbed areas.
         """

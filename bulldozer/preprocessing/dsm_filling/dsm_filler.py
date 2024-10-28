@@ -30,33 +30,34 @@ from bulldozer.utils.bulldozer_logger import Runtime
 @Runtime
 def fill_dsm(dsm_key: str,
              regular_key: str,
-             border_no_data_key: str,
+             border_nodata_key: str,
+             nodata: float,
              eomanager: eom.EOContextManager) -> dict:
     """
-    This method returns the binary masks of the borrder and inner nodata.
-    The border nodata correpond to the nodata points on the edges if the DSM is skewed and the inner nodata correspond to the other nodata points.
+    This fills the nodata of the input DSM for the following dtm extraction step.
 
     Args:
-        dsm_path: path to the input DSM.
-        nb_max_workers: number of available workers (multiprocessing).
-        nodata: nodata value of the input DSM. If None, retrieve this value from the input DSM metadata.
+        dsm_key: input DSM.
+        regular_key: regular mask.
+        border_nodata_key: border nodata mask.
+        nodata: DSM nodata value (if nan, the nodata is set to -32768).
+        eomanager: eoscale context manager.
 
     Returns:
-        border and inner nodata masks.
+        the filled DSM.
     """
     #TODO run with eoscale
-    no_data = eomanager.get_profile(dsm_key)['nodata']
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     regular_mask = eomanager.get_array(key=regular_key)[0]
-    border_mask = eomanager.get_array(key=border_no_data_key)[0]
+    border_mask = eomanager.get_array(key=border_nodata_key)[0]
 
     inv_msk = np.logical_not(regular_mask)
     inv_msk[border_mask == 1] = 0
 
     # Fill the inner nodata and not regular areas
-    filled_dsm[:] = fill.iterative_filling(filled_dsm, inv_msk, no_data)[:]
-    # For the border nodata, put an high value to clip the DTM to the ground
-    filled_dsm[filled_dsm == no_data] = 9999
+    filled_dsm[:] = fill.iterative_filling(filled_dsm, inv_msk, nodata)[:]
+    # For the border nodata, put an high value to clip the DTM to the ground during the extraction step
+    filled_dsm[filled_dsm == nodata] = 9999
     
     return {
         "filled_dsm": dsm_key

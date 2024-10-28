@@ -54,13 +54,13 @@ def fill_pits_profile(input_profiles: list,
 
 
 def run(dtm_key: str,
-        border_no_data_key: str,
+        border_nodata_key: str,
         eomanager: eom.EOContextManager):
     """
     Performs the pit removal process using EOScale.
 
     :param dtm_key: the dtm to process key in the eo manager
-    :param border_no_data_key: Border no data
+    :param border_nodata_key: Border no data
     :return : The processed dtm and the pits mask keys
     """
     resolution = eomanager.get_profile(dtm_key)['transform'][0]
@@ -72,7 +72,7 @@ def run(dtm_key: str,
     }
 
     [filled_dtm_key, pits_mask_key] = \
-        eoexe.n_images_to_m_images_filter(inputs=[dtm_key, border_no_data_key],
+        eoexe.n_images_to_m_images_filter(inputs=[dtm_key, border_nodata_key],
                                           image_filter=fill_pits_filter,
                                           filter_parameters=fill_pits_parameters,
                                           generate_output_profiles=fill_pits_profile,

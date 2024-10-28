@@ -148,7 +148,7 @@ def drape_cloth_filter_gradient(input_buffers: list,
     num_inner_iterations: int = params['num_inner_iterations']
     spring_tension: int = params['spring_tension']
     step_scale: float = params['step_scale']
-    no_data: int = params['no_data']
+    nodata: int = params['nodata']
     dtm = copy.deepcopy(input_buffers[0][0, :, :])
     
     dsm = input_buffers[1][0, :, :]
@@ -173,9 +173,9 @@ def drape_cloth_filter_gradient(input_buffers: list,
             np.minimum(dtm, dsm, out=dtm)
 
             # apply spring tension forces (blur the DTM)
-            #dtm[input_buffers[0][0, :, :] == no_data] = np.nan
+            #dtm[input_buffers[0][0, :, :] == nodata] = np.nan
             dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
-            #dtm = bfilters.run(dtm, spring_tension, no_data)
+            #dtm = bfilters.run(dtm, spring_tension, nodata)
 
     # One final intersection check
     dtm[snap_mask] = dsm[snap_mask]
@@ -209,7 +209,8 @@ def drape_cloth(filled_dsm_key: str,
                 prevent_unhook_iter: int,
                 spring_tension: int,
                 num_outer_iterations: int,
-                num_inner_iterations: int) -> str:
+                num_inner_iterations: int,
+                nodata: float) -> str:
     """ """
 
     dsm_profile: dict = eomanager.get_profile(key=filled_dsm_key)
@@ -270,7 +271,7 @@ def drape_cloth(filled_dsm_key: str,
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
             'spring_tension': spring_tension,
-            'no_data': dsm_profile['nodata']
+            'nodata': nodata
         }
 
         drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
