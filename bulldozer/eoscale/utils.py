@@ -1,3 +1,23 @@
+#!/usr/bin/env python
+# coding: utf8
+#
+# Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import rasterio
 import numpy
 from collections import namedtuple
@@ -16,8 +36,7 @@ def rasterio_profile_to_dict(profile: rasterio.DatasetReader.profile) -> dict:
     metadata = dict()
     for key, value in profile.items():
         if key == "crs":
-            # call to to_authority() gives ('EPSG', '32654')
-            metadata['crs'] = int(profile['crs'].to_authority()[1])
+            metadata['crs'] = profile['crs'].to_wkt()
         elif key == "transform":
             metadata['transform_1'] = profile['transform'][0]
             metadata['transform_2'] = profile['transform'][1]
@@ -47,7 +66,7 @@ def dict_to_rasterio_profile(metadata: dict) -> rasterio.DatasetReader.profile :
     rasterio_profile = {}
     for key, value in metadata.items():
         if key == "crs":
-            rasterio_profile["crs"] = rasterio.crs.CRS.from_epsg(metadata['crs'])
+            rasterio_profile["crs"] = rasterio.crs.CRS.from_string(metadata['crs'])
         elif key == "transform_1":
             rasterio_profile['transform'] = rasterio.Affine(metadata['transform_1'], 
                                                             metadata['transform_2'], 
