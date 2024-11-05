@@ -18,10 +18,10 @@ cd bulldozer/
 make install
 
 # Activate the virtual env
-source venv/bin/activate
+source bulldozer_venv/bin/activate
 ```
 
-* Installation with Python and using a [virtualenv](https://virtualenv.pypa.io/en/latest/) (you can also use  [conda](https://docs.conda.io/en/latest/)):
+* Installation with Python and using a [virtualenv](https://virtualenv.pypa.io/en/latest/):
 ```sh
 # Clone the project
 git clone https://github.com/CNES/bulldozer.git

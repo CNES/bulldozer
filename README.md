@@ -33,8 +33,17 @@ cd bulldozer/
 # Create the virtual environment and install required depencies
 make install
 
+<<<<<<< HEAD
 # Activate the virtual env
 source bulldozer_venv/bin/activate
+=======
+As described in the [documentation](https://bulldozer.readthedocs.io/en/stable/run_bulldozer.html), there are many different ways to launch **Bulldozer**. Here are the two most popular:
+
+1. Using the CLI *(Command Line Interface)*
+Run the folowing command after updating the parameters `input_dsm.tif` and `output_dir`:
+```console
+bulldozer -dsm input_dsm.tif -out output_dir
+>>>>>>> c86694c (fix: typo fixed)
 ```
 ## Run **Bulldozer**
 
