@@ -33,6 +33,7 @@ import logging
 import logging.config
 from git import Repo
 from git.exc import InvalidGitRepositoryError
+from bulldozer._version import __version__
 
 class BulldozerLogger:
     """
@@ -146,10 +147,10 @@ class BulldozerLogger:
             info['os_version'] = platform.version()
             
             # Message format
-            init = ("\n"+"#"*17+"\n#   BULLDOZER   #\n"+"#"*17+"\n# <Git info>\n#\t- branch: {}\n#\t- commit SHA: {}"
+            init = ("\n"+"#"*17+"\n#   BULLDOZER   #\n"+"#"*17+"\n# <Bulldozer info>\n#\t- version: {}"+"\n#\n# <Git info>\n#\t- branch: {}\n#\t- commit SHA: {}"
                     "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - processor: {}\n#\t - CPU count: {}\n#\t - RAM: {}"
                     "\n#\n# <OS info>\n#\t - system: {}\n#\t - release: {}\n#\t - version: {}\n"
-                    +"#"*17).format(info['branch'], info['commit_sha'], info['user'], info['node'], 
+                    +"#"*17).format(__version__, info['branch'], info['commit_sha'], info['user'], info['node'], 
                                     info['processor'], info['cpu_count'], info['ram'], info['system'], info['release'], info['os_version'])
             BulldozerLogger.log(init, logging.DEBUG)
 
