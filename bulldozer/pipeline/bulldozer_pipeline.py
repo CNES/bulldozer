@@ -93,7 +93,13 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Nodata value handling
         input_nodata = eomanager.get_profile(key=input_dsm_key)["nodata"]
-        if np.isnan(input_nodata):
+        if input_nodata is None:
+            BulldozerLogger.log("The provided nodata value is None. Bulldozer will use it's own nodata default value ({}) during the pipeline run (Cython constraint).".format(DEFAULT_NODATA), logging.DEBUG)
+            dsm = eomanager.get_array(key=input_dsm_key)[0]
+            dsm[dsm == None] = DEFAULT_NODATA
+            dsm = np.nan_to_num(dsm, copy=False, nan=DEFAULT_NODATA)
+            pipeline_nodata = DEFAULT_NODATA
+        elif np.isnan(input_nodata):
             BulldozerLogger.log("The provided nodata value is NaN. Bulldozer will use it's own nodata default value ({}) during the pipeline run (Cython constraint).".format(DEFAULT_NODATA), logging.DEBUG)
             dsm = eomanager.get_array(key=input_dsm_key)[0]
             dsm = np.nan_to_num(dsm, copy=False, nan=DEFAULT_NODATA)
