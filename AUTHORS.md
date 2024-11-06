@@ -5,7 +5,7 @@ Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 BULLDOZER is licensed under permissive Apache 2 license (See [LICENSE](LICENSE) file).
 The copyright is kept CNES only for long term maintenance ease.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for more details on Contributor License Agrement.
+If you want to contribute, please refers to [CONTRIBUTING.md](CONTRIBUTING.md).
 ]
 This file keeps track of authors contributions.
 
