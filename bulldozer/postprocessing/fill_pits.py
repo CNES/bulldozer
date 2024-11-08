@@ -6,9 +6,9 @@ import numpy as np
 import scipy.ndimage as ndimage
 
 from bulldozer.utils.bulldozer_logger import BulldozerLogger
+from rasterio.fill import fillnodata
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.springforce as sf
 
 
 def fill_pits_filter(inputBuffers: list,
@@ -27,19 +27,18 @@ def fill_pits_filter(inputBuffers: list,
 
     dtm[border_mask==1] = params["nodata"]
 
-    nb_rows = dtm.shape[0]
-    nb_cols = dtm.shape[1]
-    bfilters = sf.PyBulldozerFilters()
+    border_mask = np.where(border_mask==1, 0, 1).astype(np.ubyte)
 
-    # dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
-    dtm_LF = bfilters.run(dtm, nb_rows, nb_cols, round(params["filter_size"]), params["nodata"])
+    dtm = fillnodata(dtm, mask=border_mask, max_search_distance=params["search_distance"])
+
+    dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
     
     # Retrieves the high frequencies in the input DTM
     dtm_HF = dtm - dtm_LF
 
     # Tags the pits
     pits_mask[dtm_HF < 0.] = 1
-    pits_mask[border_mask==1] = 0
+    pits_mask[border_mask==0] = 0
 
     # fill pits
     dtm = np.where( (pits_mask) & (dtm != params["nodata"]), dtm_LF, dtm)
@@ -73,7 +72,8 @@ def run(dtm_key: str,
 
     fill_pits_parameters: dict = {
         "filter_size": filter_size,
-        "nodata": eomanager.get_profile(dtm_key)['nodata']
+        "nodata": eomanager.get_profile(dtm_key)['nodata'],
+        "search_distance": 100
     }
 
     [filled_dtm_key, pits_mask_key] = \
