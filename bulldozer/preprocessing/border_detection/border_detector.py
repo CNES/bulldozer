@@ -147,7 +147,7 @@ def detect_border_nodata(dsm_key: str,
 
     hor_mask = eomanager.get_array(key=hor_border_nodata_mask_key)[0]
     border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
-    border_mask[hor_mask == 1] = 1
+    np.logical_and(hor_mask, border_mask, out=border_mask)
     eomanager.release(key=hor_border_nodata_mask_key)
 
     # Inner nodata detection
