@@ -10,12 +10,7 @@ def post_anchorage_filter(input_buffers: list,
     inter_dtm = input_buffers[0][0, :, :]
     dsm = input_buffers[1][0, :, :]
     regular_mask = input_buffers[2][0, :, :]
-
-    # Putting the height at the Everest should be good :D
-    fake_dsm = np.where(regular_mask > 0, dsm, 9999.0)
-    abs_diff = np.absolute(inter_dtm - fake_dsm)
-    post_anchorage_mask = np.where(abs_diff <= filter_parameters["error_threshold"], 1, 0).astype(np.uint8)
-
+    post_anchorage_mask = np.where(np.logical_and(np.absolute(inter_dtm-dsm) <= filter_parameters["error_threshold"],regular_mask), 1, 0).astype(np.uint8)
     return post_anchorage_mask
 
 
