@@ -80,11 +80,11 @@ bulldozer_pipeline_params = {
         BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use", int, 8)
     ],
     "ADVANCED SETTINGS": [
-        BulldozerParam("dsm_z_precision", "dsm_z", "DSM altimetric resolution", "Altimetric height resolution of the input DSM", float, 1.0),
+        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy", "Altimetric height accuracy of the input DSM", float, 1.0),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%)", "The maximum slope of the terrain of the observed landscape in percentage", float, 20.0),
-        BulldozerParam("dtm_max_error", "dtm_error", "DTM max error", "The absolute maximum error of the first pass drape cloth filter between the ground height estimation and the real ground height", float, None),
         BulldozerParam("post_anchor_points_activation", "post_anchor", "Post anchor points", "Activate post anchor points", bool, False),
-        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False)
+        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification", str, None)
     ],
     "BULLDOZER CORE SETTINGS": [
         BulldozerParam("cloth_tension_force", "tension_force", "Tension force", "Filter size for tension (should be greater than 3)", int, 3),

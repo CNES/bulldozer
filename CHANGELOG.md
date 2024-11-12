@@ -5,10 +5,12 @@
 ### Added
 - Update of the version release policy: increased release frequency to be expected
 - Major method improvment (pseudo-local)
+- Adding anchor points detection (optional)
+- Adding ground mask entry (optional)
 - Parallel computation method updated (EOScale)
-- New nodata filling method
 - Adding CLI with options (in addition to CLI with config file)
 - Adding Makefile
+- New nodata filling method
 - Warning on unused parameters in the configuration
 
 ### Changed
@@ -30,6 +32,7 @@
 - DSM with CRS for which to_authority() returns None => fixed
 - Bulldozer version added in logfile
 - Remove unused documentation until the new version of the official documentation is published
+- Remove unnecessary memory allocation in anchor prediction
 
 ## 1.0.1 New interface (July 2023)
 

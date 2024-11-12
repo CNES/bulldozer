@@ -109,8 +109,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             BulldozerLogger.log("Nodata retrieved and used in the pipeline: {}".format(pipeline_nodata), logging.DEBUG)    
 
         # Step 1: Compute the regular area mask 
-        # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm precision 
-        regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params["dsm_z_precision"])
+        # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm accuracy 
+        regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params["dsm_z_accuracy"])
         regular_outputs = preprocess_regular_detector.detect_regular_areas(dsm_key=input_dsm_key,
                                                                            eomanager=eomanager,
                                                                            regular_slope=regular_slope,
@@ -152,43 +152,39 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             filled_dsm_path: str = os.path.join(developer_dir, "filled_dsm.tif")
             eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
 
-        # Step 4.5 - optional: post anchor mask computation (first drape cloth + terrain pixel detection)
-        # Brute force post process to minimize a side effect of the drape that often underestimates the terrain height
+
+        if params["ground_mask_path"]:
+            ground_mask_key = eomanager.open_raster(params["ground_mask_path"])
+        else:
+            ground_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+
+        # Step 4 [optional]: post anchor mask computation (first drape cloth + terrain pixel detection)
+        # Run a first drape cloth simulation to minimize the underestimation the terrain height (common issue)
         # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as possible terrain points.
         # Knowing that the drape cloth will be run again.
-        #TODO if cos:
-        #    cos_mask_key = data)
-        #else:
-        #    create image profile à 0
         if params["post_anchor_points_activation"]:
             BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
-            # TODO handle Land use map (convert it to reach: ground=1/else=0)
-            cos_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
             dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
-                                                 predicted_anchorage_mask_key=cos_mask_key,
+                                                 ground_mask_key=ground_mask_key,
                                                  eomanager=eomanager,
                                                  max_object_size=params["max_object_size"],
                                                  prevent_unhook_iter=params["prevent_unhook_iter"],
                                                  spring_tension=params["cloth_tension_force"],
                                                  num_outer_iterations=params["num_outer_iter"],
-                                                 num_inner_iterations=params["num_inner_iter"])
+                                                 num_inner_iterations=params["num_inner_iter"],
+                                                 nodata=pipeline_nodata)
             BulldozerLogger.log("First pass of a drape cloth filter: Done.", logging.INFO)
-            eomanager.release(key=cos_mask_key)
 
             if params["developer_mode"]:
                 inter_dtm_path: str = os.path.join(developer_dir, "dtm_first_pass.tif")
                 eomanager.write(key=dtm_key, img_path=inter_dtm_path)
 
-            # TODO for steps 4.5: add a conditional statement to activate the second pass
-            # Attempt to detect terrain pixels
-            #TODO remplacer max error par dsm_z_precision
-            if params["dtm_max_error"] is None:
-                params["dtm_max_error"] = 2.0 * params["dsm_z_precision"]
             BulldozerLogger.log("Post detection of Terrain pixels: Starting...", logging.INFO)
+            #TODO refactor this function
             post_anchorage_output = postprocess_anchorage.run(intermediate_dtm_key=dtm_key,
                                                               dsm_key=filled_dsm_key,
                                                               regular_mask_key=regular_mask_key,
-                                                              error_threshold=params["dtm_max_error"],
+                                                              error_threshold=params["dsm_z_accuracy"],
                                                               eomanager=eomanager)
             BulldozerLogger.log("Post detection of Terrain pixels: Done.", logging.INFO)
 
@@ -203,20 +199,23 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         eomanager.release(key=regular_mask_key)
 
+        # Step 5 [optional]: ground mask
+        if params["ground_mask_path"]:
+            # Union of post_anchorage_mask with ground_mask
+            post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
+            ground_mask = eomanager.get_array(ground_mask_key)
+            np.logical_or(post_anchors[0, :, :], ground_mask[0, :, :], out=post_anchors[0, :, :])
+            if params["developer_mode"]:
+                post_anchorage_mask_with_ground_path: str = os.path.join(developer_dir, "post_anchorage_mask_with_ground.tif")
+                eomanager.write(key=post_anchorage_mask_key, img_path=post_anchorage_mask_with_ground_path, binary=True)
+            BulldozerLogger.log("Ground mask processing: Done.", logging.INFO)
 
-        #TODO Copier le même foncionnement pour le COS et anchor points
-        # if params["pre_anchor_points_activation"]:
-        #     # Union of post_anchorage_mask with pre_process_anchorage_mask
-        #     post_anchors = eomanager.get_array(key=post_anchorage_mask_key)
-        #     pre_anchors = eomanager.get_array(key=preprocess_anchorage_mask_key)
-        #     np.logical_or(pre_anchors[0, :, :], post_anchors[0, :, :], out=post_anchors[0, :, :])
-        #     eomanager.release(key=preprocess_anchorage_mask_key)
+        eomanager.release(key=ground_mask_key)
 
-
-        # Step 5: Compute final DTM with post processed predicted terrain point
+        # Step 6: Compute final DTM with post processed predicted terrain point
         BulldozerLogger.log("Main pass of a drape cloth filter: Starting...", logging.INFO)
         dtm_key = dtm_extraction.drape_cloth(filled_dsm_key=filled_dsm_key,
-                                             predicted_anchorage_mask_key=post_anchorage_mask_key,
+                                             ground_mask_key=post_anchorage_mask_key,
                                              eomanager=eomanager,
                                              max_object_size=params["max_object_size"],
                                              prevent_unhook_iter=params["prevent_unhook_iter"],
@@ -230,13 +229,12 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         if params["developer_mode"]:
             eomanager.write(key=dtm_key, img_path=os.path.join(developer_dir, "dtm_second_pass.tif"))
 
-        # Step 8: remove pits
+        # Step 7: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
         dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_nodata_mask_key, eomanager)
         eomanager.write(key=pits_mask_key, img_path=os.path.join(output_masks_dir, "filled_pits.tif"), binary=True)
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
         eomanager.release(key=pits_mask_key)
-
 
         # last step: Apply border_nodata_mask
         BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
@@ -246,7 +244,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
-        # optional - write final dhm
+        # Step 8[optional]: write final dhm
         if params["generate_dhm"]:
             BulldozerLogger.log("Generating DHM: Starting...", logging.INFO)
             dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
