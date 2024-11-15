@@ -21,5 +21,6 @@ This file keeps track of authors contributions.
 * [Florian Bueno](mailto:florian.bueno@thalesgroup.com) - developer
 * [Celine Raille](mailto:celine.raille@thalesgroup.com) - developer
 * [Rémi Demortier](mailto:remi.demortier@thalesgroup.com) - previous developer
+* [Sophie Lefier](mailto:slefier.anim@gmail.com) - logo designer
 
 Update here with new contributors.
