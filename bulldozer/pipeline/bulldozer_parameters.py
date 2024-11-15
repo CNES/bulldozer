@@ -77,11 +77,11 @@ bulldozer_pipeline_params = {
     "BASIC SETTINGS": [
         BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the DHM (DSM - DTM) in the output directory", bool, False),               
         BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter)", float, 16),
-        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use", int, 8)
+        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use", int, None)
     ],
     "ADVANCED SETTINGS": [
-        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy", "Altimetric height accuracy of the input DSM", float, 1.0),
-        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%)", "The maximum slope of the terrain of the observed landscape in percentage", float, 20.0),
+        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution", float, None),
+        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%)", "Maximum slope of the observed landscape terrain (%)", float, 20.0),
         BulldozerParam("activate_ground_anchors", "ground_anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection)", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False),
         BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification", str, None)

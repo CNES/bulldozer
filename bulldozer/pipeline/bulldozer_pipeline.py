@@ -86,6 +86,11 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
     if "ignored_params" in params.keys():
         BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(", ".join(params["ignored_params"])), logging.WARNING)
 
+    # Retrieves the number of CPU if the number of available workers if the user didn't provide a specific value
+    if params["nb_max_workers"] is None:
+        params["nb_max_workers"] = multiprocessing.cpu_count()
+        BulldozerLogger.log("\"nb_max_workers\" parameter is not set. The default value is used: maximum number of available CPU core ({}).".format(params["nb_max_workers"]), logging.DEBUG)
+
     with eom.EOContextManager(nb_workers=params["nb_max_workers"], tile_mode=True) as eomanager:
 
         # Open the input dsm that might be noisy and full of nodatas...
@@ -107,6 +112,11 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         else:
             pipeline_nodata = input_nodata
             BulldozerLogger.log("Nodata retrieved and used in the pipeline: {}".format(pipeline_nodata), logging.DEBUG)    
+
+        # If the user doesn't provide an DSM altimetric accuracy, set it to default value: 2*planimetric resolution 
+        if params["dsm_z_accuracy"] is None:
+            params["dsm_z_accuracy"] =  2*eomanager.get_profile(key=input_dsm_key)["transform"][0]
+            BulldozerLogger.log("\"dsm_z_accuracy\" parameter is null, used default value: 2*planimetric resolution ({}m).".format(params["dsm_z_accuracy"]), logging.DEBUG)
 
         # Step 1: Compute the regular area mask 
         # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm accuracy 
@@ -318,10 +328,6 @@ def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
         if "SETTINGS" in group_name:
             for param in list_params:
                 bulldozer_params[param.name] = input_params[param.name] if param.name in input_params.keys() else param.default_value
- 
-    # Retrieves the number of CPU if the number of available workers if the user didn't provide a specific value
-    if bulldozer_params["nb_max_workers"] is None:
-        bulldozer_params["nb_max_workers"] = multiprocessing.cpu_count()
     
     # Retrieves ignored provided parameters (parameters not used by bulldozer)
     ignored_params = set(input_params.keys()).difference(set(bulldozer_pipeline_params[group][param].name for group in bulldozer_pipeline_params.keys() for param in range(len(bulldozer_pipeline_params[group]))))
