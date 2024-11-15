@@ -71,17 +71,17 @@ def regular_mask_filter(input_buffers: list,
 
 @Runtime
 def detect_regular_areas(dsm_key: str,
-                         eomanager: eom.EOContextManager,
                          regular_slope: float,
-                         nodata: float) -> dict:
+                         nodata: float,
+                         eomanager: eom.EOContextManager) -> dict:
     """
-        This method returns the binary mask of the regular areas location in the provided DSM.
+        This method returns the binary mask flagging regular areas location in the provided DSM.
 
         Args:
             dsm_key: input DSM.
-            eomanager: eoscale context manager.
             regular_slope: maximum slope of a regular area.
             nodata: DSM nodata value (if nan, the nodata is set to -32768).
+            eomanager: eoscale context manager.
 
         Returns:
             the regular areas mask.
@@ -100,5 +100,5 @@ def detect_regular_areas(dsm_key: str,
                                                            filter_desc="Regular mask processing...")
     
     return {
-        "regular_mask": regular_mask_key
+        "regular_mask_key": regular_mask_key
     }

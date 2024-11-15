@@ -82,7 +82,7 @@ bulldozer_pipeline_params = {
     "ADVANCED SETTINGS": [
         BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy", "Altimetric height accuracy of the input DSM", float, 1.0),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%)", "The maximum slope of the terrain of the observed landscape in percentage", float, 20.0),
-        BulldozerParam("post_anchor_points_activation", "post_anchor", "Post anchor points", "Activate post anchor points", bool, False),
+        BulldozerParam("activate_ground_anchors", "ground_anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection)", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False),
         BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification", str, None)
     ],

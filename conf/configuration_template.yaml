@@ -23,8 +23,8 @@ max_object_size : 16
 dsm_z_accuracy: 1.0
 # [Optional] - The maximum slope of the terrain of the observed landscape in percentage
 max_ground_slope: 20.0
-# [Optional] - If True, activate post anchor points
-post_anchor_points_activation : False
+# [Optional] - If True, activate the ground pre-detection
+activate_ground_anchors : False
 # [Optional] - If True, keep the intermediate results
 developer_mode : False
 # [Optional] - Binary ground mask path (expected format: "<folder_1>/<folder_2>/<mask>.<[tif/tiff]>") 
