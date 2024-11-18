@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/bulldozer_logo.png" width=256>
+    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/logo_with_text.png" width=600>
 
 **Bulldozer, a DTM extraction tool requiring only a DSM as input.**
 

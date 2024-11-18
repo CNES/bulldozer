@@ -11,7 +11,7 @@ output_dir : "output_dir_path"
 #-------------------------#
 # [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
 generate_dhm : True
-# [Optional] - If null, use the maximum number of available CPU core of your system
+# [Optional] - Number of workers. If null, use maximum number of available CPU core 
 nb_max_workers : 8
 # [Optional] - Foreground max object size (in meter)
 max_object_size : 16
@@ -19,17 +19,16 @@ max_object_size : 16
 #-------------------------#
 #    Advanced settings    #
 #-------------------------#
-# [Optional] - planimetric height error of the input DSM
-dsm_z_precision: 1.0
-# [Optional] - The maximum slope of the terrain of the observed landscape in percentage
+# [Optional] - Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution
+dsm_z_accuracy: null
+# [Optional] - Maximum slope of the observed landscape terrain (%)
 max_ground_slope: 20.0
-# [Optional] - The absolute maximum error of the first pass drape cloth filter between the
-# ground height estimation and the real ground height
-dtm_max_error: 2.0
-# [Optional] - If True, activate post anchor points
-post_anchor_points_activation : False
+# [Optional] - If True, activate the ground pre-detection
+activate_ground_anchors : False
 # [Optional] - If True, keep the intermediate results
 developer_mode : False
+# [Optional] - Binary ground mask path (expected format: "<folder_1>/<folder_2>/<mask>.<[tif/tiff]>") 
+ground_mask_path : null
 
 #-------------------------#
 # Bulldozer core settings #

@@ -52,14 +52,14 @@ def allocate_dezoom_dtm(level: int,
 
 def apply_first_tension(dtm_key: str,
                         filled_dsm_key: str,
-                        predicted_anchorage_mask_key: str,
+                        ground_mask_key: str,
                         eomanager: eom.EOContextManager,
                         nb_levels: int,
                         prevent_unhook_iter: int,
                         spring_tension: int) -> None:
     
     dsm = eomanager.get_array(key=filled_dsm_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
-    predicted_anchors = eomanager.get_array(key=predicted_anchorage_mask_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
+    predicted_anchors = eomanager.get_array(key=ground_mask_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
     dtm = eomanager.get_array(key=dtm_key)[0, :, :]
     dtm[:, :] = dsm[:, :]
     snap_mask = predicted_anchors > 0
@@ -203,7 +203,7 @@ def downsample_profile(profile, factor : float) :
 
 
 def drape_cloth(filled_dsm_key: str,
-                predicted_anchorage_mask_key: str,
+                ground_mask_key: str,
                 eomanager: eom.EOContextManager,
                 max_object_size: float,
                 prevent_unhook_iter: int,
@@ -231,7 +231,7 @@ def drape_cloth(filled_dsm_key: str,
 
     apply_first_tension(dtm_key=dtm_key,
                         filled_dsm_key=filled_dsm_key,
-                        predicted_anchorage_mask_key=predicted_anchorage_mask_key,
+                        ground_mask_key=ground_mask_key,
                         eomanager=eomanager,
                         nb_levels=nb_levels,
                         prevent_unhook_iter=prevent_unhook_iter,
@@ -255,9 +255,9 @@ def drape_cloth(filled_dsm_key: str,
             arr_subset=eomanager.get_array(key=filled_dsm_key)[:, ::2**level, ::2**level],
             arr_subset_profile=current_dezoom_profile)
         
-        predicted_anchorage_mask_key_memview = \
-            eomanager.create_memview(key=predicted_anchorage_mask_key,
-                                     arr_subset=eomanager.get_array(key=predicted_anchorage_mask_key)[:, ::2**level, ::2**level],
+        ground_mask_key_memview = \
+            eomanager.create_memview(key=ground_mask_key,
+                                     arr_subset=eomanager.get_array(key=ground_mask_key)[:, ::2**level, ::2**level],
                                      arr_subset_profile=current_dezoom_profile)
         
         if level < nb_levels - 1:
@@ -277,7 +277,7 @@ def drape_cloth(filled_dsm_key: str,
         drape_cloth_parameters['step_scale'] = 1. / (2 ** (nb_levels - level))
 
         [new_dtm_key] = eoexe.n_images_to_m_images_filter(
-            inputs=[dtm_key, filled_dsm_memview, predicted_anchorage_mask_key_memview],
+            inputs=[dtm_key, filled_dsm_memview, ground_mask_key_memview],
             image_filter=drape_cloth_filter_gradient,
             generate_output_profiles=drape_cloth_profiles,
             filter_parameters=drape_cloth_parameters,

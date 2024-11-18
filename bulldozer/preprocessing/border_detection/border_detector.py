@@ -28,8 +28,8 @@ from bulldozer.utils.bulldozer_logger import Runtime
 import bulldozer.preprocessing.border as border
 
 
-def generate_output_profile_for_mask(input_profile: list,
-                                     params: dict) -> dict:
+def nodata_mask_profile(input_profile: list,
+                        params: dict) -> dict:
     """
         This method is used in the main `detect_border_nodata` 
         method to provide the output mask profile (binary profile).
@@ -103,16 +103,16 @@ def inner_nodata_filter(input_buffers: list,
 
 @Runtime
 def detect_border_nodata(dsm_key: str,
-                         eomanager: eom.EOContextManager,
-                         nodata: float) -> np.ndarray:
+                         nodata: float,
+                         eomanager: eom.EOContextManager) -> np.ndarray:
     """
-    This method returns the binary masks of the border and inner nodata.
+    This method returns the binary masks flagging the border and inner nodata.
     The border nodata correpond to the nodata points on the edges if the DSM is skewed and the inner nodata correspond to the other nodata points.
 
     Args:
         dsm_key: path to the input DSM.
-        eomanager: eoscale context manager.
         nodata: DSM nodata value (if nan, the nodata is set to default value: -32768.0).
+        eomanager: eoscale context manager.
 
     Returns:
         border and inner nodata masks.
@@ -125,7 +125,7 @@ def detect_border_nodata(dsm_key: str,
     [hor_border_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key],
                                                                       image_filter=border_nodata_filter,
                                                                       filter_parameters=border_nodata_parameters,
-                                                                      generate_output_profiles=generate_output_profile_for_mask,
+                                                                      generate_output_profiles=nodata_mask_profile,
                                                                       context_manager=eomanager,
                                                                       stable_margin=0,
                                                                       filter_desc="Horizontal nodata mask processing...",
@@ -138,7 +138,7 @@ def detect_border_nodata(dsm_key: str,
     [border_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key],
                                                                  image_filter=border_nodata_filter,
                                                                  filter_parameters=border_nodata_parameters,
-                                                                 generate_output_profiles=generate_output_profile_for_mask,
+                                                                 generate_output_profiles=nodata_mask_profile,
                                                                  context_manager=eomanager,
                                                                  stable_margin=0,
                                                                  filter_desc="Vertical nodata mask processing...",
@@ -147,14 +147,14 @@ def detect_border_nodata(dsm_key: str,
 
     hor_mask = eomanager.get_array(key=hor_border_nodata_mask_key)[0]
     border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
-    border_mask[hor_mask == 1] = 1
+    np.logical_and(hor_mask, border_mask, out=border_mask)
     eomanager.release(key=hor_border_nodata_mask_key)
 
     # Inner nodata detection
     [inner_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_mask_key],
                                                                 image_filter=inner_nodata_filter,
                                                                 filter_parameters=border_nodata_parameters,
-                                                                generate_output_profiles=generate_output_profile_for_mask,
+                                                                generate_output_profiles=nodata_mask_profile,
                                                                 context_manager=eomanager,
                                                                 stable_margin=0,
                                                                 filter_desc="Build Inner NoData Mask")
