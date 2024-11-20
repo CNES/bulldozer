@@ -31,6 +31,7 @@ from bulldozer.utils.bulldozer_logger import Runtime
 def fill_dsm(dsm_key: str,
              regular_key: str,
              border_nodata_key: str,
+             unfilled_dsm_mask_key :str,
              nodata: float,
              eomanager: eom.EOContextManager) -> dict:
     """
@@ -46,19 +47,27 @@ def fill_dsm(dsm_key: str,
     Returns:
         the filled DSM.
     """
-    #TODO run with eoscale
+    #TODO - run with eoscale
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     regular_mask = eomanager.get_array(key=regular_key)[0]
     border_mask = eomanager.get_array(key=border_nodata_key)[0]
 
+    #TODO - Hotfix to remove
+    unfilled_dsm_mask = eomanager.get_array(key=unfilled_dsm_mask_key)[0]
+
     inv_msk = np.logical_not(regular_mask)
     inv_msk[border_mask == 1] = 0
 
+    #TODO - replace for statement by while nodata & iter <  max iter + add a flag : if iter_final == max_iter => replace 9999 values by dsm_nodata in the last step
     # Fill the inner nodata and not regular areas
     filled_dsm[:] = fill.iterative_filling(filled_dsm, inv_msk, nodata)[:]
     # For the border nodata, put an high value to clip the DTM to the ground during the extraction step
+    #TODO - Hotfix to remove
+    unfilled_dsm_mask[filled_dsm == nodata] = 1
     filled_dsm[filled_dsm == nodata] = 9999
+
     
     return {
-        "filled_dsm": dsm_key
+        "filled_dsm" : dsm_key,
+        "unfilled_dsm_mask_key" : unfilled_dsm_mask_key
     }
