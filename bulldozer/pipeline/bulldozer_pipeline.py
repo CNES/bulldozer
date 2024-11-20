@@ -150,13 +150,21 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=inner_nodata_mask_key)
 
         # Step 3: Fill the input DSM and compute the uncertainties
+        #TODO - Hotfix to remove
+        unfilled_dsm_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
         fill_outputs = preprocess_dsm_filler.fill_dsm(dsm_key=input_dsm_key,
                                                       regular_key=regular_mask_key,
                                                       border_nodata_key=border_nodata_mask_key,
+                                                      unfilled_dsm_mask_key=unfilled_dsm_mask_key,
                                                       nodata=pipeline_nodata,
                                                       eomanager=eomanager)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
+
+        #TODO - Hotfix to remove
+        unfilled_dsm_mask_key = fill_outputs["unfilled_dsm_mask_key"]
+        if params["developer_mode"]:
+            eomanager.write(key=unfilled_dsm_mask_key, img_path=os.path.join(developer_dir, "unfilled_dsm_mask.tif"), binary=True)
 
         if params["developer_mode"]:
             filled_dsm_path: str = os.path.join(developer_dir, "filled_dsm.tif")
@@ -209,7 +217,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         if params["ground_mask_path"]:
             # Union of detected ground anchors (ground_anchors_mask) with provided ground_mask
             ground_anchors_mask = eomanager.get_array(key=ground_anchors_mask_key)
-            ground_mask = eomanager.get_array(ground_mask_key)
+            ground_mask = eomanager.get_array(key=ground_mask_key)
             np.logical_or(ground_anchors_mask[0, :, :], ground_mask[0, :, :], out=ground_anchors_mask[0, :, :])
             if params["developer_mode"]:
                 anchorage_mask_with_ground_path: str = os.path.join(developer_dir, "anchorage_mask_with_ground.tif")
@@ -237,7 +245,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 7: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
-        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_nodata_mask_key, eomanager)
+        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_nodata_mask_key, unfilled_dsm_mask_key, eomanager)
         eomanager.write(key=pits_mask_key, img_path=os.path.join(output_masks_dir, "filled_pits.tif"), binary=True)
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
         eomanager.release(key=pits_mask_key)
@@ -247,6 +255,9 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         final_dtm = eomanager.get_array(key=dtm_key)[0]
         border_nodata_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
         final_dtm[border_nodata_mask==1] = input_nodata
+        #TODO - Hotfix to remove
+        unfilled_dsm_mask = eomanager.get_array(key=unfilled_dsm_mask_key)[0]
+        final_dtm[unfilled_dsm_mask==1] = input_nodata
         BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
@@ -261,6 +272,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=border_nodata_mask_key)
             inner_nodata_mask = eomanager.get_array(key=inner_nodata_mask_key)[0]
             dhm[inner_nodata_mask==1] = input_nodata
+            #TODO - Hotfix to remove
+            dhm[unfilled_dsm_mask==1] = input_nodata
             eomanager.release(key=inner_nodata_mask_key)
             BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
@@ -270,6 +283,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             # if the DHM is not generated, release the border_nodata_mask memory
             eomanager.release(key=border_nodata_mask_key)
         eomanager.release(key=filled_dsm_key)
+        #TODO - Hotfix to remove
+        eomanager.release(key=unfilled_dsm_mask_key)
 
         # write final dtm
         eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm.tif"))

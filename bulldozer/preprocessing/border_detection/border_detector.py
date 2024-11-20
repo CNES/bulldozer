@@ -51,7 +51,7 @@ def border_nodata_filter(input_buffers: list,
                          input_profiles: list,
                          filter_parameters: dict) -> np.ndarray:
     """ 
-        This method is used in the main `detect_border_nodata`.
+        This method is used in the main `detect_border_nodata` method.
         It calls the Cython method to extract border nodata along an axis (vertical or horizontal).
 
     Args:
@@ -80,7 +80,7 @@ def inner_nodata_filter(input_buffers: list,
                         input_profiles: list,
                         filter_parameters: dict) -> np.ndarray:
     """ 
-        This method is used in the main `detect_border_nodata`.
+        This method is used in the main `detect_border_nodata` method.
         It calls the Cython method to extract inner nodata.
 
     Args:
