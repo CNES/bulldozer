@@ -1,31 +1,72 @@
 site_name: Bulldozer
+repo_url: https://gitlab.cnes.fr/3d/bulldozer
+repo_name: 3d/bulldozer
 theme: 
-  # Readthedocs template
-  name: readthedocs
+  # MkDocs material template
+  name: material
+  custom_dir: docs/overrides
+  features:
+    - search.suggest # add suggestions while searching the doc
+    - navigation.path
+    - navigation.top # add "go to top of the page" button when scrolling up
+    - content.code.copy # add copy button next to code blocks
+    - content.tabs.link
   # Enables highlighting of source code in code blocks
   highlightjs: true
   hljs_languages:
     - yaml
     - python
   logo: docs/source/images/bulldozer_logo.png
+  icon:
+    repo: fontawesome/brands/gitlab
+  palette: 
+    # Palette toggle for light mode
+    - scheme: default
+      primary: brown
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      primary: brown
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 markdown_extensions:
   - def_list
+  - attr_list
+markdown_extensions:
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
       
-docs_dir: docs/source/
+docs_dir: docs/
 nav:
-    - Home: INTRODUCTION.md
-    - Installation: INSTALLATION.md
+    - Getting Started:
+      - Home: source/INTRODUCTION.md
+      - Installation: source/INSTALLATION.md
     - User guide:
-      - Input data preprocessing: INPUT_DATA_PREPROCESSING.md 
-      - Run Bulldozer: RUN_BULLDOZER.md 
-        - Using CLI: RUN_BULLDOZER_CLI.md 
-        - Using Python API: RUN_BULLDOZER_PYTHON_API.md 
-        - Using QGIS Plugin: RUN_BULLDOZER_QGIS_PLUGIN.md
-      - Configuration: BULLDOZER_OPTIONS.md
+      - Input data preprocessing: source/INPUT_DATA_PREPROCESSING.md 
+      - Run Bulldozer: 
+        - Prerequisite: source/RUN_BULLDOZER.md 
+        - Using CLI: source/RUN_BULLDOZER_CLI.md 
+        - Using Python API: source/RUN_BULLDOZER_PYTHON_API.md 
+        - Using QGIS Plugin: source/RUN_BULLDOZER_QGIS_PLUGIN.md
+      - Configuration: source/tutorials/BULLDOZER_OPTIONS.md
     - Tutorials:
-      - From LiDAR data to DTM: tutorials/FROM_LIDAR_DATA_TO_DTM.md 
-      - From Satellites data to DTM: tutorials/FROM_SATELLITES_DATA_TO_DTM.md
+      - From LiDAR data to DTM: source/tutorials/FROM_LIDAR_DATA_TO_DTM.md 
+      - From Satellites data to DTM: source/tutorials/FROM_SATELLITES_DATA_TO_DTM.md
+    - Software Design:
+      - How it works: source/HOW_IT_WORKS.md
+      - Pipeline: source/PIPELINE.md
+      - Eoscale: source/EOSCALE.md
     - About:
-      - Contributing: CONTRIBUTING.md
-      - Licence: CONTRIBUTING.md
+      - References: source/REFERENCES.md
+      - Contributing: source/CONTRIBUTING.md
+      - License: source/LICENSE.md
+plugins:
+  - search  # make the doc searchable
+  - mkdocs-jupyter:
+      include_source: true # allow downloading jupyter notebooks from the doc

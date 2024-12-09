@@ -1,6 +1,6 @@
 # From LiDAR data to Digital Terrain Model (DTM)
 This section illustrates the use of **Bulldozer** from an open data point cloud to the generation of the corresponding DTM.  
-_You can find the corresponding tutorial in notebook format [here](../notebooks/tutorials/From_Lidar_data_to_DTM.ipynb)._
+_You can find the corresponding tutorial in notebook format [here](../../notebooks/tutorials/From_Lidar_data_to_DTM.ipynb)._
 ___
 
 ## Prerequisites
