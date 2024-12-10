@@ -27,6 +27,44 @@ import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.fill as fill
 from bulldozer.utils.bulldozer_logger import Runtime
 
+def filled_dsm_profile(input_profiles: list,
+                       params: dict) -> dict:
+    """
+        This method is used to provide the output filled dsm profile.
+        
+        Args:
+            input_profiles: input profile.
+            params: extra parameters.
+
+        Returns:
+            updated profile.
+    """
+    output_profile = input_profiles[0]
+    return output_profile
+
+def fill_dsm_method(input_buffers: list,
+                    input_profiles: list, 
+                    filter_parameters: dict) -> np.ndarray:
+    """
+        This method is used in the main `fill_dsm_process`.
+        It calls the Cython method to fill a DMS.
+
+        Args:
+            input_buffers: input DSM, input regular mask.
+            input_profiles: DSM profile.
+            filter_parameters: filter parameters.
+        
+        Returns:
+            regular areas mask.
+    """
+    fill_process = fill.PyFill()
+    # the input_buffers[0] corresponds to the input DSM raster
+    dsm = fill_process.iterative_filling(input_buffers[0][0, :, :],
+                                         input_buffers[1][0, :, :],
+                                         input_buffers[2][0, :, :],
+                                         nodata_value=filter_parameters["nodata"])
+    return dsm.astype(np.float32)  
+
 @Runtime
 def fill_dsm(dsm_key: str,
              regular_key: str,
@@ -47,26 +85,26 @@ def fill_dsm(dsm_key: str,
     Returns:
         the filled DSM.
     """
-    #TODO - run with eoscale
-    filled_dsm = eomanager.get_array(key=dsm_key)[0]
-    regular_mask = eomanager.get_array(key=regular_key)[0]
-    border_mask = eomanager.get_array(key=border_nodata_key)[0]
 
-    #TODO - Hotfix to remove
+    regular_parameters: dict = {
+        "nodata": nodata
+    }
+    
+    [dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, regular_key, border_nodata_key],
+                                                  image_filter=fill_dsm_method,
+                                                  filter_parameters=regular_parameters,
+                                                  generate_output_profiles=filled_dsm_profile,
+                                                  context_manager=eomanager,
+                                                  stable_margin=1,
+                                                  filter_desc="Iterative filling DSM")
+
+    
+    #TODO - HOTFIX to remove
     unfilled_dsm_mask = eomanager.get_array(key=unfilled_dsm_mask_key)[0]
-
-    inv_msk = np.logical_not(regular_mask)
-    inv_msk[border_mask == 1] = 0
-
-    #TODO - replace for statement by while nodata & iter <  max iter + add a flag : if iter_final == max_iter => replace 9999 values by dsm_nodata in the last step
-    # Fill the inner nodata and not regular areas
-    filled_dsm[:] = fill.iterative_filling(filled_dsm, inv_msk, nodata)[:]
-    # For the border nodata, put an high value to clip the DTM to the ground during the extraction step
-    #TODO - Hotfix to remove
+    filled_dsm = eomanager.get_array(key=dsm_key)[0]
     unfilled_dsm_mask[filled_dsm == nodata] = 1
     filled_dsm[filled_dsm == nodata] = 9999
 
-    
     return {
         "filled_dsm" : dsm_key,
         "unfilled_dsm_mask_key" : unfilled_dsm_mask_key
