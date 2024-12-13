@@ -67,7 +67,7 @@ cdef class PyFill:
         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
         cdef unsigned char[::1] disturbance_mask_memview = npAsContiguousArray(disturbance_strip.ravel().astype(np.uint8))
         cdef unsigned char[::1] border_nodata_mask_memview = npAsContiguousArray(border_nodata_strip.ravel().astype(np.uint8))
-        cdef int num_iterations = 200
+        cdef int num_iterations = 800
         # Iterative Filling
         iterativeFilling(&dsm_memview[0], &disturbance_mask_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], nodata_value, num_iterations)
         # Reshape the output DSM. From array to matrix corresponding to the input DSM strip shape

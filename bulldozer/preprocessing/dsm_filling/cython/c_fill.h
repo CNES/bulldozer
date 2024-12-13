@@ -20,6 +20,7 @@
 
 #include <cmath>
 #include <memory>  
+#include <iostream>
 
 /*
     This class is used to build a mask that flags the pixels considered as "regular" meaning not disturbed from an altimetric perspective.
