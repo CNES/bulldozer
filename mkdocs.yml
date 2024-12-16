@@ -2,37 +2,15 @@ site_name: Bulldozer
 repo_url: https://gitlab.cnes.fr/3d/bulldozer
 repo_name: 3d/bulldozer
 theme: 
-  # MkDocs material template
-  name: material
+  # Readthedocs template
+  name: readthedocs
   custom_dir: docs/overrides
-  features:
-    - search.suggest # add suggestions while searching the doc
-    - navigation.path
-    - navigation.top # add "go to top of the page" button when scrolling up
-    - content.code.copy # add copy button next to code blocks
-    - content.tabs.link
   # Enables highlighting of source code in code blocks
   highlightjs: true
   hljs_languages:
     - yaml
     - python
   logo: docs/source/images/bulldozer_logo.png
-  icon:
-    repo: fontawesome/brands/gitlab
-  palette: 
-    # Palette toggle for light mode
-    - scheme: default
-      primary: brown
-      toggle:
-        icon: material/brightness-7 
-        name: Switch to dark mode
-
-    # Palette toggle for dark mode
-    - scheme: slate
-      primary: brown
-      toggle:
-        icon: material/brightness-4
-        name: Switch to light mode
 
 markdown_extensions:
   - def_list
@@ -66,7 +44,17 @@ nav:
       - References: source/REFERENCES.md
       - Contributing: source/CONTRIBUTING.md
       - License: source/LICENSE.md
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - javascripts/extra.js
+
 plugins:
   - search  # make the doc searchable
   - mkdocs-jupyter:
       include_source: true # allow downloading jupyter notebooks from the doc
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
