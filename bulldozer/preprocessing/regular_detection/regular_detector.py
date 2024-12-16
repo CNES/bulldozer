@@ -68,7 +68,7 @@ def regular_mask_filter(input_buffers: list,
     reg_mask = reg_filter.build_regular_mask(input_buffers[0][0, :, :],
                                              slope_threshold=filter_parameters["regular_slope"],
                                              nodata_value=filter_parameters["nodata"])
-    return reg_mask   
+    return reg_mask.astype(np.ubyte)     
 
 @Runtime
 def detect_regular_areas(dsm_key: str,
@@ -102,12 +102,12 @@ def detect_regular_areas(dsm_key: str,
                                                            stable_margin=1,
                                                            filter_desc="Regular mask processing...")
     
-    bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
-    bin_regular_mask = remove_small_objects(bin_regular_mask, min_size=max_object_size**2)
+    regular_mask_bin = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
+    regular_mask_bin = remove_small_objects(regular_mask_bin, min_size=max_object_size**2)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]
-    regular_mask[:] = bin_regular_mask
-
+    regular_mask[:] = regular_mask_bin
+        
     return {
         "regular_mask_key": regular_mask_key
     }
