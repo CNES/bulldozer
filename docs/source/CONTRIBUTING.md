@@ -17,6 +17,7 @@ Any proven or suspected malfunction should be traced in a bug report, the latter
 
 
 In the problem description, be as accurate as possible. Include:
+
 * The procedure used to initialize the environment
 * The incriminated command line or python function
 * The content of the output log file
@@ -33,6 +34,7 @@ The Merge Request shall have a short description of the proposed changes. If it 
 Likewise, if you work on a branch (which is recommended), prefix the branch's name by `xx-` in order to link it to the xx issue.
 
 Classical workflow is :
+
 * Create an issue (or begin from an existing one)
 * Create a Merge Request from the issue: a MR is created accordingly with "WIP:", "Closes xx" and associated "xx-name-issue" branch
 * Hack code from a local working directory
@@ -45,6 +47,7 @@ Classical workflow is :
 # Coding guide
 
 Here are some rules to apply when developing a new functionality:
+
 * Include a comments ratio high enough and use explicit variables names. A comment by code block of several lines is necessary to explain a new functionality.
 * The usage of the `print()` function is forbidden: use the **Bulldozer** internal logger instead.
 * Each new functionality shall have a corresponding test in its module's test file. This test shall, if possible, check the function's outputs and the corresponding degraded cases.

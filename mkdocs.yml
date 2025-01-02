@@ -10,13 +10,13 @@ theme:
   hljs_languages:
     - yaml
     - python
-  logo: docs/source/images/bulldozer_logo.png
+  logo: source/images/bulldozer_logo.png
 
 markdown_extensions:
   - def_list
   - attr_list
 markdown_extensions:
-  - pymdownx.superfences
+  - admonition
   - pymdownx.tabbed:
       alternate_style: true
       

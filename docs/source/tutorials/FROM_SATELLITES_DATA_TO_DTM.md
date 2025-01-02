@@ -12,7 +12,8 @@ To run this tutorial, you require [Python](https://www.python.org/downloads/) (v
 
 In this tutorial, we're going to directly use a pre-computed raster format Digital Surface Model (DSM). To produce a DSM from a pair of satellite images, you can for example use [CARS](https://github.com/CNES/cars), an open-source pipeline developed at CNES.
 
->⚠️ Generating a photogrammetric DSM from satellite images requires at least one pair of images with different acquisition angles over the same area. For example, since SENTINEL-2 data are acquired in Nadir (vertical) configuration, it can't be used to generate a stereoscopic DSM. 
+!!! warning
+    Generating a photogrammetric DSM from satellite images requires at least one pair of images with different acquisition angles over the same area. For example, since SENTINEL-2 data are acquired in Nadir (vertical) configuration, it can't be used to generate a stereoscopic DSM.
 
 
 First of all, we'll start by creating a space to store the data for this tutorial and its associated virtualenv: 
