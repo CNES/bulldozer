@@ -27,6 +27,7 @@ import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.regular as regular
 from bulldozer.utils.bulldozer_logger import Runtime
+from skimage.morphology import remove_small_objects
 
 def regular_mask_profile(input_profiles: list,
                          params: dict) -> dict:
@@ -67,12 +68,13 @@ def regular_mask_filter(input_buffers: list,
     reg_mask = reg_filter.build_regular_mask(input_buffers[0][0, :, :],
                                              slope_threshold=filter_parameters["regular_slope"],
                                              nodata_value=filter_parameters["nodata"])
-    return reg_mask.astype(np.ubyte)     
+    return reg_mask   
 
 @Runtime
 def detect_regular_areas(dsm_key: str,
                          regular_slope: float,
                          nodata: float,
+                         max_object_size: int,
                          eomanager: eom.EOContextManager) -> dict:
     """
         This method returns the binary mask flagging regular areas location in the provided DSM.
@@ -81,6 +83,7 @@ def detect_regular_areas(dsm_key: str,
             dsm_key: input DSM.
             regular_slope: maximum slope of a regular area.
             nodata: DSM nodata value (if nan, the nodata is set to -32768).
+            max_object_size: foreground max object size (in meter)
             eomanager: eoscale context manager.
 
         Returns:
@@ -99,6 +102,12 @@ def detect_regular_areas(dsm_key: str,
                                                            stable_margin=1,
                                                            filter_desc="Regular mask processing...")
     
+    bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
+    bin_regular_mask = remove_small_objects(bin_regular_mask, min_size=max_object_size**2)
+    
+    regular_mask = eomanager.get_array(key=regular_mask_key)[0]
+    regular_mask[:] = bin_regular_mask
+
     return {
         "regular_mask_key": regular_mask_key
     }

@@ -122,9 +122,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived from the altimetric dsm accuracy 
         regular_slope: float = max(float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0, params["dsm_z_accuracy"])
         regular_outputs = preprocess_regular_detector.detect_regular_areas(dsm_key=input_dsm_key,
-                                                                           eomanager=eomanager,
                                                                            regular_slope=regular_slope,
-                                                                           nodata=pipeline_nodata)
+                                                                           nodata=pipeline_nodata,
+                                                                           max_object_size=params["max_object_size"],
+                                                                           eomanager=eomanager)
         regular_mask_key = regular_outputs["regular_mask_key"]
 
         if params["developer_mode"]:
