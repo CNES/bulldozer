@@ -19,7 +19,7 @@
 # limitations under the License.
 
 """
-This module aims to centralize the use of the logger in Bullodzer.
+This module aims to centralize the use of the logger in Bulldozer.
 """
 from __future__ import annotations
 import sys

@@ -22,18 +22,17 @@
     This module is used to postprocess the DTM in order to improve its quality. It required a DTM generated from Bulldozer.
 """
 import os
-from typing import List
 import logging
-from shutil import copy
 from datetime import datetime
-import argparse
 import multiprocessing
 import argcomplete
-from copy import copy
 import numpy as np
 import rasterio
-from bulldozer.utils.config_parser import ConfigParser
+import sys
+# Building arguments parser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.config_parser import ConfigParser
+from bulldozer.utils.bulldozer_argparse import BulldozerArgumentParser, REQ_PARAM_KEY, OPT_PARAM_KEY
 from bulldozer.pipeline.bulldozer_parameters import bulldozer_pipeline_params, DEFAULT_NODATA
 from bulldozer._version import __version__
 
@@ -49,6 +48,7 @@ import bulldozer.extraction.drape_cloth as dtm_extraction
 
 # Postprocessing steps of Bulldozer
 import bulldozer.postprocessing.fill_pits as fill_pits
+
 
 @Runtime
 def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
@@ -80,6 +80,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params["output_dir"], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
+    if config_path:
+        BulldozerLogger.log("YAML config file provided: all other command line arguments are ignored.", logging.INFO)
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
     # Warns the user that he/she provides parameters that are not used
@@ -305,11 +307,13 @@ def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
         Returns:
             the dict containing the input parameters.
     """
+    # Parameters used in the main pipeline
     bulldozer_params = dict()
-    # Config path provided case
 
+    # Parameters provided by the user
     input_params = dict()
 
+    # Config file case
     if config_path:
         # Configuration file format check
         if not (config_path.endswith(".yaml") or config_path.endswith(".yml")):
@@ -322,58 +326,96 @@ def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
         # Retrieves all the settings
         parser = ConfigParser(False)
         input_params = parser.read(config_path)
-        if "dsm_path" not in input_params.keys() or input_params["dsm_path"] is None:
-            raise ValueError("No DSM path provided or invalid YAML key syntax. Expected: dsm_path=\"<path>/<dsm_file>.<[tif/tiff]>\"")
-        bulldozer_params["dsm_path"] = input_params["dsm_path"]
 
-        if "output_dir" not in input_params.keys() or input_params["output_dir"] is None:
-            raise ValueError("No output directory path provided or invalid YAML key syntax. Expected: output_dir=\"<path>\")")
-        bulldozer_params["output_dir"] = input_params["output_dir"]
-    else :
+        # Check if all required parameters are defined
+        for param in bulldozer_pipeline_params[REQ_PARAM_KEY]:
+            if param.name not in input_params.keys() or input_params[param.name] is None:
+                if "path" in param.value_label.lower():
+                    raise ValueError("No {} provided or invalid YAML key syntax. \nExpected: {}=\"{}\"".format(
+                        param.label.lower(), param.name, param.value_label.lower()
+                    ))
+                else:
+                    raise ValueError("No {} provided or invalid YAML key syntax. \nExpected: {}={}".format(
+                        param.label.lower(), param.name, param.value_label.lower()
+                    ))
+            bulldozer_params[param.name] = input_params[param.name]
+
+    else:
         # User directly provides the input parameters (kwargs)
         input_params = kwargs
-        if not "dsm_path" in input_params or input_params["dsm_path"] is None:
-            raise ValueError("No DSM path provided or invalid argument syntax. Expected: \n\t-Python API: dsm_to_dtm(dsm_path=\"<path>\")\n\t-CLI: bulldozer -dsm <path>")
-        bulldozer_params["dsm_path"] = input_params["dsm_path"]
-        if not "output_dir" in input_params or input_params["output_dir"] is None:
-            raise ValueError("No output directory path provided or invalid argument syntax. Expected: \n\t-Python API:  dsm_to_dtm(dsm_path=\"<path>\", output_dir=\"<path>\")\n\t-CLI: bulldozer -dsm <path> -out <path>")
-        bulldozer_params["output_dir"] = input_params["output_dir"]
+
+        # Check if all required parameters are defined
+        errors = ""
+        api_args = []
+        cli_command = "bulldozer"
+        for param in bulldozer_pipeline_params[REQ_PARAM_KEY]:
+            if param.name not in input_params.keys() or input_params[param.name] is None:
+                errors += "No {} provided.\n".format(param.label.lower())
+            else:
+                bulldozer_params[param.name] = input_params[param.name]
+
+            # complete exception message in case of missing parameter
+            cli_command += " -{} {}".format(param.name, param.value_label)
+            if "path" in param.value_label.lower():
+                api_args.append("{}=\"{}\"".format(param.name, param.value_label.lower()))
+            else:
+                api_args.append("{}={}".format(param.name, param.value_label.lower()))
+
+        if errors:
+            raise ValueError("{} Minimum parameters expected: \n\t-Python API: dsm_to_dtm({})\n\t-CLI: {}".format(
+                errors, ", ".join(api_args), cli_command
+            ))
     
     # For each optional parameters of Bulldozer check if the user provide a specific value, otherwise retrieve the default value from bulldozer_pipeline_params
-    for group_name, list_params in bulldozer_pipeline_params.items():
-        if "SETTINGS" in group_name:
-            for param in list_params:
-                bulldozer_params[param.name] = input_params[param.name] if param.name in input_params.keys() else param.default_value
-    
+    for param in bulldozer_pipeline_params[OPT_PARAM_KEY]:
+        bulldozer_params[param.name] = input_params[param.name] if param.name in input_params.keys() else param.default_value
+
     # Retrieves ignored provided parameters (parameters not used by bulldozer)
     ignored_params = set(input_params.keys()).difference(set(bulldozer_pipeline_params[group][param].name for group in bulldozer_pipeline_params.keys() for param in range(len(bulldozer_pipeline_params[group]))))
     if len(ignored_params) > 0:
         bulldozer_params["ignored_params"] = ignored_params
 
     return bulldozer_params
-    
 
-def get_parser():
+
+def get_parser() -> BulldozerArgumentParser:
     """
     Argument parser for Bulldozer (CLI).
 
     Returns:
         the parser.
     """
-    parser = argparse.ArgumentParser(description="Bulldozer: CNES pipeline designed to extract DTM from DSM")
+    short_lu = "-lu"
+    long_lu = "--long_usage"
+
+    # Create parser
+    parser = BulldozerArgumentParser(
+        description="Bulldozer: CNES pipeline designed to extract DTM from DSM",
+        epilog=f"Note: prog {short_lu} or prog {long_lu} for full help.",
+        add_help=False
+    )
+
+    # Global positional argument: nargs to make it optional for launch using CLI parameters
+    parser.add_argument("config_path", type=str, nargs="?", help="Input configuration file.")
     
-    parser.add_argument("config_path", type=str, nargs="?", help="Input configuration file")
-    parser.add_argument("-v", "--version", action="version", 
-                        version="%(prog)s {version}".format(version=__version__))
+    # Common optional arguments for full help and version number
+    parser.add_argument("-h", "--help", action="help", help="Show short help message and exit.")
+    parser.add_argument("-v", "--version", action="version", version="%(prog)s {version}".format(version=__version__),
+                        help="Show program's version number and exit.")
+    parser.add_argument(short_lu, long_lu, action="store_true", help="Show complete help message and exit.")
     
+    # Add bulldozer parameters and split them into required and optional groups
     for group_name, list_params in bulldozer_pipeline_params.items():
-        group = parser.add_argument_group(description=f"*** {group_name} ***")
+        group = parser.add_argument_group(description=group_name)
         for param in list_params:
+            # Add argument with the correct store action
             if param.param_type == bool:
-                param_action = "store_true" if param.default_value is False else "store_false"
-                group.add_argument(f"-{param.alias}", f"--{param.name}", action=param_action, help=param.description)
+                if param.default_value is False:
+                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_true", help=param.description)
+                else:
+                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_false", help=param.description)
             else:
-                group.add_argument(f"-{param.alias}", f"--{param.name}", type=param.param_type, metavar="VALUE",
+                group.add_argument(f"-{param.alias}", f"--{param.name}", type=param.param_type, metavar=param.value_label,
                                    default=param.default_value, action="store", help=param.description)
 
     return parser
@@ -383,10 +425,18 @@ def bulldozer_cli() -> None:
     """
         Call bulldozer main pipeline.
     """
+    # Get arguments
     parser = get_parser()
     argcomplete.autocomplete(parser)
     args = parser.parse_args()
+    
+    # Check for long help then delete long help argument
+    if args.long_usage:
+        parser.print_help(long_help=True)
+        sys.exit(0)
+    del args.long_usage
 
+    # Execute bulldozer pipeline
     dsm_to_dtm(**vars(args))
 
 

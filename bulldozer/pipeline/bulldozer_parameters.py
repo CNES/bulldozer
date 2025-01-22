@@ -19,28 +19,33 @@
 # limitations under the License.
 
 """
-    This module contains the bulldozer pipeline parameter structure and the dict of default parameters.
+    This module contains the Bulldozer pipeline parameter structure and the dictionnary of default parameters.
 """
+
+from bulldozer.utils.bulldozer_argparse import REQ_PARAM_KEY, OPT_PARAM_KEY
 
 # This value is used if the provided nodata value is None or NaN
 DEFAULT_NODATA = -32768.0
+
 
 class BulldozerParam:
     """
         Bulldozer pipeline parameter structure.
     """
 
-    def __init__(self, name: str, alias: str, label: str, description: str, param_type: type, default_value: object) -> None:
+    def __init__(self, name: str, alias: str, label: str, description: str, 
+                 param_type: type, default_value: object, value_label: str = None) -> None:
         """
-        BulldozerParams constructor.
+        BulldozerParam constructor.
         
         Args:
             name: parameter name (key in the yaml configuration file and str in the CLI).
             alias: parameter alias used for the CLI.
             label: parameter label suitable for display (without underscore, etc.).
-            param_type: parameter type (used for QGIS plugin).
+            param_type: parameter type (used in QGIS plugin).
             description: complete parameter description displayed in helper.
             default_value: parameter default value.
+            value_label: parameter value print in helper (e.g. "<value>").
         """
         self.name = name
         self.alias = alias
@@ -48,6 +53,7 @@ class BulldozerParam:
         self.description = description
         self.param_type = param_type
         self.default_value = default_value
+        self.value_label = value_label
     
     def __str__(self) -> str:
         """
@@ -70,26 +76,22 @@ class BulldozerParam:
         
 # This dict store all the Bulldozer parameters description and default values
 bulldozer_pipeline_params = {
-    "REQUIRED (if no config file)": [
-        BulldozerParam("dsm_path", "dsm", "Input DSM", "Input DSM path", str, None),
-        BulldozerParam("output_dir", "out", "Output directory", "Output directory path", str, None)
+    REQ_PARAM_KEY: [
+        BulldozerParam("dsm_path", "dsm", "Input DSM", "Input DSM path.", str, None, "<path/dsm.tif>"),
+        BulldozerParam("output_dir", "out", "Output directory", "Output directory path.", str, None, "<path>")
     ],
-    "BASIC SETTINGS": [
-        BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the DHM (DSM - DTM) in the output directory", bool, False),               
-        BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter)", float, 16),
-        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use", int, None)
-    ],
-    "ADVANCED SETTINGS": [
-        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution", float, None),
-        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%)", float, 20.0),
-        BulldozerParam("activate_ground_anchors", "ground_anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection)", bool, False),
-        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results", bool, False),
-        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification", str, None)
-    ],
-    "BULLDOZER CORE SETTINGS": [
-        BulldozerParam("cloth_tension_force", "tension_force", "Tension force", "Filter size for tension (should be greater than 3)", int, 3),
-        BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations", int, 10),
-        BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations", int, 25),
-        BulldozerParam("num_inner_iter", "inner", "Number of inner iterations", "Number of tension iterations", int, 5)
+    OPT_PARAM_KEY: [
+        BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the Digital Height Model (DHM=DSM-DTM).", bool, False),
+        BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter).", float, 16, "<value>"),
+        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
+        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
+        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
+        BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
+        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<value>"),
+        BulldozerParam("cloth_tension_force", "tension", "Tension force", "Filter size for tension (should be greater than 3).", int, 3, "<value>"),
+        BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
+        BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations.", int, 25, "<value>"),
+        BulldozerParam("num_inner_iter", "inner", "Number of inner iterations", "Number of tension iterations.", int, 5, "<value>")
     ]
 }
