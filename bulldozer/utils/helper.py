@@ -25,6 +25,7 @@ import rasterio
 import numpy as np
 from rasterio import Affine
 
+
 def npAsContiguousArray(arr: np.array) -> np.array:
     """
     This method checks that the input array is contiguous. 
