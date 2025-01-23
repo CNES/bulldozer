@@ -84,6 +84,9 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         BulldozerLogger.log("YAML config file provided: all other command line arguments are ignored.", logging.INFO)
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
+    with rasterio.open(params["dsm_path"]) as ds:
+        BulldozerLogger.log("Input DSM profile: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in ds.profile.items()), logging.DEBUG)
+
     # Warns the user that he/she provides parameters that are not used
     if "ignored_params" in params.keys():
         BulldozerLogger.log("The following input parameters are ignored: {}. \nPlease refer to the documentation for the list of valid parameters.".format(", ".join(params["ignored_params"])), logging.WARNING)
