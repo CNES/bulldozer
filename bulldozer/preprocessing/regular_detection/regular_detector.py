@@ -28,6 +28,7 @@ import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.regular as regular
 from bulldozer.utils.bulldozer_logger import Runtime
 from skimage.morphology import remove_small_objects
+from scipy.ndimage import binary_opening
 
 def regular_mask_profile(input_profiles: list,
                          params: dict) -> dict:
@@ -102,11 +103,12 @@ def detect_regular_areas(dsm_key: str,
                                                            stable_margin=1,
                                                            filter_desc="Regular mask processing...")
     
-    regular_mask_bin = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
-    regular_mask_bin = remove_small_objects(regular_mask_bin, min_size=max_object_size**2)
+    bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
+    # bin_regular_mask = remove_small_objects(bin_regular_mask, min_size=max_object_size**2)
+    binary_opening(bin_regular_mask, iterations=int(max_object_size/4), output=bin_regular_mask)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]
-    regular_mask[:] = regular_mask_bin
+    regular_mask[:] = bin_regular_mask
         
     return {
         "regular_mask_key": regular_mask_key

@@ -20,7 +20,6 @@
 namespace bulldozer {
 
     void iterativeFilling(float * dsm,
-                          unsigned char * disturbance_mask,
                           unsigned char * border_nodata_mask,
                           int dsm_h,
                           int dsm_w,
@@ -39,10 +38,8 @@ namespace bulldozer {
             for (int j = 0; j < dsm_w; ++j) {
                 int idx = i * dsm_w + j;
 
-                // Inversion logique : inv_msk = !(regular_mask)
-                inv_msk[idx] = (disturbance_mask[idx] == 0) ? 1 : 0;
-
-                // Si border_mask[i] == 1, alors inv_msk[i] = 0
+                inv_msk[idx] = (dsm[idx] == nodata_val) ? 1 : 0;
+                
                 if (border_nodata_mask[idx] == 1) {
                     inv_msk[idx] = 0;
                 }
@@ -61,7 +58,6 @@ namespace bulldozer {
                     if (inv_msk[idx] == 1) {
                         hasNoData = true;
                         ++toCorrect;
-                        
                         
                         // Neighborhood checks
                         goods[0] = (i>0 && j>0) && (inv_msk[idx - dsm_w - 1] == 0 && dsm[idx - dsm_w - 1] != nodata_val);

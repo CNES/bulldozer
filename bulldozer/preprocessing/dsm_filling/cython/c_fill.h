@@ -28,7 +28,6 @@
 namespace bulldozer
 {
     void iterativeFilling(float * dsm,
-                          unsigned char * disturbance_mask,
                           unsigned char * border_nodata_mask,
                           int dsm_h,
                           int dsm_w,

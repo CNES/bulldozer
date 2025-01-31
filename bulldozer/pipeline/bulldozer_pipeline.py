@@ -163,7 +163,10 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
                                                       border_nodata_key=border_nodata_mask_key,
                                                       unfilled_dsm_mask_key=unfilled_dsm_mask_key,
                                                       nodata=pipeline_nodata,
-                                                      eomanager=eomanager)
+                                                      max_object_size=params["max_object_size"],
+                                                      eomanager=eomanager,
+                                                      dev_mode=params["developer_mode"],
+                                                      dev_dir=developer_dir)
 
         filled_dsm_key = fill_outputs["filled_dsm"]
 
