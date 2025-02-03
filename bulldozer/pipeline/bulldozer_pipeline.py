@@ -157,6 +157,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 3: Fill the input DSM and compute the uncertainties
         #TODO - Hotfix to remove
+        if not params["developer_mode"]:
+            developer_dir=''
         unfilled_dsm_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
         fill_outputs = preprocess_dsm_filler.fill_dsm(dsm_key=input_dsm_key,
                                                       regular_key=regular_mask_key,
