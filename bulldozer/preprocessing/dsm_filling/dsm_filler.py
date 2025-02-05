@@ -125,7 +125,7 @@ def fill_dsm(dsm_key: str,
              max_object_size: int,
              eomanager: eom.EOContextManager,
              dev_mode: bool,
-             dev_dir: str) -> dict:
+             dev_dir: str = '') -> dict:
     """
     This fills the nodata of the input DSM for the following dtm extraction step.
 

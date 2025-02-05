@@ -77,6 +77,8 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
         developer_dir = os.path.join(params["output_dir"], "developer")
         if not os.path.isdir(developer_dir):
             os.makedirs(developer_dir)
+    else:
+        developer_dir=''
 
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params["output_dir"], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
@@ -157,8 +159,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
         # Step 3: Fill the input DSM and compute the uncertainties
         #TODO - Hotfix to remove
-        if not params["developer_mode"]:
-            developer_dir=''
         unfilled_dsm_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
         fill_outputs = preprocess_dsm_filler.fill_dsm(dsm_key=input_dsm_key,
                                                       regular_key=regular_mask_key,
