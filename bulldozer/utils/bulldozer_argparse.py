@@ -143,7 +143,9 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
                 elif action_group.description == EXPERT_PARAM_KEY:
                     cli_experts_optionals = action_group
                 else:
-                    raise ValueError(f"Unknown group description {action_group.description}: expects {REQ_PARAM_KEY} or {OPT_PARAM_KEY}")
+                    raise ValueError(
+                        f"Unknown group description {action_group.description}: expects {REQ_PARAM_KEY}, {OPT_PARAM_KEY} or {EXPERT_PARAM_KEY}"
+                    )
 
         return cli_positionals, cli_optionals, cli_experts_optionals
     
