@@ -29,6 +29,7 @@ import argcomplete
 import numpy as np
 import rasterio
 import sys
+import argparse
 # Building arguments parser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
 from bulldozer.utils.config_parser import ConfigParser
@@ -80,8 +81,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
 
     logger = BulldozerLogger.getInstance(logger_file_path=os.path.join(params["output_dir"], "bulldozer_" + datetime.now().strftime("%Y-%m-%dT%H:%M:%S") + ".log"))
 
-    if config_path:
-        BulldozerLogger.log("YAML config file provided: all other command line arguments are ignored.", logging.INFO)
     BulldozerLogger.log("Bulldozer input parameters: \n" + "".join("\t- " + str(key) + ": " + str(value) + "\n" for key, value in params.items()), logging.DEBUG)
 
     with rasterio.open(params["dsm_path"]) as ds:
@@ -310,7 +309,7 @@ def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
         Returns:
             the dict containing the input parameters.
     """
-    # Parameters used in the main pipeline
+    # Parameters to use in the main pipeline
     bulldozer_params = dict()
 
     # Parameters provided by the user
@@ -329,6 +328,9 @@ def retrieve_params(config_path: str = None, **kwargs: int) -> dict:
         # Retrieves all the settings
         parser = ConfigParser(False)
         input_params = parser.read(config_path)
+
+        # Overrides with CLI parameters provided by the user
+        input_params.update(kwargs)
 
         # Check if all required parameters are defined
         for param in bulldozer_pipeline_params[REQ_PARAM_KEY]:
@@ -414,12 +416,12 @@ def get_parser() -> BulldozerArgumentParser:
             # Add argument with the correct store action
             if param.param_type == bool:
                 if param.default_value is False:
-                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_true", help=param.description)
+                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_true", default=argparse.SUPPRESS, help=param.description)
                 else:
-                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_false", help=param.description)
+                    group.add_argument(f"-{param.alias}", f"--{param.name}", action="store_false", default=argparse.SUPPRESS, help=param.description)
             else:
                 group.add_argument(f"-{param.alias}", f"--{param.name}", type=param.param_type, metavar=param.value_label,
-                                   default=param.default_value, action="store", help=param.description)
+                                   action="store", default=argparse.SUPPRESS, help=param.description)
 
     return parser
 
@@ -430,7 +432,6 @@ def bulldozer_cli() -> None:
     """
     # Get arguments
     parser = get_parser()
-    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     
     # Check for long help then delete long help argument

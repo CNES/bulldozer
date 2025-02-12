@@ -214,6 +214,10 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
             formatter.add_text(self._optionals.description)
             formatter.add_arguments(self._optionals._group_actions)
             formatter.end_section()
+
+        # epilog
+        if add_epilog:
+            formatter.add_text("If extra arguments are provided it overrides the value of the configuration file.")
         
         formatter.add_text("---------------------------------")
         
