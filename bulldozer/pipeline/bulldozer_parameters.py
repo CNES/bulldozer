@@ -22,7 +22,7 @@
     This module contains the Bulldozer pipeline parameter structure and the dictionnary of default parameters.
 """
 
-from bulldozer.utils.bulldozer_argparse import REQ_PARAM_KEY, OPT_PARAM_KEY
+from bulldozer.utils.bulldozer_argparse import REQ_PARAM_KEY, OPT_PARAM_KEY, EXPERT_PARAM_KEY
 
 # This value is used if the provided nodata value is None or NaN
 DEFAULT_NODATA = -32768.0
@@ -84,11 +84,14 @@ bulldozer_pipeline_params = {
         BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the Digital Height Model (DHM=DSM-DTM).", bool, False),
         BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter).", float, 16, "<value>"),
         BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
-        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
-        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
         BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False),
-        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<value>"),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<value>")
+
+    ],
+    EXPERT_PARAM_KEY: [
+        BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
+        BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
         BulldozerParam("cloth_tension_force", "tension", "Tension force", "Filter size for tension (should be greater than 3).", int, 3, "<value>"),
         BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
         BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations.", int, 25, "<value>"),
