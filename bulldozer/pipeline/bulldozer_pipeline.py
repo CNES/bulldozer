@@ -29,6 +29,7 @@ import numpy as np
 import rasterio
 import sys
 import argparse
+import argcomplete
 # Building arguments parser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
 from bulldozer.utils.config_parser import ConfigParser
@@ -434,6 +435,7 @@ def bulldozer_cli() -> None:
     """
     # Get arguments
     parser = get_parser()
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
     
     # Check for long help then delete long help argument
