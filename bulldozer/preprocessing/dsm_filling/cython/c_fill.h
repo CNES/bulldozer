@@ -23,7 +23,7 @@
 #include <iostream>
 
 /*
-    This class is used to build a mask that flags the pixels considered as "regular" meaning not disturbed from an altimetric perspective.
+    This class is used to fill the dsm
 */
 namespace bulldozer
 {
@@ -32,7 +32,8 @@ namespace bulldozer
                           int dsm_h,
                           int dsm_w,
                           float nodata_val,
-                          int num_iterations);
+                          int num_iterations,
+                          int nbgoodNeighbor);
 
 } // end of namespace bulldozer
 

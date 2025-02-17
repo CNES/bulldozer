@@ -24,7 +24,8 @@ namespace bulldozer {
                           int dsm_h,
                           int dsm_w,
                           float nodata_val,
-                          int num_iterations) {
+                          int num_iterations,
+                          int nbgoodNeighbor) {
 
         double diag_weight = 1 / sqrt(2);
         int corrected = 0, toCorrect = 0, nbPass = 0;
@@ -71,7 +72,7 @@ namespace bulldozer {
                         
                         int goodNeighbor = goods[0] + goods[1] + goods[2] + goods[3] + goods[4] + goods[5] + goods[6] + goods[7];
 
-                        if (goodNeighbor >= 3) {
+                        if (goodNeighbor >= nbgoodNeighbor) {
                             ++corrected;
 
                             weights[0] = goods[0] * diag_weight;

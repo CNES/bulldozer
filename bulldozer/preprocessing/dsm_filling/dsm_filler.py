@@ -26,7 +26,7 @@ import rasterio
 import os
 
 from rasterio import Affine
-from scipy.ndimage import zoom
+from scipy.ndimage import zoom, binary_erosion
 
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
@@ -69,7 +69,8 @@ def fill_dsm_method(input_buffers: list,
     dsm = fill_process.iterative_filling(input_buffers[0][0, :, :],
                                          input_buffers[1][0, :, :],
                                          nodata_value=filter_parameters["nodata"],
-                                         nb_it=filter_parameters["it"])
+                                         nb_it=filter_parameters["it"],
+                                         nb_goodneighbors=filter_parameters["goodneighbors"])
     
     return [dsm.astype(np.float32)]
 
@@ -86,34 +87,6 @@ def downsample_profile(profile, factor : float) :
     })
     
     return newprofile
-
-
-# def next_power_of_2(x: int) -> int:
-#     """
-#     This function returns the smallest power of 2 that is greater than or equal to a given non-negative integer x.
-
-#     Args:
-#         x : non negative integer.
-
-#     Returns:
-#         the corresponding power index power (2**index >= x).
-#     """
-#     return 0 if x == 0 else (1 << (x-1).bit_length()).bit_length() - 1
-
-
-# def get_max_pyramid_level(max_object_size_pixels: float) -> int :
-#     """ 
-#         Given the max size of an object on the ground,
-#         this method computes the max level of the pyramid
-#         for drape cloth algorithm
-#     """
-#     power = next_power_of_2(int(max_object_size_pixels))
-    
-#     # Take the closest power to the max object size
-#     if abs(2**(power-1) - max_object_size_pixels) < abs(2**power - max_object_size_pixels):
-#         power -= 1
-
-#     return power
 
 
 @Runtime
@@ -141,24 +114,25 @@ def fill_dsm(dsm_key: str,
     Returns:
         the filled DSM.
     """
-
+    
+    if dev_mode:
+        dev_dir += "/filling_DSM/"
+        if not os.path.isdir(dev_dir):
+            os.makedirs(dev_dir)
+            
+    dsm_resolution = eomanager.get_profile(key=dsm_key)['transform'][0]
+    
+    # Setting parameters for the dsm filling method
     regular_parameters: dict = {
         "nodata": nodata,
-        "it": max_object_size
+        "it": int(np.floor((max_object_size / dsm_resolution) / 2)), # Nb iterations = max_object_size (px) / 2 (allow to fill a hole between two points max_object_size apart) 
+        "goodneighbors": 3
     }
+    nb_max_filling_it = 10 # Setting max iterations of the dsm filling method
+    nb_levels = int(np.floor(regular_parameters["it"] * (2-np.sqrt(2)))) # sqrt(2) to handle the diagonal neighbors
+    it = 1
     
-    dsm_profile = eomanager.get_profile(key=dsm_key)
-    
-    dsm_resolution: float = dsm_profile["transform"][0]
-
-    # Determine max object size in pixels
-    # max_object_size_pixels = max_object_size / dsm_re-solution
-
-    # Determine the dezoom factor wrt to max size of an object
-    # on the ground.
-    # nb_levels = get_max_pyramid_level(max_object_size_pixels/2) + 1
-    nb_levels = 100
-    
+    dsm_profile = eomanager.get_profile(key=dsm_key)   
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     regular = eomanager.get_array(key=regular_key)[0]
     
@@ -166,8 +140,8 @@ def fill_dsm(dsm_key: str,
     filled_dsm[regular==0] = nodata
     
     if dev_mode:
-            filled_dsm_with_regular_path: str = os.path.join(dev_dir, "filled_dsm_with_regular.tif")
-            eomanager.write(key=dsm_key, img_path=filled_dsm_with_regular_path)
+        filled_dsm_with_regular_path: str = os.path.join(dev_dir, "filled_dsm_with_regular.tif")
+        eomanager.write(key=dsm_key, img_path=filled_dsm_with_regular_path)
     
     # First iterative filling for small no data areas
     [dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_key],
@@ -176,11 +150,11 @@ def fill_dsm(dsm_key: str,
                                                   generate_output_profiles=filled_dsm_profile,
                                                   context_manager=eomanager,
                                                   stable_margin=regular_parameters['it'],
-                                                  filter_desc="Iterative filling DSM - 1st pass") 
+                                                  filter_desc="Iterative filling DSM level 0") 
     
     if dev_mode:
-            filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_1stpass.tif")
-            eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
+        filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
+        eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
     
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     border_nodata = eomanager.get_array(key=border_nodata_key)[0]
@@ -194,23 +168,23 @@ def fill_dsm(dsm_key: str,
     # if nodata areas are still in the DSM
     has_nodata = np.any(remaining_nodata)
     
-    if has_nodata:
+    # while has_nodata and it<=nb_max_filling_it+1:
+    while has_nodata and it<=nb_max_filling_it:
+        regular_parameters["goodneighbors"] = 3
+        
+        filled_dsm = eomanager.get_array(key=dsm_key)[0]
 
         # Downsampling the DSM to fill the bigger nodata areas
-        filled_dsm_downsampled = zoom(filled_dsm, 1/nb_levels, order=1, mode='nearest') 
-        filled_dsm_downsampled = np.where(np.isnan(filled_dsm_downsampled), nodata, filled_dsm_downsampled)
-        
+        filled_dsm_downsampled = zoom(filled_dsm, 1/(nb_levels**it), order=1, mode='nearest') 
+        filled_dsm_downsampled = np.where(np.isnan(filled_dsm_downsampled), nodata, filled_dsm_downsampled) # Putting back nodata values
+
         # Creating new profile for downsampled data
-        downsampled_profile = downsample_profile(profile=eomanager.get_profile(key=dsm_key), factor=nb_levels)
+        downsampled_profile = downsample_profile(profile=eomanager.get_profile(key=dsm_key), factor=nb_levels**it)
         downsampled_profile.update(width=np.shape(filled_dsm_downsampled)[1], height=np.shape(filled_dsm_downsampled)[0])
         downsampled_filled_dsm_key = eomanager.create_image(downsampled_profile)
-        
+
         filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
         filled_dsm_downsample[:] = filled_dsm_downsampled
-        
-        if dev_mode:
-            filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_downsample.tif")
-            eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
 
         # Updating the profile for the bordernodata mask
         downsampled_profile['dtype'] = np.uint8
@@ -219,26 +193,27 @@ def fill_dsm(dsm_key: str,
         # Downsampling the bordernodata mask
         downsampled_border_nodata_key = eomanager.create_image(downsampled_profile)
         border_nodata_downsample = eomanager.get_array(key=downsampled_border_nodata_key)[0]
-        border_nodata_downsampled = zoom(border_nodata, 1/nb_levels, order=1, mode='nearest')
-        border_nodata_downsample[:] = border_nodata_downsampled   
         
-        if dev_mode:
-            border_nodata_downsample_path: str = os.path.join(dev_dir, "border_nodata_downsample.tif")
-            eomanager.write(key=downsampled_border_nodata_key, img_path=border_nodata_downsample_path, binary=True)
+        # TODO - Hotfix : 1st iteration zoom + binary, other iterations np.zeros
+        # border_nodata_downsampled = zoom(border_nodata[:], 1/(nb_levels**it), order=1, mode='nearest')            
+        # border_nodata_downsampled = binary_erosion(border_nodata_downsampled, structure=np.ones((3,3)), ).astype(border_nodata_downsampled.dtype)
+        border_nodata_downsampled = np.zeros((np.shape(filled_dsm_downsampled)[0],np.shape(filled_dsm_downsampled)[1]))
         
-        regular_parameters: dict = {
-        "nodata": nodata,
-        "it": 1000
-        }
+        border_nodata_downsample[:] = border_nodata_downsampled
         
-        # Second iterative filling for the remaining no data areas
+        # TODO - Hotfix keep file from binary erosion
+        # if dev_mode:
+        #     border_nodata_downsample_path: str = os.path.join(dev_dir, "border_nodata_downsample_level_"+str(it)+".tif")
+        #     eomanager.write(key=downsampled_border_nodata_key, img_path=border_nodata_downsample_path)
+        
+        # Iterative filling for the remaining no data areas
         [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key, downsampled_border_nodata_key],
                                                                          image_filter=fill_dsm_method,
                                                                          filter_parameters=regular_parameters,
                                                                          generate_output_profiles=filled_dsm_profile,
                                                                          context_manager=eomanager,
                                                                          stable_margin=regular_parameters['it'],
-                                                                         filter_desc="Iterative filling DSM - 2nd pass") 
+                                                                         filter_desc="Iterative filling DSM level "+str(it)) 
                     
         filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
         
@@ -246,25 +221,32 @@ def fill_dsm(dsm_key: str,
         filled_dsm_downsample[filled_dsm_downsample == nodata] = np.nan
         
         if dev_mode:
-            filled_dsm_downsample_2ndpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_2ndpass.tif")
-            eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_2ndpass_path)
+            filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_"+str(it)+".tif")
+            eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
         
-        # Merging the second filling with the first one
+        # Merging the current level with the first one
         scale_y = filled_dsm.shape[0] / filled_dsm_downsample.shape[0]
         scale_x = filled_dsm.shape[1] / filled_dsm_downsample.shape[1]
         filled_dsm_resample = zoom(filled_dsm_downsample, (scale_y, scale_x), order=1, mode='nearest')
 
         filled_dsm[:] = np.where(remaining_nodata == 1, filled_dsm_resample, filled_dsm)
         
+        remaining_nodata = (np.isnan(filled_dsm)) & (border_nodata == 0)
+        
+        has_nodata = np.any(remaining_nodata)
+        
         eomanager.release(key=downsampled_filled_dsm_key)
         eomanager.release(key=downsampled_border_nodata_key)
-
-
+        
+        it+=1
+        
     
     #TODO - HOTFIX to remove
     unfilled_dsm_mask = eomanager.get_array(key=unfilled_dsm_mask_key)[0]
     unfilled_dsm_mask[np.isnan(filled_dsm)] = 1
+    unfilled_dsm_mask[border_nodata==1] = 1
     filled_dsm[np.isnan(filled_dsm)] = 9999
+    filled_dsm[border_nodata==1] = 9999
 
     return {
         "filled_dsm" : dsm_key,
