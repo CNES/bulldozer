@@ -88,7 +88,7 @@ bulldozer_pipeline_params = {
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
         BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False),
-        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<value>"),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<mask.tif>"),
         BulldozerParam("cloth_tension_force", "tension", "Tension force", "Filter size for tension (should be greater than 3).", int, 3, "<value>"),
         BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
         BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations.", int, 25, "<value>"),

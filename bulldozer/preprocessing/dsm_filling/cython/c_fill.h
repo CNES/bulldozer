@@ -23,7 +23,7 @@
 #include <iostream>
 
 /*
-    This class is used to fill the dsm
+    This class is used to fill the dsm.
 */
 namespace bulldozer
 {
@@ -32,8 +32,7 @@ namespace bulldozer
                           int dsm_h,
                           int dsm_w,
                           float nodata_val,
-                          int num_iterations,
-                          int nbgoodNeighbor);
+                          int num_iterations);
 
 } // end of namespace bulldozer
 

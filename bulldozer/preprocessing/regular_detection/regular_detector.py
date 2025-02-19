@@ -104,7 +104,7 @@ def detect_regular_areas(dsm_key: str,
                                                            filter_desc="Regular mask processing...")
     
     bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
-    # bin_regular_mask = remove_small_objects(bin_regular_mask, min_size=max_object_size**2)
+
     binary_opening(bin_regular_mask, iterations=int(max_object_size/4), output=bin_regular_mask)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]

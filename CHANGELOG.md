@@ -1,10 +1,26 @@
 # Changelog
 
+## 1.1.0 Windows and macOS compatibility (February 2025)
+
+### Added
+- Building and providing wheels for Windows and macOS on PyPI
+- Filter small element in the regular mask to avoid clipping on noisy elevation points
+- Adding `--long-usage` option 
+- Adding raster profile to logs
+
+### Changed
+- New version number management
+- Update CLI helper
+
+### Fixed
+- Reduce DSM filling runtime by using a new filling method
+- Regular areas detection on the DSM edges issue => fixed
+
 ## 1.0.2 New pipeline (November 2024)
 
 ### Added
 - Update of the version release policy: increased release frequency to be expected
-- Major method improvment (pseudo-local)
+- Major method improvement (pseudo-local)
 - Adding ground pre-detection: ground_clipping (optional)
 - Adding ground mask entry (optional)
 - Parallel computation method updated (EOScale)
@@ -22,7 +38,7 @@
 - Update the version location
 - Update the pits filling method
 - New log file name
-- Remove `nodata` and `min_valid_height` parameters and replace them by an explanation in documentation on how to change the 'nodata' value in raster metadata 
+- Remove `nodata` and `min_valid_height` parameters and replace them with an explanation in documentation on how to change the 'nodata' value in raster metadata 
 - `max_object_width` parameter is renamed `max_object_size`
 - `keep_inter_dtm` parameter is removed due to the new pipeline
 - `four_connexity` parameter is removed due to the new pipeline

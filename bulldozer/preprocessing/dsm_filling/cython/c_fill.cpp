@@ -24,12 +24,12 @@ namespace bulldozer {
                           int dsm_h,
                           int dsm_w,
                           float nodata_val,
-                          int num_iterations,
-                          int nbgoodNeighbor) {
+                          int num_iterations) {
 
         double diag_weight = 1 / sqrt(2);
         int corrected = 0, toCorrect = 0, nbPass = 0;
         bool hasNoData = true;
+        int nbgoodNeighbor = 3;
 
         std::unique_ptr<int[]> goods(new int[8]());
         std::unique_ptr<unsigned char[]> inv_msk(new unsigned char[dsm_h * dsm_w]);
