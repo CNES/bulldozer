@@ -1,9 +1,9 @@
 # Changelog
 
-## 1.1.0 Windows and macOS compatibility (February 2025)
+## 1.1.0 Cross-platforms compatibility (February 2025)
 
 ### Added
-- Building and providing wheels for Windows and macOS on PyPI
+- Building and providing wheels for Windows, macOS and Ubuntu on PyPI
 - Filter small element in the regular mask to avoid clipping on noisy elevation points
 - Adding `--long-usage` option 
 - Adding raster profile to logs
