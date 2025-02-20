@@ -1,6 +1,9 @@
 name: Create and Publish wheel
 
-on: [push]
+on: 
+  push:
+      tags:
+        - "v*" # Push to every tag containing version number
 
 jobs:
   # Build Ubuntu, Windows and macOS wheels 
