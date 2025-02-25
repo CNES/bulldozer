@@ -3,10 +3,10 @@
 ## 1.1.1 QGIS Plugin released (February 2025)
 
 ### Added
-
+- Adding expert mode CLI
 ### Changed
 - C++ files refactoring
-
+- The user can override the configuration file with parameters in the CLI
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed
 
