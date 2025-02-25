@@ -227,7 +227,7 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
 
         # epilog
         if add_epilog:
-            formatter.add_text("If extra arguments are provided it overrides the value of the configuration file.")
+            formatter.add_text("If extra arguments are provided, these will override the original values from the configuration file.")
         
         formatter.add_text("---------------------------------")
 

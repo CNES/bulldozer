@@ -85,10 +85,10 @@ bulldozer_pipeline_params = {
     OPT_PARAM_KEY: [
         BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the Digital Height Model (DHM=DSM-DTM).", bool, False),
         BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter).", float, 16, "<value>"),
-        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<mask.tif>"),
         BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
-        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False),
-        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<mask.tif>")
+        BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
+        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False)
     ],
     # Options for expert: these parameters are considered as core settings and must be changed by users who are experts
     EXPERT_PARAM_KEY: [
