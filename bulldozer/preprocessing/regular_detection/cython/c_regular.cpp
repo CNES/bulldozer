@@ -1,4 +1,23 @@
- /*Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+/*Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+
+ This file is part of Bulldozer
+ (see https://github.com/CNES/bulldozer).
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.*/
+ 
+ #include "c_regular.h"
+
+/*Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
 
  This file is part of Bulldozer
  (see https://github.com/CNES/bulldozer).
@@ -36,10 +55,11 @@ namespace bulldozer {
 		float sum;
 		float used;
 		std::ptrdiff_t pos;
+        std::ptrdiff_t pos_off;
 
 
-		for (long int y=1; y<y_size-1; y++) {
-			for (long int x=1; x<x_size-1; x++) {
+		for (long int y=0; y<y_size; y++) {
+			for (long int x=0; x<x_size; x++) {
 
 				pos = x_size*y + x;
 
@@ -49,10 +69,16 @@ namespace bulldozer {
 
 				if (dsm[pos] != nodata_dsm) {
 					for(int v=0; v<nb_neigbhors; v++) {
-						if(dsm[pos+v8_off[v]]  != nodata_dsm) {
-							sum += std::fabs(dsm[pos+v8_off[v]] - dsm[pos]);
-							used++;
-						}
+                        
+                        pos_off = pos+v8_off[v];
+                            
+                        if(pos_off>=0 && pos_off<x_size*y_size) {
+                        
+                            if(dsm[pos_off] != nodata_dsm) {
+                                sum += std::fabs(dsm[pos_off] - dsm[pos]);
+                                used++;
+                            }
+                        }
 					}
 				}
 

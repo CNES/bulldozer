@@ -23,3 +23,7 @@
 [build-system]
 requires = ["setuptools", "wheel", "Cython", "numpy"]
 build-backend = "setuptools.build_meta"
+
+# Avoid PyPy and Python < 3.8 wheel generation
+[tool.cibuildwheel]
+skip = ["pp*", "cp36-*", "cp37-*"]
