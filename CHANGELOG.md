@@ -5,6 +5,7 @@
 ### Added
 
 ### Changed
+- C++ files refactoring
 
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed

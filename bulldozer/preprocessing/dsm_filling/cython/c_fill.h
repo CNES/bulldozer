@@ -23,16 +23,16 @@
 #include <iostream>
 
 /*
-    This class is used to fill the dsm.
+    This function is used to fill the inner nodata of the input DSM.
 */
 namespace bulldozer
 {
     void iterativeFilling(float * dsm,
-                          unsigned char * border_nodata_mask,
-                          int dsm_h,
-                          int dsm_w,
-                          float nodata_val,
-                          int num_iterations);
+                          unsigned char * borderNodataMask,
+                          int dsmHeight,
+                          int dsmWidth,
+                          float nodataVal,
+                          int numIterations);
 
 } // end of namespace bulldozer
 
