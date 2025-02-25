@@ -48,9 +48,8 @@ def fill_pits_filter(inputBuffers: list,
 
     border_mask = inputBuffers[1][0, :, :]
     unfilled_dsm_mask = inputBuffers[2][0, :, :]
-    # print("test1")
+    
     dtm = fillnodata(dtm, mask=np.logical_not(np.logical_or(border_mask,unfilled_dsm_mask)), max_search_distance=params["search_distance"], transform=params["transform"])
-    # print("test2")
     
     dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
     
