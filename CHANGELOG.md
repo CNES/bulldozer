@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1 QGIS Plugin released (February 2025)
+
+### Added
+
+### Changed
+- C++ files refactoring
+
+### Fixed
+- Github actions workflow file for publishing wheels on PyPI fixed
+
 ## 1.1.0 Cross-platforms compatibility (February 2025)
 
 ### Added

@@ -24,17 +24,16 @@
 #include <list>
 
 /*
-    This class is used to build a mask that flags the pixels associated to the border nodata of the input DSM.
+    This function is used to build a mask that flags the pixels associated to the border nodata of the input DSM.
     Those no data areas appears on the edges if the DSM is skewed or detoured (e.g. when part of the sea has been removed with a water mask).
 */
 namespace bulldozer 
 {
-    void buildBorderNodataMask(float * dsm_strip,
-                                unsigned char * disturbance_mask,
-                                unsigned int nb_rows,
-                                unsigned int nb_cols,
-                                float nodata_value);
-
+    void buildBorderNodataMask(float * dsm,
+                                unsigned char * borderNodataMask,
+                                unsigned int nbRows,
+                                unsigned int nbCols,
+                                float nodataValue);
 } // end of namespace bulldozer
 
 #endif

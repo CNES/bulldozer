@@ -49,7 +49,7 @@ jobs:
     name: Publish package on PyPI
     needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
-    environment: pypi
+    environment: publish
     permissions:
       id-token: write
     steps:
@@ -60,5 +60,3 @@ jobs:
           merge-multiple: true
 
       - uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://pypi.org/legacy/

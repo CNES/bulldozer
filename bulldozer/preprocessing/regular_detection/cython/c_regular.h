@@ -26,16 +26,16 @@
 #include <algorithm>
 
 /*
-    This class is used to build a mask that flags the pixels considered as "regular" meaning not disturbed from an altimetric perspective.
+    This function is used to build a mask that flags the pixels considered as "regular" meaning not disturbed from an altimetric perspective.
 */
 namespace bulldozer
 {
     void buildRegularMask(float * dsm,
-                            unsigned char * regularMask,
-                            unsigned int nb_rows,
-                            unsigned int nb_cols,
-                            float thresh,
-                            float nodata_value);
+                          unsigned char * regularMask,
+                          unsigned int nbRows,
+                          unsigned int nbCols,
+                          float thresh,
+                          float nodataValue);
 
 } // end of namespace bulldozer
 

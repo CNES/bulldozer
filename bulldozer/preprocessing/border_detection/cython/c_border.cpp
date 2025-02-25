@@ -20,24 +20,24 @@
 namespace bulldozer {
 
     void buildBorderNodataMask(float * dsm,
-                                unsigned char * border_nodata_mask,
-                                unsigned int nb_rows,
-                                unsigned int nb_cols,
-                                float nodata_value) {
+                               unsigned char * borderNodataMask,
+                               unsigned int nbRows,
+                               unsigned int nbCols,
+                               float nodataValue) {
 
-        unsigned int c;
-        for(unsigned int r = 0; r < nb_rows; r++) {
+        unsigned int col;
+        for(unsigned int row = 0; row < nbRows; row++) {
             // extracts border nodata for the left side of the input DSM
-            c = r * nb_cols;
-            while(c < ((r * nb_cols)-1 + nb_cols) && dsm[c] == nodata_value){
-                border_nodata_mask[c] = true;
-                c++;
+            col = row * nbCols;
+            while(col < ((row * nbCols)-1 + nbCols) && dsm[col] == nodataValue){
+                borderNodataMask[col] = true;
+                col++;
             }
             // extracts border nodata for the right side of the input DSM
-            c = r * nb_cols + nb_cols - 1;
-            while(c > r * nb_cols && dsm[c] == nodata_value){
-                border_nodata_mask[c] = true;
-                c--;
+            col = row * nbCols + nbCols - 1;
+            while(col > row * nbCols && dsm[col] == nodataValue){
+                borderNodataMask[col] = true;
+                col--;
             }
         }
     }

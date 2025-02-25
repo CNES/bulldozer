@@ -40,17 +40,17 @@ namespace bulldozer {
 
 	void buildRegularMask(float * dsm,
 						  unsigned char * regularMask,
-                          unsigned int nb_rows,
-                          unsigned int nb_cols,
+                          unsigned int nbRows,
+                          unsigned int nbCols,
                           float thresh,
-                          float nodata_dsm) {
+                          float nodataValue) {
 
-		const long int x_size = nb_cols;
-		const long int y_size = nb_rows;
+		const long int x_size = nbCols;
+		const long int y_size = nbRows;
 
 
-		const int nb_neigbhors=8;
-		std::ptrdiff_t v8_off[nb_neigbhors] = {-x_size-1, -x_size,  -x_size+1, -1, +1, x_size-1, x_size,  x_size+1 };
+		const int nbNeigbhors=8;
+		std::ptrdiff_t v8_off[nbNeigbhors] = {-x_size-1, -x_size,  -x_size+1, -1, +1, x_size-1, x_size,  x_size+1 };
 
 		float sum;
 		float used;
@@ -67,14 +67,14 @@ namespace bulldozer {
 				sum = 0;
 				used = 0;
 
-				if (dsm[pos] != nodata_dsm) {
-					for(int v=0; v<nb_neigbhors; v++) {
+				if (dsm[pos] != nodataValue) {
+					for(int v=0; v<nbNeigbhors; v++) {
                         
                         pos_off = pos+v8_off[v];
                             
                         if(pos_off>=0 && pos_off<x_size*y_size) {
                         
-                            if(dsm[pos_off] != nodata_dsm) {
+                            if(dsm[pos_off] != nodataValue) {
                                 sum += std::fabs(dsm[pos_off] - dsm[pos]);
                                 used++;
                             }
