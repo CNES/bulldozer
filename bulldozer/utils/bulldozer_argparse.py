@@ -28,9 +28,10 @@ import sys as _sys
 
 REQ_PARAM_KEY = "REQUIRED"
 OPT_PARAM_KEY = "OPTIONAL"
+EXPERT_PARAM_KEY = "EXPERT OPTIONAL"
 
 
-class BulldozerHelpFormatter(argparse.HelpFormatter):
+class BulldozerHelpFormatter(argparse.RawTextHelpFormatter):
     """
         Bulldozer formatter of help messages for command line options.
         Displays help message for execution with configuration file and CLI arguments.
@@ -132,29 +133,35 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
         """
         cli_positionals = []
         cli_optionals = []
+        cli_experts_optionals = []
         for action_group in self._action_groups:
             if action_group.title is None:  # the group contains Bulldozer parameters
                 if action_group.description == REQ_PARAM_KEY:
                     cli_positionals = action_group
                 elif action_group.description == OPT_PARAM_KEY:
                     cli_optionals = action_group
+                elif action_group.description == EXPERT_PARAM_KEY:
+                    cli_experts_optionals = action_group
                 else:
-                    raise ValueError(f"Unknown group description {action_group.description}: expects {REQ_PARAM_KEY} or {OPT_PARAM_KEY}")
+                    raise ValueError(
+                        f"Unknown group description {action_group.description}: expects {REQ_PARAM_KEY}, {OPT_PARAM_KEY} or {EXPERT_PARAM_KEY}"
+                    )
 
-        return cli_positionals, cli_optionals
+        return cli_positionals, cli_optionals, cli_experts_optionals
     
 
-    def print_help(self, file: str = None, long_help: bool = False) -> None:
+    def print_help(self, file: str = None, long_help: bool = False, expert_mode: bool = False) -> None:
         """
             This method generates the help message.
 
             Args:
                 file: path to a file to save the output.
                 long_help: whether print the full help or not (by default short help).
+                export_mode: whether print the expert parameters or not (by default False).
         """
         if file is None:
             file = _sys.stdout
-        self._print_message(self.format_help(long_help), file)
+        self._print_message(self.format_help(long_help, expert_mode), file)
 
     def format_usage(self) -> str:
         """
@@ -166,15 +173,15 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
         """
         return self.format_help(add_description=False, add_epilog=False)
     
-    
-    def format_help(self, long_help: bool = False, add_description: bool = True, 
-                    add_epilog: bool = True) -> str:
+    def format_help(self, long_help: bool = False, expert_mode: bool = False,
+                    add_description: bool = True, add_epilog: bool = True) -> str:
         """
             This method generates the bulldozer global help message.
             It contains both execution methods: using a config file or using CLI arguments.
 
             Args:
                 long_help: whether to display only usage description (False) or full arguments descriptions (True).
+                export_mode: whether to display expert arguments or not.
                 add_description: whether to add description or not at the beginning of the help message.
                 add_epilog: whether to add epilog or not at the end of the help message.
 
@@ -182,13 +189,16 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
                 The help message for Bulldozer.
         """
         # get groups corresponding to bulldozer parameters
-        cli_pos_group, cli_opt_group = self.get_bulldozer_groups()
+        cli_pos_group, cli_opt_group, cli_expert_group = self.get_bulldozer_groups()
 
         # prepare input arguments for both config file and cli usages
         cli_positionals = cli_pos_group._group_actions  # positional arguments for CLI
-        # We set to required (for visual display)
+        # We set positionals to required (for visual display)
         for action in cli_positionals:
             action.required = True
+        cli_optionals = cli_opt_group._group_actions  # optionals arguments for CLI
+        if expert_mode:
+            cli_optionals += cli_expert_group._group_actions
         positionals = self._positionals._group_actions  # positional arguments (only config file path)
         positionals[0].nargs = None  # We set the nargs to None to highlight the requirement of this parameter
 
@@ -214,11 +224,15 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
             formatter.add_text(self._optionals.description)
             formatter.add_arguments(self._optionals._group_actions)
             formatter.end_section()
+
+        # epilog
+        if add_epilog:
+            formatter.add_text("If extra arguments are provided, these will override the original values from the configuration file.")
         
         formatter.add_text("---------------------------------")
-        
+
         # usage and help with cli arguments
-        formatter.bulldozer_add_usage(cli_positionals, cli_opt_group._group_actions, self._optionals._group_actions,
+        formatter.bulldozer_add_usage(cli_positionals, cli_optionals, self._optionals._group_actions,
                                    prefix=_("Usage with parameters: "))
         
         if long_help:
@@ -231,7 +245,7 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
             formatter.add_arguments(self._optionals._group_actions)
             formatter.end_section()
             formatter.start_section(None)  # for visual spacing
-            formatter.add_arguments(cli_opt_group._group_actions)
+            formatter.add_arguments(cli_optionals)
             formatter.end_section()
         
         # epilog
