@@ -11,7 +11,7 @@ output_dir : "output_dir_path"
 #-------------------------#
 # [Optional] - If True, generates the DHM (DSM - DTM) in the output directory 
 generate_dhm : True
-# [Optional] - If null, use the maximum number of available CPU core of your system
-nb_max_workers : 8
 # [Optional] - Foreground max object size (in meter)
 max_object_size : 16
+# [Optional] - If null, use the maximum number of available CPU core of your system
+nb_max_workers : 8
