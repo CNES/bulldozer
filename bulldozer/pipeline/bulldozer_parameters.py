@@ -85,12 +85,12 @@ bulldozer_pipeline_params = {
     OPT_PARAM_KEY: [
         BulldozerParam("generate_dhm", "dhm", "Generate DHM", "Generate the Digital Height Model (DHM=DSM-DTM).", bool, False),
         BulldozerParam("max_object_size", "max_size", "Max object size (m)", "Foreground max object size (in meter).", float, 16, "<value>"),
-        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the ground mask classification.", str, None, "<mask.tif>"),
+        BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the binary ground classification mask.", str, None, "<mask.tif>"),
         BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
         BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
         BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False)
     ],
-    # Options for expert: these parameters are considered as core settings and must be changed by users who are experts
+    # Expert options: these parameters are considered as core settings and must be changed by users who are experts
     EXPERT_PARAM_KEY: [
         BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
