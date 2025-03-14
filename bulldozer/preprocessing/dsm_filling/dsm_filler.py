@@ -195,7 +195,6 @@ def fill_dsm(dsm_key: str,
         # border_nodata_downsampled = zoom(border_nodata[:], 1/(dezoom_factor**dezoom_level), order=1, mode='nearest')            
         # border_nodata_downsampled = binary_erosion(border_nodata_downsampled, structure=np.ones((3,3)), ).astype(border_nodata_downsampled.dtype)
         border_nodata_downsampled = np.zeros((np.shape(filled_dsm_downsampled)[0],np.shape(filled_dsm_downsampled)[1]))
-        
         border_nodata_downsample[:] = border_nodata_downsampled
         
         # TODO - Hotfix keep file from binary erosion
