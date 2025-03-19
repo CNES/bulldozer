@@ -158,58 +158,6 @@ def detect_border_nodata(dsm_key: str,
 
     eomanager.release(key=hor_border_nodata_mask_key)
     
-    
-    #############
-     ### 1st Method: ConvexHull on resampled data
-    
-#     # ConvexHull on the downasampled bordernodata
-#     convex_hull = convex_hull_image(border_mask_downsample == 0)
-#     border_mask_downsample[convex_hull] = 0
-    
-#     # Back to DSM resolution
-#     scale_y = border_mask.shape[0] / border_mask_downsample.shape[0]
-#     scale_x = border_mask.shape[1] / border_mask_downsample.shape[1]
-#     border_mask_resample = zoom(border_mask_downsample, (scale_y, scale_x), order=1, mode='nearest')
-#     border_mask_resample = binary_erosion(border_mask_resample, structure=np.ones((3, 3)))
-    
-#     # New border mask with ConvexHull without adding data
-#     # border_mask[border_mask_resample==0] = 0      
-#     new_border_mask = border_mask.copy()
-#     new_border_mask[(border_mask_resample == 0) & (border_mask == 1)] = 0
-#     new_border_mask[border_mask == 0] = 0
-#     border_mask = new_border_mask
-    ###########
-        
-    ### 2nd Method: ConvexHull on resampled data, erosion and binary fill holes  
-    # Downsample bordernodata
-#     dsm_resolution = eomanager.get_profile(key=dsm_key)['transform'][0]
-#     dezoom_factor = max(2, int(np.floor((max_object_size / dsm_resolution) / 2 * (2 - np.sqrt(2)))))
-#     border_mask = np.where(border_mask == 0, 1, 0)
-#     border_mask_downsample = zoom(border_mask, 1 / dezoom_factor, output=np.uint8, order=1, mode='nearest')
-    
-#     # ConvexHull on the downasampled bordernodata
-#     convex_hull = convex_hull_image(border_mask_downsample)
-#     border_mask_downsample[convex_hull] = 1
-    
-#     # Erosion to avoid adding new data
-#     # border_mask_downsample = binary_erosion(border_mask_downsample, structure=[[0,1,0],[1,1,1],[0,1,0]])
-#     border_mask_downsample = binary_erosion(border_mask_downsample, structure=np.ones((5,5)))
-    
-#     # Back to DSM resolution
-#     scale_y = border_mask.shape[0] / border_mask_downsample.shape[0]
-#     scale_x = border_mask.shape[1] / border_mask_downsample.shape[1]
-#     border_mask_resample = zoom(border_mask_downsample, (scale_y, scale_x), output=np.uint8, order=1, mode='nearest')
-    
-#     # New border mask with ConvexHull with corrections to avoid adding data    
-#     np.logical_or(border_mask_resample, border_mask, out=border_mask_resample)
-#     binary_fill_holes(border_mask_resample, output=border_mask_resample) # To fill the remaining holes
-    
-#     border_mask_resample = np.where(border_mask_resample == 0, 1, 0)
-#     border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
-#     border_mask[:] = border_mask_resample
-    
-    
-    ###############
     ### Filling the holes inside the border nodata mask
     border_mask_reverted = np.where(border_mask == 0, 1, 0).astype(np.uint8)
     binary_fill_holes(border_mask_reverted, output=border_mask_reverted)
