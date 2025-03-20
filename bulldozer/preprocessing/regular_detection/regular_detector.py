@@ -23,6 +23,7 @@ This module is used to extract the regular areas in the provided DSM.
 """
 import numpy as np
 import rasterio
+import os
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.regular as regular
@@ -76,7 +77,9 @@ def detect_regular_areas(dsm_key: str,
                          regular_slope: float,
                          nodata: float,
                          max_object_size: int,
-                         eomanager: eom.EOContextManager) -> dict:
+                         eomanager: eom.EOContextManager,
+                         dev_mode: bool = False,
+                         dev_dir: str = "") -> dict:
     """
         This method returns the binary mask flagging regular areas location in the provided DSM.
 
@@ -84,8 +87,10 @@ def detect_regular_areas(dsm_key: str,
             dsm_key: input DSM.
             regular_slope: maximum slope of a regular area.
             nodata: DSM nodata value (if nan, the nodata is set to -32768).
-            max_object_size: foreground max object size (in meter)
+            max_object_size: foreground max object size (in meter).
             eomanager: eoscale context manager.
+            dev_mode: if True, dev mode activated
+            dev_dir: path to save dev files
 
         Returns:
             the regular areas mask.
@@ -103,7 +108,11 @@ def detect_regular_areas(dsm_key: str,
                                                            stable_margin=1,
                                                            filter_desc="Regular mask processing...")
     
+
     bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
+    
+    if dev_mode:
+            eomanager.write(key=regular_mask_key, img_path=os.path.join(dev_dir, "raw_regular_mask.tif"), binary=True)
 
     binary_opening(bin_regular_mask, iterations=int(max_object_size/4), output=bin_regular_mask)
     

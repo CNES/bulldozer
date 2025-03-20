@@ -5,13 +5,17 @@
 ### Added
 - Adding Dockerfile and publishing it on [dockerhub](https://hub.docker.com/r/cnes/bulldozer)
 - Adding expert mode CLI
+- Adding deploy pipeline in gitlab CI
 ### Changed
 - C++ files refactoring
 - The user can override the configuration file with parameters in the CLI
+- Adding a new step in developer mode to write regular mask before filtering 
+
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed
 - Configuration file templates refactoring
 - Fixing gitPython issue (dependency removed as it's rarely used)
+
 ---
 
 ## 1.1.0 Cross-platforms compatibility (February 2025)
