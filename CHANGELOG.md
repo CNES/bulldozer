@@ -11,6 +11,7 @@
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed
 - Configuration file templates refactoring
+- Fixing gitPython issue (dependency removed as it's rarely used)
 ---
 
 ## 1.1.0 Cross-platforms compatibility (February 2025)

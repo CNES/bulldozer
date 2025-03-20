@@ -8,7 +8,6 @@ RUN apt-get update \
     binutils \
     libproj-dev \
     gdal-bin \
-    git \
     && pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir bulldozer-dtm \
     && rm -rf /var/lib/apt/lists/*;
