@@ -1,14 +1,17 @@
 # Changelog
 
-## 1.1.1 QGIS Plugin released (February 2025)
+## 1.1.1 Docker release (March 2025)
 
 ### Added
+- Adding Dockerfile and publishing it on [dockerhub](https://hub.docker.com/r/cnes/bulldozer)
 - Adding expert mode CLI
 ### Changed
 - C++ files refactoring
 - The user can override the configuration file with parameters in the CLI
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed
+- Configuration file templates refactoring
+---
 
 ## 1.1.0 Cross-platforms compatibility (February 2025)
 
@@ -25,6 +28,8 @@
 ### Fixed
 - Reduce DSM filling runtime by using a new filling method
 - Regular areas detection on the DSM edges issue => fixed
+
+---
 
 ## 1.0.2 New pipeline (November 2024)
 
@@ -68,6 +73,7 @@
 - Remove unused documentation until the new version of the official documentation is published
 - Remove unnecessary memory allocation in anchor prediction
 
+---
 
 ## 1.0.1 New interface (July 2023)
 
@@ -91,6 +97,7 @@
 - Disturbed areas missing line => Fixed
 - Border nodata multi-processing issue => Fixed
 
+---
 
 ## 1.0.0 Open Source Release (January 2023)
 

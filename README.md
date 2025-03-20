@@ -1,12 +1,12 @@
 <div align="center">
     <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/logo_with_text.png" width=600>
 
-**Bulldozer, a DTM extraction tool requiring only a DSM as input.**
+**Bulldozer, a DTM extraction tool that requires only a DSM as input.**
 
-[![Python](https://img.shields.io/badge/python-v3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![PyPI Version](https://img.shields.io/pypi/v/bulldozer-dtm?color=%2334D058&label=pypi%20package)](https://pypi.org/project/bulldozer-dtm/)
+[![pypi](https://img.shields.io/pypi/v/bulldozer-dtm?color=%2334D058&label=pypi)](https://pypi.org/project/bulldozer-dtm/)
+[![docker](https://badgen.net/docker/size/cnes/bulldozer?icon=docker&label=image%20size)](https://hub.docker.com/r/cnes/bulldozer)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 </div>
 
 
@@ -14,8 +14,8 @@
 <div align="center">
 <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/result_overview.gif" alt="demo" width="400"/>
 </div>
-
-**Bulldozer** is designed as a pipeline that aims to extract a *Digital Terrain Model* (DTM) from a *Digital Surface Model* (DSM). It supports both noisy satellite DSM and high-quality LiDAR DSM.  
+ 
+**Bulldozer** is a pipeline designed to extract a *Digital Terrain Model* (DTM) from a *Digital Surface Model* (DSM). It supports both noisy satellite DSMs and high-quality LiDAR DSMs.
 
 # Quick Start
 
@@ -61,6 +61,23 @@ dsm_to_dtm(dsm_path="input_dsm.tif", output_dir="output_dir")
 bulldozer conf/configuration_template.yaml
 ```
 ✅ Done! Your DTM is available in the directory defined in the configuration file.
+
+## **Bulldozer** docker image
+
+[![Docker Status](http://dockeri.co/image/cnes/bulldozer)](https://hub.docker.com/r/cnes/bulldozer)
+
+**Bulldozer** is available on Docker Hub and can be downloaded using:
+``` bash
+docker pull cnes/bulldozer
+```
+And you can run **Bulldozer** with the following command:
+``` bash
+docker run --user $(id -u):$(id -g) --shm-size=10gb -v <path>:/data cnes/bulldozer:latest /data/<conf>.yaml
+```
+⚠️ You have to change the `<path>` to provide a valide absolute path to a directory where the input data are stored and where **Bulldozer** will write the ouput DTM. You also have to provide a configuration file (and rename `<conf>.yaml` in the command line) in this directory with an `ouput_dir` value using the `data` folder given to docker, e.g.: `output_dir : "/data/outputdir"`. If you want to run **Bulldozer** on a huge DSM, please improve the shared memory value of the command line (`--shm-size`) argument.  
+
+
+
 # License
 
 **Bulldozer**  is licensed under Apache License v2.0. Please refer to the [LICENSE](LICENSE) file for more details.
