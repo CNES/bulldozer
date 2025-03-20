@@ -25,11 +25,13 @@ workflow:
     - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
       when: never
     - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v.*/
 
 # Defines groups of steps
 stages:
   - init
   - quality
+  - deploy
 
 # Default configuration for all jobs (CNES specificity)
 default:
@@ -55,10 +57,14 @@ variables:
   PIP_CACHE_DIR: "${WORKSPACE}/.pip-cache/"
   # Local artifactory Dockerhub URL containing copies of docker hub images
   ARTIFACTORY_URL: "${ARTIFACTORY_HOST}/docker"
+  # Github repository
+  GITHUB_REPO: "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/CNES/bulldozer.git"
+
 
 # Steps:
 #    - build (stage, init)
 #    - test (stage, quality)
+#    - deploy-github (stage, deploy)
 
 build:
   stage: init
@@ -98,3 +104,23 @@ test:
   artifacts:
     untracked: false
     expire_in: 1 day
+
+deploy-github:
+  stage: deploy
+  needs:
+    - test
+  # Get a small docker git image
+  image:
+    name: ${ARTIFACTORY_URL}/${TAG_IMAGE_GIT}
+    entrypoint: [""]
+  before_script:
+    # Set proxy and git credentials
+    - git config --global http.proxy "http://${PROXY_USER}:${PROXY_PWD}@${PROXY_URL}"
+    - git config --global user.email "${GITLAB_USER_EMAIL}"
+    - git config --global user.name "${GITLAB_USER_NAME}"
+  script:
+    # Push to github
+    - git push ${GITHUB_REPO} ${CI_COMMIT_TAG}
+    - git push -f ${GITHUB_REPO} HEAD:master
+  only:
+    - tags
