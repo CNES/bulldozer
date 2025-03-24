@@ -41,7 +41,7 @@ namespace bulldozer {
 
                 invMask[idx] = (dsm[idx] == nodataValue) ? 1 : 0;
                 
-                if (borderNodataMask[idx] == 1) {
+                if (borderNodataMask && borderNodataMask[idx] == 1) {
                     invMask[idx] = 0;
                 }
             }
