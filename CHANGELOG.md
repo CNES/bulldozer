@@ -16,6 +16,7 @@
 - Configuration file templates refactoring
 - Fixing gitPython issue (dependency removed as it's rarely used)
 - Adding default value (2) for dezoom factor if the provided value is less than 2 
+- Adding default value (1) for nb_iterations during the regular mask filtering if the provided value is less than 1  
 
 ---
 

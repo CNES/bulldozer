@@ -114,7 +114,8 @@ def detect_regular_areas(dsm_key: str,
     if dev_mode:
             eomanager.write(key=regular_mask_key, img_path=os.path.join(dev_dir, "raw_regular_mask.tif"), binary=True)
 
-    binary_opening(bin_regular_mask, iterations=int(max_object_size/4), output=bin_regular_mask)
+    nb_iterations = int(np.max([1 ,max_object_size/4]))
+    binary_opening(bin_regular_mask, iterations=nb_iterations, output=bin_regular_mask)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]
     regular_mask[:] = bin_regular_mask
