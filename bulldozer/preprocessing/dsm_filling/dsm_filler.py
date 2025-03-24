@@ -96,7 +96,7 @@ def fill_dsm(dsm_key: str,
              nodata: float,
              max_object_size: int,
              eomanager: eom.EOContextManager,
-             dev_mode: bool,
+             dev_mode: bool = False,
              dev_dir: str = "") -> dict:
     """
     This fills the nodata of the input DSM for the following dtm extraction step.
@@ -107,8 +107,8 @@ def fill_dsm(dsm_key: str,
         border_nodata_key: border nodata mask.
         nodata: DSM nodata value (if nan, the nodata is set to -32768).
         eomanager: eoscale context manager.
-        dev_mode: if True, dev mode activated
-        dev_dir: path to save dev files
+        dev_mode: if True, dev mode activated.
+        dev_dir: path to save dev files.
 
     Returns:
         the filled DSM.
@@ -124,12 +124,14 @@ def fill_dsm(dsm_key: str,
     # Setting parameters for the dsm filling method
     regular_parameters: dict = {
         "nodata": nodata,
-        "filling_iterations": int(np.floor((max_object_size / dsm_resolution) / 2)) # Nb iterations = max_object_size (px) / 2 (allow to fill a hole between two points max_object_size apart) 
+        # if max_object_size is less than 2+sqrt(2) overides the computed value to avoid information loss during dezoom
+        "filling_iterations": int(np.max([int(2+np.sqrt(2)), np.floor((max_object_size / dsm_resolution) / 2)])) # Nb iterations = max_object_size (px) / 2 (allow to fill a hole between two points max_object_size apart)
     }
     nb_max_level = 20 # limits the number of dezoom iterations
-    dezoom_factor = int(np.floor(regular_parameters["filling_iterations"] * (2-np.sqrt(2)))) # sqrt(2) to handle the diagonal neighbors
+    # if computed value for dezoom_factor is less than 2 overides the value with 2 to ensure a dezoom during the filling process
+    dezoom_factor = int(np.max([2, np.floor(regular_parameters["filling_iterations"] * (2-np.sqrt(2)))])) # sqrt(2) to handle the diagonal neighbors
     dezoom_level = 1
-    
+
     dsm_profile = eomanager.get_profile(key=dsm_key)   
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     regular = eomanager.get_array(key=regular_key)[0]

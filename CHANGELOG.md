@@ -15,6 +15,7 @@
 - Github actions workflow file for publishing wheels on PyPI fixed
 - Configuration file templates refactoring
 - Fixing gitPython issue (dependency removed as it's rarely used)
+- Adding default value (2) for dezoom factor if the provided value is less than 2 
 
 ---
 
