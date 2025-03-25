@@ -22,6 +22,11 @@
 This module is used to detect border and inner nodata in the input DSM.
 """
 import numpy as np
+# from scipy.spatial import ConvexHull
+from scipy.ndimage import zoom, binary_erosion, binary_fill_holes
+from skimage.morphology import convex_hull_image
+from skimage.draw import polygon
+
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 from bulldozer.utils.bulldozer_logger import Runtime
@@ -74,6 +79,8 @@ def border_nodata_filter(input_buffers: list,
     else:
         # Horizontal border nodata detection case
         return border_nodata.build_border_nodata_mask(dsm, nodata, False).astype(np.ubyte)
+
+    
 
 
 def inner_nodata_filter(input_buffers: list,
@@ -148,8 +155,16 @@ def detect_border_nodata(dsm_key: str,
     hor_mask = eomanager.get_array(key=hor_border_nodata_mask_key)[0]
     border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
     np.logical_and(hor_mask, border_mask, out=border_mask)
-    eomanager.release(key=hor_border_nodata_mask_key)
 
+    eomanager.release(key=hor_border_nodata_mask_key)
+    
+    ### Filling the holes inside the border nodata mask
+    border_mask = np.where(border_mask == 0, 1, 0).astype(np.uint8)
+    binary_fill_holes(border_mask, output=border_mask)
+    border_mask = np.where(border_mask == 0, 1, 0)
+    new_border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
+    new_border_mask[:] = border_mask
+            
     # Inner nodata detection
     [inner_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_mask_key],
                                                                 image_filter=inner_nodata_filter,
@@ -157,7 +172,8 @@ def detect_border_nodata(dsm_key: str,
                                                                 generate_output_profiles=nodata_mask_profile,
                                                                 context_manager=eomanager,
                                                                 stable_margin=0,
-                                                                filter_desc="Build Inner NoData Mask")
+                                                                filter_desc="Build Inner NoData Mask")    
+    
 
     return {
         "border_nodata_mask": border_nodata_mask_key,

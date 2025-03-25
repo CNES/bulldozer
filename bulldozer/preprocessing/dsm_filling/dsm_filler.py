@@ -65,12 +65,18 @@ def fill_dsm_method(input_buffers: list,
             regular areas mask.
     """
     fill_process = fill.PyFill()
-    # the input_buffers[0] corresponds to the input DSM raster
-    dsm = fill_process.iterative_filling(input_buffers[0][0, :, :],
-                                         input_buffers[1][0, :, :],
-                                         nodata_value=filter_parameters["nodata"],
-                                         nb_it=filter_parameters["filling_iterations"])
     
+    if filter_parameters["use_bordernodata_mask"]==True:
+        # the input_buffers[0] corresponds to the input DSM raster, input_buffers[1] corresponds to the bordernodata mask
+        dsm = fill_process.iterative_filling(dsm_strip=input_buffers[0][0, :, :],
+                                            nodata_value=filter_parameters["nodata"],
+                                            nb_it=filter_parameters["filling_iterations"],
+                                            border_nodata_strip=input_buffers[1][0, :, :])
+    else:
+        dsm = fill_process.iterative_filling(input_buffers[0][0, :, :],
+                                            nodata_value=filter_parameters["nodata"],
+                                            nb_it=filter_parameters["filling_iterations"])
+        
     return [dsm.astype(np.float32)]
 
 
@@ -125,7 +131,8 @@ def fill_dsm(dsm_key: str,
     regular_parameters: dict = {
         "nodata": nodata,
         # if max_object_size is less than 2+sqrt(2) overides the computed value to avoid information loss during dezoom
-        "filling_iterations": int(np.max([int(2+np.sqrt(2)), np.floor((max_object_size / dsm_resolution) / 2)])) # Nb iterations = max_object_size (px) / 2 (allow to fill a hole between two points max_object_size apart)
+        "filling_iterations": int(np.max([int(2+np.sqrt(2)), np.floor((max_object_size / dsm_resolution) / 2)])), # Nb iterations = max_object_size (px) / 2 (allow to fill a hole between two points max_object_size apart)
+        "use_bordernodata_mask": True
     }
     nb_max_level = 20 # limits the number of dezoom iterations
     # if computed value for dezoom_factor is less than 2 overides the value with 2 to ensure a dezoom during the filling process
@@ -170,10 +177,12 @@ def fill_dsm(dsm_key: str,
     
     while has_nodata and dezoom_level<=nb_max_level:
         
+        regular_parameters["use_bordernodata_mask"]=False
+        
         filled_dsm = eomanager.get_array(key=dsm_key)[0]
 
         # Downsampling the DSM to fill the bigger nodata areas. the order is set to one because it's the only one that handle no data 
-        # The mode is set to nearest because ut expands the image when zooming if the resampling factor is not proportional to the image size
+        # The mode is set to nearest because it expands the image when zooming if the resampling factor is not proportional to the image size
         filled_dsm_downsampled = zoom(filled_dsm, 1/(dezoom_factor**dezoom_level), order=1, mode="nearest") 
         filled_dsm_downsampled = np.where(np.isnan(filled_dsm_downsampled), nodata, filled_dsm_downsampled) # Putting back nodata values
 
@@ -183,30 +192,10 @@ def fill_dsm(dsm_key: str,
         downsampled_filled_dsm_key = eomanager.create_image(downsampled_profile)
 
         filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
-        filled_dsm_downsample[:] = filled_dsm_downsampled
-
-        # Updating the profile for the bordernodata mask
-        downsampled_profile["dtype"] = np.uint8
-        downsampled_profile["nodata"] = None
-
-        # Downsampling the bordernodata mask
-        downsampled_border_nodata_key = eomanager.create_image(downsampled_profile)
-        border_nodata_downsample = eomanager.get_array(key=downsampled_border_nodata_key)[0]
-        
-        # TODO - Hotfix : 1st iteration zoom + binary, other iterations np.zeros
-        # border_nodata_downsampled = zoom(border_nodata[:], 1/(dezoom_factor**dezoom_level), order=1, mode='nearest')            
-        # border_nodata_downsampled = binary_erosion(border_nodata_downsampled, structure=np.ones((3,3)), ).astype(border_nodata_downsampled.dtype)
-        border_nodata_downsampled = np.zeros((np.shape(filled_dsm_downsampled)[0],np.shape(filled_dsm_downsampled)[1]))
-        
-        border_nodata_downsample[:] = border_nodata_downsampled
-        
-        # TODO - Hotfix keep file from binary erosion
-        # if dev_mode:
-        #     border_nodata_downsample_path: str = os.path.join(dev_dir, "border_nodata_downsample_level_"+str(dezoom_level)+".tif")
-        #     eomanager.write(key=downsampled_border_nodata_key, img_path=border_nodata_downsample_path)
+        filled_dsm_downsample[:] = filled_dsm_downsampled        
         
         # Iterative filling for the remaining no data areas
-        [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key, downsampled_border_nodata_key],
+        [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key],
                                                                          image_filter=fill_dsm_method,
                                                                          filter_parameters=regular_parameters,
                                                                          generate_output_profiles=filled_dsm_profile,
@@ -235,7 +224,6 @@ def fill_dsm(dsm_key: str,
         has_nodata = np.any(remaining_nodata)
         
         eomanager.release(key=downsampled_filled_dsm_key)
-        eomanager.release(key=downsampled_border_nodata_key)
         
         dezoom_level+=1
         
