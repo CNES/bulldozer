@@ -66,8 +66,8 @@ cdef class PyFill:
         cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
         cdef unsigned char[::1] border_nodata_mask_memview 
         cdef unsigned char* border_nodata_mask_ptr = NULL  # Initialize as NULL
-        if border_nodata_strip is not None:
-            # border_nodata_mask_memview = None
+
+        if border_nodata_strip is not None: # For the level 0
             border_nodata_mask_memview = npAsContiguousArray(border_nodata_strip.ravel().astype(np.uint8))
             border_nodata_mask_ptr = &border_nodata_mask_memview[0]
 

@@ -67,7 +67,7 @@ def fill_dsm_method(input_buffers: list,
     fill_process = fill.PyFill()
     
     if filter_parameters["use_bordernodata_mask"]==True:
-    # the input_buffers[0] corresponds to the input DSM raster
+        # the input_buffers[0] corresponds to the input DSM raster, input_buffers[1] corresponds to the bordernodata mask
         dsm = fill_process.iterative_filling(dsm_strip=input_buffers[0][0, :, :],
                                             nodata_value=filter_parameters["nodata"],
                                             nb_it=filter_parameters["filling_iterations"],
