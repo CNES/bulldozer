@@ -53,6 +53,7 @@ variables:
   PIP_CERT: "${CNES_CERTIFICATE}"
   # TAGS for images if each stages: base python
   TAG_IMAGE_PYTHON: "python:3.10.8"
+  TAG_IMAGE_GIT: "alpine/git:v2.45.2"
   # Can be used to move pip cache in local directory
   PIP_CACHE_DIR: "${WORKSPACE}/.pip-cache/"
   # Local artifactory Dockerhub URL containing copies of docker hub images
