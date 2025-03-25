@@ -23,11 +23,12 @@ This module is used to extract the regular areas in the provided DSM.
 """
 import numpy as np
 import rasterio
+import logging
 import os
 import bulldozer.eoscale.manager as eom
 import bulldozer.eoscale.eo_executors as eoexe
 import bulldozer.preprocessing.regular as regular
-from bulldozer.utils.bulldozer_logger import Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, BulldozerLogger
 from skimage.morphology import remove_small_objects
 from scipy.ndimage import binary_opening
 
@@ -78,6 +79,7 @@ def detect_regular_areas(dsm_key: str,
                          nodata: float,
                          max_object_size: int,
                          eomanager: eom.EOContextManager,
+                         reg_filtering_iter: int = None,
                          dev_mode: bool = False,
                          dev_dir: str = "") -> dict:
     """
@@ -88,6 +90,7 @@ def detect_regular_areas(dsm_key: str,
             regular_slope: maximum slope of a regular area.
             nodata: DSM nodata value (if nan, the nodata is set to -32768).
             max_object_size: foreground max object size (in meter).
+            reg_filtering_iter:  number of regular mask filtering iterations.
             eomanager: eoscale context manager.
             dev_mode: if True, dev mode activated
             dev_dir: path to save dev files
@@ -114,7 +117,12 @@ def detect_regular_areas(dsm_key: str,
     if dev_mode:
             eomanager.write(key=regular_mask_key, img_path=os.path.join(dev_dir, "raw_regular_mask.tif"), binary=True)
 
-    nb_iterations = int(np.max([1 ,max_object_size/4]))
+    if reg_filtering_iter is not None and reg_filtering_iter > 1:
+        nb_iterations = reg_filtering_iter
+    else:
+        nb_iterations = int(np.max([1 ,max_object_size/4]))
+        BulldozerLogger.log('\'reg_filtering_iter\' is not set or less than 1. Used default computed value: {}'.format(nb_iterations), logging.DEBUG)
+
     binary_opening(bin_regular_mask, iterations=nb_iterations, output=bin_regular_mask)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]

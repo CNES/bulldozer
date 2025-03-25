@@ -6,10 +6,14 @@
 - Adding Dockerfile and publishing it on [dockerhub](https://hub.docker.com/r/cnes/bulldozer)
 - Adding expert mode CLI
 - Adding deploy pipeline in gitlab CI
+- Adding `reg_filtering_iter` parameter in expert mode 
+
 ### Changed
 - C++ files refactoring
 - The user can override the configuration file with parameters in the CLI
-- Adding a new step in developer mode to write regular mask before filtering 
+- Adding a new step in developer mode to write regular mask before filtering
+- New border noadata mask computation
+- Including border nodata mask option in filling method
 
 ### Fixed
 - Github actions workflow file for publishing wheels on PyPI fixed

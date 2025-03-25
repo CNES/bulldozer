@@ -92,6 +92,7 @@ bulldozer_pipeline_params = {
     ],
     # Expert options: these parameters are considered as core settings and must be changed by users who are experts
     EXPERT_PARAM_KEY: [
+        BulldozerParam("reg_filtering_iter", "reg_it", "Number of regular mask filtering iterations", "Number of regular mask filtering iterations.", int, None, "<value>"),
         BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
         BulldozerParam("cloth_tension_force", "tension", "Tension force", "Filter size for tension (should be greater than 3).", int, 3, "<value>"),

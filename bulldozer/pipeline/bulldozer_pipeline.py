@@ -131,6 +131,7 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
                                                                            regular_slope=regular_slope,
                                                                            nodata=pipeline_nodata,
                                                                            max_object_size=params["max_object_size"],
+                                                                           reg_filtering_iter=params["reg_filtering_iter"],
                                                                            eomanager=eomanager,
                                                                            dev_mode=params["developer_mode"],
                                                                            dev_dir=developer_dir)
