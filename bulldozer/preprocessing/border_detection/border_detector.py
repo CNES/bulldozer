@@ -159,11 +159,11 @@ def detect_border_nodata(dsm_key: str,
     eomanager.release(key=hor_border_nodata_mask_key)
     
     ### Filling the holes inside the border nodata mask
-    border_mask_reverted = np.where(border_mask == 0, 1, 0).astype(np.uint8)
-    binary_fill_holes(border_mask_reverted, output=border_mask_reverted)
-    border_mask_reverted = np.where(border_mask_reverted == 0, 1, 0)
-    border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
-    border_mask[:] = border_mask_reverted
+    border_mask = np.where(border_mask == 0, 1, 0).astype(np.uint8)
+    binary_fill_holes(border_mask, output=border_mask)
+    border_mask = np.where(border_mask == 0, 1, 0)
+    new_border_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
+    new_border_mask[:] = border_mask
             
     # Inner nodata detection
     [inner_nodata_mask_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_mask_key],
