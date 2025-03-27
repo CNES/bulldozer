@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.2 QGIS plugin release (April 2025)
+
+### Added
+- [QGIS plugin](https://github.com/CNES/bulldozer-qgis-plugin) released
+
+### Changed
+- Allows the user to set the `reg_filtering_iter` to 0 in order to desactivate the regular mask fitlering
+
+### Fixed
+
+
+---
+
 ## 1.1.1 Docker release (March 2025)
 
 ### Added

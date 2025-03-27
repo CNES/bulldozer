@@ -117,13 +117,15 @@ def detect_regular_areas(dsm_key: str,
     if dev_mode:
             eomanager.write(key=regular_mask_key, img_path=os.path.join(dev_dir, "raw_regular_mask.tif"), binary=True)
 
-    if reg_filtering_iter is not None and reg_filtering_iter > 1:
+    if reg_filtering_iter is not None:
         nb_iterations = reg_filtering_iter
     else:
         nb_iterations = int(np.max([1 ,max_object_size/4]))
         BulldozerLogger.log('\'reg_filtering_iter\' is not set or less than 1. Used default computed value: {}'.format(nb_iterations), logging.DEBUG)
 
-    binary_opening(bin_regular_mask, iterations=nb_iterations, output=bin_regular_mask)
+    # This condition allows the user to desactivate the filtering (iterations=0 in binary_opening ends up to filtering until nothing change)
+    if nb_iterations>=1:
+        binary_opening(bin_regular_mask, iterations=nb_iterations, output=bin_regular_mask)
     
     regular_mask = eomanager.get_array(key=regular_mask_key)[0]
     regular_mask[:] = bin_regular_mask
