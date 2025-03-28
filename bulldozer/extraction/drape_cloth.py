@@ -55,8 +55,7 @@ def apply_first_tension(dtm_key: str,
                         ground_mask_key: str,
                         eomanager: eom.EOContextManager,
                         nb_levels: int,
-                        prevent_unhook_iter: int,
-                        spring_tension: int) -> None:
+                        prevent_unhook_iter: int) -> None:
     
     dsm = eomanager.get_array(key=filled_dsm_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
     predicted_anchors = eomanager.get_array(key=ground_mask_key)[0, ::2**(nb_levels-1), ::2**(nb_levels-1)]
@@ -66,7 +65,7 @@ def apply_first_tension(dtm_key: str,
 
     # Prevent unhook from hills
     for i in tqdm(range(prevent_unhook_iter), desc="Prevent unhook from hills..."):
-        dtm = scipy.ndimage.uniform_filter(dtm, output=dtm, size=spring_tension)
+        dtm = scipy.ndimage.uniform_filter(dtm, output=dtm, size=3)
         dtm[snap_mask] = dsm[snap_mask]
 
 
@@ -111,7 +110,6 @@ def drape_cloth_filter(input_buffers: list,
     """ """
     num_outer_iterations: int = params['num_outer_iterations']
     num_inner_iterations: int = params['num_inner_iterations']
-    spring_tension: int = params['spring_tension']
     step: float = params['step']
     dtm = copy.deepcopy(input_buffers[0][0, :, :])
     dsm = input_buffers[1][0, :, :]
@@ -131,7 +129,7 @@ def drape_cloth_filter(input_buffers: list,
             np.minimum(dtm, dsm, out=dtm)
 
             # apply spring tension forces (blur the DTM)
-            dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
+            dtm = scipy.ndimage.uniform_filter(dtm, size=3)
         
     # One final intersection check
     dtm[snap_mask] = dsm[snap_mask]
@@ -146,7 +144,6 @@ def drape_cloth_filter_gradient(input_buffers: list,
     """ """
     num_outer_iterations: int = params['num_outer_iterations']
     num_inner_iterations: int = params['num_inner_iterations']
-    spring_tension: int = params['spring_tension']
     step_scale: float = params['step_scale']
     nodata: int = params['nodata']
     dtm = copy.deepcopy(input_buffers[0][0, :, :])
@@ -174,8 +171,8 @@ def drape_cloth_filter_gradient(input_buffers: list,
 
             # apply spring tension forces (blur the DTM)
             #dtm[input_buffers[0][0, :, :] == nodata] = np.nan
-            dtm = scipy.ndimage.uniform_filter(dtm, size=spring_tension)
-            #dtm = bfilters.run(dtm, spring_tension, nodata)
+            dtm = scipy.ndimage.uniform_filter(dtm, size=3)
+            #dtm = bfilters.run(dtm, 3, nodata)
 
     # One final intersection check
     dtm[snap_mask] = dsm[snap_mask]
@@ -207,7 +204,6 @@ def drape_cloth(filled_dsm_key: str,
                 eomanager: eom.EOContextManager,
                 max_object_size: float,
                 prevent_unhook_iter: int,
-                spring_tension: int,
                 num_outer_iterations: int,
                 num_inner_iterations: int,
                 nodata: float) -> str:
@@ -234,8 +230,7 @@ def drape_cloth(filled_dsm_key: str,
                         ground_mask_key=ground_mask_key,
                         eomanager=eomanager,
                         nb_levels=nb_levels,
-                        prevent_unhook_iter=prevent_unhook_iter,
-                        spring_tension=spring_tension)
+                        prevent_unhook_iter=prevent_unhook_iter)
 
     # Init classical parameters of drape cloth
     level = nb_levels - 1
@@ -270,7 +265,6 @@ def drape_cloth(filled_dsm_key: str,
         drape_cloth_parameters: dict = {
             'num_outer_iterations': current_num_outer_iterations,
             'num_inner_iterations': num_inner_iterations,
-            'spring_tension': spring_tension,
             'nodata': nodata
         }
 
@@ -281,7 +275,7 @@ def drape_cloth(filled_dsm_key: str,
             image_filter=drape_cloth_filter_gradient,
             generate_output_profiles=drape_cloth_profiles,
             filter_parameters=drape_cloth_parameters,
-            stable_margin=int(current_num_outer_iterations * num_inner_iterations * (spring_tension / 2)),
+            stable_margin=int(current_num_outer_iterations * num_inner_iterations * (3 / 2)), # 3 correspond to filter size
             context_manager=eomanager,
             filter_desc="Drape cloth simulation...")
 

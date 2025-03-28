@@ -27,14 +27,12 @@ developer_mode : False
 #-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
-# [Optional] - Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution
+# [Optional] - Number of regular mask filtering iterations
 reg_filtering_iter: null
 # [Optional] - Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution
 dsm_z_accuracy: null
 # [Optional] - Maximum slope of the observed landscape terrain (%)
 max_ground_slope: 20.0
-# [Optional] - Filter size for tension (should be greater than 3)
-cloth_tension_force : 3
 # [Optional] - Number of unhook iterations
 prevent_unhook_iter : 10
 # [Optional] - Number of gravity step iterations

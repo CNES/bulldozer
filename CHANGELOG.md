@@ -7,6 +7,7 @@
 
 ### Changed
 - Allows the user to set the `reg_filtering_iter` to 0 in order to desactivate the regular mask fitlering
+- Remove `cloth_tension_force` parameter
 
 ### Fixed
 

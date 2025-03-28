@@ -95,7 +95,6 @@ bulldozer_pipeline_params = {
         BulldozerParam("reg_filtering_iter", "reg_it", "Number of regular mask filtering iterations", "Number of regular mask filtering iterations.", int, None, "<value>"),
         BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
-        BulldozerParam("cloth_tension_force", "tension", "Tension force", "Filter size for tension (should be greater than 3).", int, 3, "<value>"),
         BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
         BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations.", int, 25, "<value>"),
         BulldozerParam("num_inner_iter", "inner", "Number of inner iterations", "Number of tension iterations.", int, 5, "<value>")
