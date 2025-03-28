@@ -4,13 +4,15 @@
 
 ### Added
 - [QGIS plugin](https://github.com/CNES/bulldozer-qgis-plugin) released
+- New filling DSM method
 
 ### Changed
 - Allows the user to set the `reg_filtering_iter` to 0 in order to desactivate the regular mask fitlering
 - Remove `cloth_tension_force` parameter
+- Eoscale can now handle specific tile size
 
 ### Fixed
-
+- Fix the remaining nodata issue after DSM filling step
 
 ---
 

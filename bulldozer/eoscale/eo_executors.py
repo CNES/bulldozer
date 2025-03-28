@@ -102,6 +102,7 @@ def compute_mp_tiles(inputs: list,
                      nb_workers: int,
                      tile_mode: bool,
                      context_manager: eom.EOContextManager,
+                     specific_tile_size: int = None,
                      strip_along_lines: bool = False):
     """
         Given an input eoscale virtual path and nb_workers,
@@ -137,7 +138,10 @@ def compute_mp_tiles(inputs: list,
 
         # Force to make square tiles (except the last one unfortunately)
         nb_pixels_per_worker: int = (image_width * image_height) // nb_workers
-        tile_size = int(math.sqrt(nb_pixels_per_worker))
+        if specific_tile_size:
+            tile_size = specific_tile_size
+        else:
+            tile_size = int(math.sqrt(nb_pixels_per_worker))
         nb_tiles_x = image_width // tile_size
         nb_tiles_y = image_height // tile_size
         if image_width % tile_size > 0:
@@ -274,6 +278,7 @@ def n_images_to_m_images_filter(inputs: list = None,
                                 context_manager: eom.EOContextManager = None,
                                 filter_desc: str = "N Images to M images MultiProcessing...",
                                 tile_mode: bool = None,
+                                specific_tile_size : int = None,
                                 strip_along_lines: bool = None) -> list:
     """
         Generic paradigm to process n images providing m resulting images using a paradigm
@@ -289,6 +294,7 @@ def n_images_to_m_images_filter(inputs: list = None,
         concatenate_filter is processed by the master node to aggregate results
 
         If tile_mode is set to False, the image will be cropped as strips.
+        specific_tile_size: hotfix to handle dezoom in filling dsm method.
         If strip_along_line is set to True, those strips will be vertical.
 
         Strong hypothesis: all input image are in the same geometry and have the same size
@@ -313,6 +319,7 @@ def n_images_to_m_images_filter(inputs: list = None,
                              nb_workers=context_manager.nb_workers,
                              tile_mode=tile_mode if tile_mode is not None else context_manager.tile_mode,
                              context_manager=context_manager,
+                             specific_tile_size = specific_tile_size,
                              strip_along_lines=strip_along_lines)
 
     # Call the generate output profile callable. Use the default one

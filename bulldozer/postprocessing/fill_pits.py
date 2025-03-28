@@ -47,9 +47,8 @@ def fill_pits_filter(inputBuffers: list,
     pits_mask = np.zeros(dtm.shape, dtype=np.ubyte)
 
     border_mask = inputBuffers[1][0, :, :]
-    unfilled_dsm_mask = inputBuffers[2][0, :, :]
     
-    dtm = fillnodata(dtm, mask=np.logical_not(np.logical_or(border_mask,unfilled_dsm_mask)), max_search_distance=params["search_distance"])
+    dtm = fillnodata(dtm, mask=np.logical_not(border_mask), max_search_distance=params["search_distance"])
     
     dtm_LF = ndimage.uniform_filter(dtm, size=params["filter_size"])
     
@@ -59,7 +58,6 @@ def fill_pits_filter(inputBuffers: list,
     # Tags the pits
     pits_mask[dtm_HF < 0.] = 1
     pits_mask[border_mask==1] = 0
-    pits_mask[unfilled_dsm_mask==1] = 0
 
     # fill pits
     dtm = np.where(pits_mask, dtm_LF, dtm)
@@ -80,7 +78,6 @@ def fill_pits_profile(input_profiles: list,
 #TODO - rename function + add @Runtime
 def run(dtm_key: str,
         border_nodata_key: str,
-        unfilled_dsm_mask_key: str,
         eomanager: eom.EOContextManager):
     """
     Performs the pit removal process using EOScale.
@@ -98,7 +95,7 @@ def run(dtm_key: str,
     }
 
     [filled_dtm_key, pits_mask_key] = \
-        eoexe.n_images_to_m_images_filter(inputs=[dtm_key, border_nodata_key, unfilled_dsm_mask_key],
+        eoexe.n_images_to_m_images_filter(inputs=[dtm_key, border_nodata_key],
                                           image_filter=fill_pits_filter,
                                           filter_parameters=fill_pits_parameters,
                                           generate_output_profiles=fill_pits_profile,
