@@ -272,8 +272,6 @@ def dsm_to_dtm(config_path: str = None, **kwargs: int) -> None:
             eomanager.release(key=border_nodata_mask_key)
             inner_nodata_mask = eomanager.get_array(key=inner_nodata_mask_key)[0]
             dhm[inner_nodata_mask==1] = input_nodata
-            #TODO - Hotfix to remove
-            dhm[unfilled_dsm_mask==1] = input_nodata
             eomanager.release(key=inner_nodata_mask_key)
             BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
             with rasterio.open(os.path.join(params["output_dir"], "dhm.tif"), "w", **eomanager.get_profile(key=filled_dsm_key)) as dhm_out:
