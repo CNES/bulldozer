@@ -120,7 +120,7 @@ def detect_regular_areas(dsm_key: str,
     if reg_filtering_iter is not None:
         nb_iterations = reg_filtering_iter
     else:
-        nb_iterations = int(np.max([1 ,max_object_size/4]))
+        nb_iterations = int(np.max([1 ,max_object_size/2]))
         BulldozerLogger.log('\'reg_filtering_iter\' is not set or less than 1. Used default computed value: {}'.format(nb_iterations), logging.DEBUG)
 
     # This condition allows the user to desactivate the filtering (iterations=0 in binary_opening ends up to filtering until nothing change)
