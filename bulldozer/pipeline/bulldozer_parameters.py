@@ -88,14 +88,14 @@ bulldozer_pipeline_params = {
         BulldozerParam("ground_mask_path", "ground", "Ground mask path", "Path to the binary ground classification mask.", str, None, "<mask.tif>"),
         BulldozerParam("activate_ground_anchors", "anchors", "Activate ground anchors", "Activate ground anchor detection (ground pre-detection).", bool, False),
         BulldozerParam("nb_max_workers", "workers", "Number of workers", "Max number of CPU core to use.", int, None, "<value>"),
-        BulldozerParam("developer_mode", "dev_mode", "Developper mode", "To keep the intermediate results.", bool, False)
+        BulldozerParam("developer_mode", "dev", "Developper mode", "To keep the intermediate results.", bool, False)
     ],
     # Expert options: these parameters are considered as core settings and must be changed by users who are experts
     EXPERT_PARAM_KEY: [
         BulldozerParam("reg_filtering_iter", "reg_it", "Number of regular mask filtering iterations", "Number of regular mask filtering iterations.", int, None, "<value>"),
         BulldozerParam("dsm_z_accuracy", "dsm_z", "DSM altimetric accuracy (m)", "Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution.", float, None, "<value>"),
         BulldozerParam("max_ground_slope", "max_slope", "Max ground slope (%%)", "Maximum slope of the observed landscape terrain (%%).", float, 20.0, "<value>"),
-        BulldozerParam("prevent_unhook_iter", "unhook_iter", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
+        BulldozerParam("prevent_unhook_iter", "unhook_it", "Unhook iterations", "Number of unhook iterations.", int, 10, "<value>"),
         BulldozerParam("num_outer_iter", "outer", "Number of outer iterations", "Number of gravity step iterations.", int, 25, "<value>"),
         BulldozerParam("num_inner_iter", "inner", "Number of inner iterations", "Number of tension iterations.", int, 5, "<value>")
     ]

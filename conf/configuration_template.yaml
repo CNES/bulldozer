@@ -27,7 +27,7 @@ developer_mode : False
 #-------------------------#
 # /!\ Modify those data at your own risk (it is suggested to keep the default values) /!\
 
-# [Optional] - Number of regular mask filtering iterations
+# [Optional] - Number of regular mask filtering iterations. If null, use the default value: max_object_size/4
 reg_filtering_iter: null
 # [Optional] - Altimetric height accuracy of the input DSM (m). If null, use the default value: 2*planimetric resolution
 dsm_z_accuracy: null
