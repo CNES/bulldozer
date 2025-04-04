@@ -14,8 +14,10 @@
 - Update the filling DSM method
 - Increase the number of filtering iteration of the regular mask
 - Rename `dev_mode` alias to `dev` and `unhook_iter` alias to `unhook_it`
+
 ### Fixed
 - Fix the remaining nodata issue after DSM filling step
+- Fix the issue of `get_max_pyramid_level` function returning negative result
 
 ---
 

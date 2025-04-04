@@ -33,6 +33,8 @@ def get_max_pyramid_level(max_object_size_pixels: float) -> int :
     if abs(2**(power-1) - max_object_size_pixels) < abs(2**power - max_object_size_pixels):
         power -= 1
 
+    if power < 0 :
+        power = 0
     return power
 
 
