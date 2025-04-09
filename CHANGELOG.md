@@ -11,13 +11,13 @@
 - Allows the user to set the `reg_filtering_iter` to 0 in order to desactivate the regular mask fitlering
 - Remove `cloth_tension_force` parameter
 - Eoscale can now handle specific tile size
-- Update the filling DSM method
 - Increase the number of filtering iteration of the regular mask
 - Rename `dev_mode` alias to `dev` and `unhook_iter` alias to `unhook_it`
 
 ### Fixed
 - Fix the remaining nodata issue after DSM filling step
 - Fix the issue of `get_max_pyramid_level` function returning negative result
+- Change logfile name in order to comply with the Windows filename rule
 
 ---
 
