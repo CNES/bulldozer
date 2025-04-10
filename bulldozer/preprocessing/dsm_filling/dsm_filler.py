@@ -122,12 +122,12 @@ def fill_dsm(dsm_key: str,
     """
     
     if dev_mode:
-        dev_dir += "/filling_DSM/"
-        if not os.path.isdir(dev_dir):
-            os.makedirs(dev_dir)
+        dev_dir = os.path.join(dev_dir, "filling_DSM")
+        os.makedirs(dev_dir, exist_ok=True)
             
     filled_dsm = eomanager.get_array(key=dsm_key)[0]
     regular = eomanager.get_array(key=regular_key)[0]
+    border_nodata = eomanager.get_array(key=border_nodata_key)[0]
     
     # We're also filling the irregular areas
     filled_dsm[regular==0] = nodata
@@ -148,177 +148,137 @@ def fill_dsm(dsm_key: str,
     dezoom_factor = int(np.max([2, np.floor(regular_parameters["filling_iterations"] * (2-np.sqrt(2)))])) # sqrt(2) to handle the diagonal neighbors
     nb_max_level = int(np.floor(math.log(np.min([filled_dsm.shape[0],filled_dsm.shape[1]]), dezoom_factor))) # limits the number of dezoom iterations
     BulldozerLogger.log("DSM filling parameters : filling_iterations={} / dezoom_factor={} / nb_max_level={}".format(regular_parameters["filling_iterations"], dezoom_factor,nb_max_level), logging.DEBUG)
-
-
-    # First iterative filling for small no data areas
-    [dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_key],
-                                                  image_filter=fill_dsm_method,
-                                                  filter_parameters=regular_parameters,
-                                                  generate_output_profiles=filled_dsm_profile,
-                                                  context_manager=eomanager,
-                                                  stable_margin=regular_parameters["filling_iterations"],
-                                                  filter_desc="Iterative filling DSM level 0") 
-    
-    if dev_mode:
-        filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
-        eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
-    
-    filled_dsm = eomanager.get_array(key=dsm_key)[0]
-    border_nodata = eomanager.get_array(key=border_nodata_key)[0]
     
     # Identifying the remaining inner no data areas
     remaining_nodata = (filled_dsm == nodata) & (border_nodata == 0)
     
-    # Putting nan values instead of no data for the sampling function
-    filled_dsm[filled_dsm == nodata] = np.nan  
-
     # if nodata areas are still in the DSM
     has_nodata = np.any(remaining_nodata)
+    dezoom_level = 0
+    downsample = True
     
-    dezoom_level = 1
     # Downsampling until there is nodata remaining or reaching max level
-    while has_nodata and dezoom_level<=nb_max_level:
-        
-        regular_parameters["use_bordernodata_mask"] = False
-        
-        filled_dsm = eomanager.get_array(key=dsm_key)[0]
+    while has_nodata and 0<=dezoom_level and dezoom_level<=nb_max_level:
 
-        # Downsampling the DSM to fill the large nodata areas. the order is set to 1 because it's the only one that handle no data 
-        # The mode is set to nearest because it expands the image when zooming if the resampling factor is not proportional to the image size
-        filled_dsm_downsampled = zoom(filled_dsm, 1/(dezoom_factor**dezoom_level), order=1, mode="nearest") 
-        # Putting back nodata values
-        filled_dsm_downsampled = np.where(np.isnan(filled_dsm_downsampled), nodata, filled_dsm_downsampled) 
+        if dezoom_level==0: # When level is 0
 
-        # Creating new profile for downsampled data
-        downsampled_profile = downsample_profile(profile=eomanager.get_profile(key=dsm_key), factor=dezoom_factor**dezoom_level)
-        downsampled_profile.update(width=np.shape(filled_dsm_downsampled)[1], height=np.shape(filled_dsm_downsampled)[0])
-        downsampled_filled_dsm_key = eomanager.create_image(downsampled_profile)
+            # First iterative filling for small no data areas
+            regular_parameters["use_bordernodata_mask"] = True
+            [dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_key],
+                                                        image_filter=fill_dsm_method,
+                                                        filter_parameters=regular_parameters,
+                                                        generate_output_profiles=filled_dsm_profile,
+                                                        context_manager=eomanager,
+                                                        stable_margin=regular_parameters["filling_iterations"],
+                                                        filter_desc="Iterative filling DSM level 0") 
+            
+            if dev_mode and downsample:
+                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
+                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
 
-        filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
-        filled_dsm_downsample[:] = filled_dsm_downsampled    
-        
-        # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
-        BulldozerLogger.log("DSM filling during downsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers)), logging.DEBUG)
-        if np.ceil(dsm_resolution*dezoom_factor**dezoom_level) > math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers):
-            specific_tile_size = int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level))
-        else:
-            specific_tile_size = None
-       
-        # Iterative filling for the remaining no data areas
-        [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key],
-                                                                         image_filter=fill_dsm_method,
-                                                                         filter_parameters=regular_parameters,
-                                                                         generate_output_profiles=filled_dsm_profile,
-                                                                         context_manager=eomanager,
-                                                                         stable_margin=regular_parameters["filling_iterations"],
-                                                                         filter_desc="Iterative filling DSM level "+str(dezoom_level),
-                                                                         specific_tile_size = specific_tile_size) 
-                    
-        filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
-        
-        # Putting nan values instead of no data for the sampling function
-        filled_dsm_downsample[filled_dsm_downsample == nodata] = np.nan
-        
-        if dev_mode:
-            filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_downsampled_level_"+str(dezoom_level)+".tif")
-            eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
-        
-        # Merging the current level with the first one
-        scale_y = filled_dsm.shape[0] / filled_dsm_downsample.shape[0]
-        scale_x = filled_dsm.shape[1] / filled_dsm_downsample.shape[1]
-        filled_dsm_resample = zoom(filled_dsm_downsample, (scale_y, scale_x), order=1, mode="nearest")
+            elif dev_mode and not downsample:
+                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
+                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
+            
+            filled_dsm = eomanager.get_array(key=dsm_key)[0]
+            border_nodata = eomanager.get_array(key=border_nodata_key)[0]
+            
+            # Identifying the remaining inner no data areas
+            remaining_nodata = (filled_dsm == nodata) & (border_nodata == 0)
+            
+            # Putting nan values instead of no data for the sampling function
+            filled_dsm[filled_dsm == nodata] = np.nan  
 
-        filled_dsm[:] = np.where(remaining_nodata == 1, filled_dsm_resample, filled_dsm)
-        
-        remaining_nodata = (np.isnan(filled_dsm)) & (border_nodata == 0)
-        
-        has_nodata = np.any(remaining_nodata)
-        
-        eomanager.release(key=downsampled_filled_dsm_key)
-        
-        dezoom_level+=1
+            # if nodata areas are still in the DSM
+            has_nodata = np.any(remaining_nodata)
 
-    # After the downsampling step it may remains nodata due to a number of iteration too low at each level or due to the downsampling method (e.g. noada pixel in a batch that convert to a neigbour value after dezoom step and that never fill later)
-    # Another multi(resolution iterative filling step is apply to fill the remaining nodata. In this case we try to fill the remaining nodata with the lowest resolution and iterate until reaching full resolution.
-    # At each resolution we iterate until reaching the theorical maximal number of iteration based on the resolution or until there is no remaining nodata.
-    dezoom_level-=2
+            if downsample:
+                dezoom_level+=1
 
-    # upsampling until retrieving the original resolution
-    while has_nodata and dezoom_level>=1:
+            else:
+                dezoom_level-=1
 
-        filled_dsm = eomanager.get_array(key=dsm_key)[0]
+        else: # For every other level than 0 (with downsampling)
 
-        # We keep the same method for dezoom
-        filled_dsm_upsampled = zoom(filled_dsm, 1/(dezoom_factor**dezoom_level), order=1, mode="nearest") 
-        filled_dsm_upsampled = np.where(np.isnan(filled_dsm_upsampled), nodata, filled_dsm_upsampled)
+            regular_parameters["use_bordernodata_mask"] = False
+            filled_dsm = eomanager.get_array(key=dsm_key)[0]
 
-        # The number of iteration is set to the maximum at the current resolution (we consider the max distance to reach with current resolution considering the diagional of the image)
-        regular_parameters["filling_iterations"] = int(np.floor(np.sqrt(filled_dsm.shape[0]**2+filled_dsm.shape[1]**2) // dezoom_factor**dezoom_level))
-        BulldozerLogger.log("DSM filling during upsampling step : level={} / filling_iterations={}".format(dezoom_level, regular_parameters["filling_iterations"]), logging.DEBUG)
+            # Downsampling the DSM to fill the large nodata areas. the order is set to 1 because it's the only one that handle no data 
+            # The mode is set to nearest because it expands the image when zooming if the resampling factor is not proportional to the image size
+            filled_dsm_downsampled = zoom(filled_dsm, 1/(dezoom_factor**dezoom_level), order=1, mode="nearest") 
+            # Putting back nodata values
+            filled_dsm_downsampled = np.where(np.isnan(filled_dsm_downsampled), nodata, filled_dsm_downsampled) 
 
-        # Creating new profile for downsampled data
-        downsampled_profile = downsample_profile(profile=eomanager.get_profile(key=dsm_key), factor=dezoom_factor**dezoom_level)
-        downsampled_profile.update(width=np.shape(filled_dsm_upsampled)[1], height=np.shape(filled_dsm_upsampled)[0])
-        downsampled_filled_dsm_key = eomanager.create_image(downsampled_profile)
+            # Creating new profile for downsampled data
+            downsampled_profile = downsample_profile(profile=eomanager.get_profile(key=dsm_key), factor=dezoom_factor**dezoom_level)
+            downsampled_profile.update(width=np.shape(filled_dsm_downsampled)[1], height=np.shape(filled_dsm_downsampled)[0])
+            downsampled_filled_dsm_key = eomanager.create_image(downsampled_profile)
 
-        filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
-        filled_dsm_downsample[:] = filled_dsm_upsampled        
-        
-        # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
-        BulldozerLogger.log("DSM filling during upsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers)), logging.DEBUG)
-        if np.ceil(dsm_resolution*dezoom_factor**dezoom_level) > math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers):
-            specific_tile_size = int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level))
-        else:
-            specific_tile_size = None
+            filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
+            filled_dsm_downsample[:] = filled_dsm_downsampled  
 
-        # Iterative filling for the remaining no data areas
-        [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key],
-                                                                         image_filter=fill_dsm_method,
-                                                                         filter_parameters=regular_parameters,
-                                                                         generate_output_profiles=filled_dsm_profile,
-                                                                         context_manager=eomanager,
-                                                                         stable_margin=regular_parameters["filling_iterations"],
-                                                                         filter_desc="Iterative filling DSM level -"+str(dezoom_level),
-                                                                         specific_tile_size = specific_tile_size) 
-                    
-        filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
-        
-        # Putting nan values instead of no data for the sampling function
-        filled_dsm_downsample[filled_dsm_downsample == nodata] = np.nan
-        
-        if dev_mode:
-            filled_dsm_upsample_path: str = os.path.join(dev_dir, "filled_dsm_upsampled_level_"+str(dezoom_level)+".tif")
-            eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_upsample_path)
-        
-        # Merging the current level with the first one
-        scale_y = filled_dsm.shape[0] / filled_dsm_downsample.shape[0]
-        scale_x = filled_dsm.shape[1] / filled_dsm_downsample.shape[1]
-        filled_dsm_resample = zoom(filled_dsm_downsample, (scale_y, scale_x), order=1, mode="nearest")
+            if downsample:
+                # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
+                BulldozerLogger.log("DSM filling during downsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers))), logging.DEBUG)
 
-        filled_dsm[:] = np.where(remaining_nodata == 1, filled_dsm_resample, filled_dsm)
+            else:
+                # The number of iteration is set to the maximum at the current resolution (we consider the max distance to reach with current resolution considering the diagional of the image)
+                regular_parameters["filling_iterations"] = int(np.floor(np.sqrt(filled_dsm.shape[0]**2+filled_dsm.shape[1]**2) // dezoom_factor**dezoom_level))
+                BulldozerLogger.log("DSM filling during upsampling step : level={} / filling_iterations={}".format(dezoom_level, regular_parameters["filling_iterations"]), logging.DEBUG)
+                
+                # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
+                BulldozerLogger.log("DSM filling during upsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers))), logging.DEBUG)
         
-        remaining_nodata = (np.isnan(filled_dsm)) & (border_nodata == 0)
+            if np.ceil(dsm_resolution*dezoom_factor**dezoom_level) > math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers):
+                specific_tile_size = int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level))
+            else:
+                specific_tile_size = None
         
-        has_nodata = np.any(remaining_nodata)
-        
-        eomanager.release(key=downsampled_filled_dsm_key)
-        
-        dezoom_level-=1
+            # Iterative filling for the remaining no data areas
+            [downsampled_filled_dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[downsampled_filled_dsm_key],
+                                                                            image_filter=fill_dsm_method,
+                                                                            filter_parameters=regular_parameters,
+                                                                            generate_output_profiles=filled_dsm_profile,
+                                                                            context_manager=eomanager,
+                                                                            stable_margin=regular_parameters["filling_iterations"],
+                                                                            filter_desc="Iterative filling DSM level "+str(dezoom_level),
+                                                                            specific_tile_size = specific_tile_size) 
+                        
+            filled_dsm_downsample = eomanager.get_array(key=downsampled_filled_dsm_key)[0]
+            
+            # Putting nan values instead of no data for the sampling function
+            filled_dsm_downsample[filled_dsm_downsample == nodata] = np.nan
+            
+            if dev_mode and downsample:
+                filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_downsampled_level_"+str(dezoom_level)+".tif")
+                eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
 
-    
-    if has_nodata:
-        # Last iterative filling for small no data areas
-        [dsm_key] = eoexe.n_images_to_m_images_filter(inputs=[dsm_key, border_nodata_key],
-                                                    image_filter=fill_dsm_method,
-                                                    filter_parameters=regular_parameters,
-                                                    generate_output_profiles=filled_dsm_profile,
-                                                    context_manager=eomanager,
-                                                    stable_margin=regular_parameters["filling_iterations"],
-                                                    filter_desc="Iterative filling DSM Final level") 
-        
-        if dev_mode:
-            filled_dsm_lastpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
-            eomanager.write(key=dsm_key, img_path=filled_dsm_lastpass_path)
+            elif dev_mode and not downsample:
+                filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_upsampled_level_"+str(dezoom_level)+".tif")
+                eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
+            
+            # Merging the current level with the first one
+            scale_y = filled_dsm.shape[0] / filled_dsm_downsample.shape[0]
+            scale_x = filled_dsm.shape[1] / filled_dsm_downsample.shape[1]
+            filled_dsm_resample = zoom(filled_dsm_downsample, (scale_y, scale_x), order=1, mode="nearest")
+
+            filled_dsm[:] = np.where(remaining_nodata == 1, filled_dsm_resample, filled_dsm)
+            
+            remaining_nodata = (np.isnan(filled_dsm)) & (border_nodata == 0)
+            
+            has_nodata = np.any(remaining_nodata)
+            
+            eomanager.release(key=downsampled_filled_dsm_key)
+
+            if downsample:
+                dezoom_level+=1
+
+            else:
+                dezoom_level-=1
+
+            if dezoom_level==nb_max_level:
+                dezoom_level-=2
+                downsample=False
 
     # Set the border nodata to very high value in order to avoid underestimation of the DTM on the border
     #TODO change to another method?
