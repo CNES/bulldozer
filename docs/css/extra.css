@@ -1,0 +1,16 @@
+.wy-side-nav-search img {
+    max-height: 150px;
+    width: auto;
+}
+
+.wy-side-nav-search {
+    background-color: #272525;
+}
+
+.wy-nav-side {
+    background-color: #343131;
+}
+
+.wy-side-nav-search, .wy-menu-vertical a {
+    color: white;
+}

@@ -1,0 +1,21 @@
+site_name: Bulldozer
+
+theme: 
+  # Readthedocs template
+  name: readthedocs
+  logo: https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/logo.png
+  favicon: source/images/logo_icon.ico
+  custom_dir: docs
+
+extra_css:
+    - css/extra.css
+markdown_extensions:
+    - toc:
+        permalink: true
+    - admonition
+    - tables
+    - footnotes
+    - codehilite
+      
+nav:
+    - Home: index.md
