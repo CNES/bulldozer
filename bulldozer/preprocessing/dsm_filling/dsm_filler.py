@@ -115,7 +115,7 @@ def fill_dsm(dsm_key: str,
         nodata: DSM nodata value (if nan, the nodata is set to -32768).
         eomanager: eoscale context manager.
         dev_mode: if True, dev mode activated.
-        dev_dir: path to save dev files.
+        dev_dir: path to save dev files. 
 
     Returns:
         the filled DSM.
@@ -133,9 +133,13 @@ def fill_dsm(dsm_key: str,
     filled_dsm[regular==0] = nodata
     
     if dev_mode:
+        profile = eomanager.get_profile(key=dsm_key).copy()
+        profile['driver'] = 'GTiff'
+        profile['interleave'] = 'band'
+        profile['nodata'] = nodata
         filled_dsm_with_regular_path: str = os.path.join(dev_dir, "regular_dsm.tif")
-        eomanager.write(key=dsm_key, img_path=filled_dsm_with_regular_path)
-    
+        eomanager.write(key=dsm_key, img_path=filled_dsm_with_regular_path, profile=profile)
+        
     dsm_resolution = eomanager.get_profile(key=dsm_key)["transform"][0]
     # Setting parameters for the DSM filling method
     regular_parameters: dict = {
@@ -172,23 +176,28 @@ def fill_dsm(dsm_key: str,
                                                         stable_margin=regular_parameters["filling_iterations"],
                                                         filter_desc="Iterative filling DSM level 0") 
             
-            if dev_mode and downsample:
-                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
-                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
-
-            elif dev_mode and not downsample:
-                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
-                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path)
-            
             filled_dsm = eomanager.get_array(key=dsm_key)[0]
             border_nodata = eomanager.get_array(key=border_nodata_key)[0]
             
             # Identifying the remaining inner no data areas
             remaining_nodata = (filled_dsm == nodata) & (border_nodata == 0)
             
-            # Putting nan values instead of no data for the sampling function
-            filled_dsm[filled_dsm == nodata] = np.nan  
+            if dev_mode and downsample:
+                profile = eomanager.get_profile(key=dsm_key).copy()
+                profile['driver'] = 'GTiff'
+                profile['interleave'] = 'band'
+                profile['nodata'] = nodata
+                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
+                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path, profile=profile)
 
+            elif dev_mode and not downsample:
+                profile = eomanager.get_profile(key=dsm_key).copy()
+                profile['driver'] = 'GTiff'
+                profile['interleave'] = 'band'
+                profile['nodata'] = nodata
+                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
+                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path, profile=profile)
+                
             # if nodata areas are still in the DSM
             has_nodata = np.any(remaining_nodata)
 
@@ -202,6 +211,9 @@ def fill_dsm(dsm_key: str,
 
             regular_parameters["use_bordernodata_mask"] = False
             filled_dsm = eomanager.get_array(key=dsm_key)[0]
+            
+            # Putting nan values instead of no data for the sampling function
+            filled_dsm[filled_dsm == nodata] = np.nan
 
             # Downsampling the DSM to fill the large nodata areas. the order is set to 1 because it's the only one that handle no data 
             # The mode is set to nearest because it expands the image when zooming if the resampling factor is not proportional to the image size
@@ -269,6 +281,8 @@ def fill_dsm(dsm_key: str,
             has_nodata = np.any(remaining_nodata)
             
             eomanager.release(key=downsampled_filled_dsm_key)
+            
+            filled_dsm[:] = np.where(np.isnan(filled_dsm), nodata, filled_dsm) 
 
             if downsample:
                 dezoom_level+=1

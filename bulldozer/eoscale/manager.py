@@ -136,20 +136,23 @@ class EOContextManager:
             self.shared_resources[key].release()
             del self.shared_resources[key]
     
-    def write(self, key: str, img_path: str, binary: bool = False):
+    def write(self, key: str, img_path: str, binary: bool = False, profile: dict = None):
         """
             Write the corresponding shared resource to disk
         """
         if key in self.shared_resources:
-            profile = self.shared_resources[key].get_profile()
-            profile['driver'] = 'GTiff'
-            profile['interleave'] = 'band'
+            if profile:
+                target_profile = profile
+            else:
+                target_profile = self.shared_resources[key].get_profile()
+                target_profile['driver'] = 'GTiff'
+                target_profile['interleave'] = 'band'
             img_buffer = self.shared_resources[key].get_array()
             if binary:
-                with rasterio.open(img_path, "w", nbits=1,**profile) as out_dataset:
+                with rasterio.open(img_path, "w", nbits=1,**target_profile) as out_dataset:
                     out_dataset.write(img_buffer)             
             else:
-                with rasterio.open(img_path, "w", **profile) as out_dataset:
+                with rasterio.open(img_path, "w", **target_profile) as out_dataset:
                     out_dataset.write(img_buffer)
         else:
             print(f"WARNING: the key {key} to write is not known by the context manager")
