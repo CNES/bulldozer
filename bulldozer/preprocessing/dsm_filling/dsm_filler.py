@@ -182,20 +182,16 @@ def fill_dsm(dsm_key: str,
             # Identifying the remaining inner no data areas
             remaining_nodata = (filled_dsm == nodata) & (border_nodata == 0)
             
-            if dev_mode and downsample:
+            if dev_mode:
                 profile = eomanager.get_profile(key=dsm_key).copy()
                 profile['driver'] = 'GTiff'
                 profile['interleave'] = 'band'
                 profile['nodata'] = nodata
-                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
-                eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path, profile=profile)
-
-            elif dev_mode and not downsample:
-                profile = eomanager.get_profile(key=dsm_key).copy()
-                profile['driver'] = 'GTiff'
-                profile['interleave'] = 'band'
-                profile['nodata'] = nodata
-                filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
+                if downsample:
+                    filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_downsample_level_0.tif")
+                else:
+                    # Upsample case
+                    filled_dsm_1stpass_path: str = os.path.join(dev_dir, "filled_dsm_upsample_level_0.tif")
                 eomanager.write(key=dsm_key, img_path=filled_dsm_1stpass_path, profile=profile)
                 
             # if nodata areas are still in the DSM
@@ -203,7 +199,6 @@ def fill_dsm(dsm_key: str,
 
             if downsample:
                 dezoom_level+=1
-
             else:
                 dezoom_level-=1
 
@@ -230,18 +225,17 @@ def fill_dsm(dsm_key: str,
             filled_dsm_downsample[:] = filled_dsm_downsampled  
 
             if downsample:
-                # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
-                BulldozerLogger.log("DSM filling during downsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers))), logging.DEBUG)
+                #TODO HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
+                BulldozerLogger.log("DSM filling during downsampling step : level={} / computed_specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers))), logging.DEBUG)
 
             else:
                 # The number of iteration is set to the maximum at the current resolution (we consider the max distance to reach with current resolution considering the diagional of the image)
-                regular_parameters["filling_iterations"] = int(np.floor(np.sqrt(filled_dsm.shape[0]**2+filled_dsm.shape[1]**2) // dezoom_factor**dezoom_level))
-                BulldozerLogger.log("DSM filling during upsampling step : level={} / filling_iterations={}".format(dezoom_level, regular_parameters["filling_iterations"]), logging.DEBUG)
-                
-                # HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
-                BulldozerLogger.log("DSM filling during upsampling step : level={} / specific_tile_size={} / default_tile_size={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers))), logging.DEBUG)
+                regular_parameters["filling_iterations"] = int(np.floor(np.sqrt(filled_dsm.shape[0]**2+filled_dsm.shape[1]**2) // dezoom_factor**dezoom_level))                
+                #TODO HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
+                BulldozerLogger.log("DSM filling during upsampling step : level={} / computed_specific_tile_size={} / default_tile_size={} / filling_iterations={}".format(dezoom_level, int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level)), int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers)),  regular_parameters["filling_iterations"]), logging.DEBUG)
         
             if np.ceil(dsm_resolution*dezoom_factor**dezoom_level) > math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // eomanager.nb_workers):
+                #TODO HOTFIX to remove: until we change eoscale we have to compute the tile size manually 
                 specific_tile_size = int(np.ceil(dsm_resolution*dezoom_factor**dezoom_level))
             else:
                 specific_tile_size = None
@@ -261,18 +255,20 @@ def fill_dsm(dsm_key: str,
             # Putting nan values instead of no data for the sampling function
             filled_dsm_downsample[filled_dsm_downsample == nodata] = np.nan
             
-            if dev_mode and downsample:
-                filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_downsampled_level_"+str(dezoom_level)+".tif")
-                eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
-
-            elif dev_mode and not downsample:
-                filled_dsm_downsample_path: str = os.path.join(dev_dir, "filled_dsm_upsampled_level_"+str(dezoom_level)+".tif")
-                eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_downsample_path)
+            if dev_mode:
+                if downsample:
+                    filled_dsm_path: str = os.path.join(dev_dir, "filled_dsm_downsampled_level_"+str(dezoom_level)+".tif")
+                else:
+                    # Upsample case
+                    filled_dsm_path: str = os.path.join(dev_dir, "filled_dsm_upsampled_level_"+str(dezoom_level)+".tif")
+                eomanager.write(key=downsampled_filled_dsm_key, img_path=filled_dsm_path)
             
             # Merging the current level with the first one
             scale_y = filled_dsm.shape[0] / filled_dsm_downsample.shape[0]
             scale_x = filled_dsm.shape[1] / filled_dsm_downsample.shape[1]
             filled_dsm_resample = zoom(filled_dsm_downsample, (scale_y, scale_x), order=1, mode="nearest")
+
+            eomanager.release(key=downsampled_filled_dsm_key)
 
             filled_dsm[:] = np.where(remaining_nodata == 1, filled_dsm_resample, filled_dsm)
             
@@ -280,17 +276,15 @@ def fill_dsm(dsm_key: str,
             
             has_nodata = np.any(remaining_nodata)
             
-            eomanager.release(key=downsampled_filled_dsm_key)
-            
             filled_dsm[:] = np.where(np.isnan(filled_dsm), nodata, filled_dsm) 
 
             if downsample:
                 dezoom_level+=1
-
             else:
                 dezoom_level-=1
 
             if dezoom_level==nb_max_level:
+                # For upsampling we prefer to start at the level just after the max_level
                 dezoom_level-=2
                 downsample=False
 

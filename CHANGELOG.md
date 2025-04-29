@@ -19,6 +19,7 @@
 - Fix the remaining nodata issue after DSM filling step
 - Fix the issue of `get_max_pyramid_level` function returning negative result
 - Change logfile name in order to comply with the Windows filename rule
+- Fix the nodata value in intermediate profile for `dev_mode` during the DSM filling step 
 
 ---
 
