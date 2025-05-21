@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.0 Documentation online (June 2025)
+
+### Added
+
+### Changed
+
+### Fixed
+- Docker image push github action fixed 
+
+---
+
 ## 1.1.2 QGIS plugin release (April 2025)
 
 ### Added
