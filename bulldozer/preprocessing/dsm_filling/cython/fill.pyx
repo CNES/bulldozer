@@ -18,8 +18,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import numpy as np
-from bulldozer.utils.helper import npAsContiguousArray
+
+from bulldozer.utils.helper import np_as_contiguous_array
 
 # Begin PXD
 
@@ -63,12 +65,12 @@ cdef class PyFill:
         Return:
             Filled DSM
         """
-        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
+        cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
         cdef unsigned char[::1] border_nodata_mask_memview 
         cdef unsigned char* border_nodata_mask_ptr = NULL  # Initialize as NULL
 
         if border_nodata_strip is not None: # For the level 0
-            border_nodata_mask_memview = npAsContiguousArray(border_nodata_strip.ravel().astype(np.uint8))
+            border_nodata_mask_memview = np_as_contiguous_array(border_nodata_strip.ravel().astype(np.uint8))
             border_nodata_mask_ptr = &border_nodata_mask_memview[0]
 
         # Iterative Filling

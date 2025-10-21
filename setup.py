@@ -18,18 +18,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup, Extension, find_packages
+"""
+Setup file for bulldozer
+"""
+
 from distutils.util import convert_path
-from Cython.Build import cythonize
+
 import numpy
+from Cython.Build import cythonize
+from setuptools import Extension, find_packages, setup
 
 extensions = [
-    Extension( "bulldozer.preprocessing.regular", ["bulldozer/preprocessing/regular_detection/cython/regular.pyx"]),
-    Extension( "bulldozer.preprocessing.border", ["bulldozer/preprocessing/border_detection/cython/border.pyx"]),
-    Extension( "bulldozer.preprocessing.fill", ["bulldozer/preprocessing/dsm_filling/cython/fill.pyx"], include_dirs=[numpy.get_include()])
+    Extension(
+        "bulldozer.preprocessing.regular",
+        ["bulldozer/preprocessing/regular_detection/cython/regular.pyx"],
+    ),
+    Extension(
+        "bulldozer.preprocessing.border",
+        ["bulldozer/preprocessing/border_detection/cython/border.pyx"],
+    ),
+    Extension(
+        "bulldozer.preprocessing.fill",
+        ["bulldozer/preprocessing/dsm_filling/cython/fill.pyx"],
+        include_dirs=[numpy.get_include()],
+    ),
 ]
 
-compiler_directives = { "language_level": 3, "embedsignature": True}
+compiler_directives = {"language_level": 3, "embedsignature": True}
 extensions = cythonize(extensions, compiler_directives=compiler_directives)
 
 main_ns = {}
@@ -39,9 +54,9 @@ with open(ver_path) as ver_file:
 
 try:
     setup(
-        version = main_ns['__version__'],
+        version=main_ns["__version__"],
         ext_modules=extensions,
-        packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"])
+        packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     )
 except Exception:
     print(
@@ -51,4 +66,3 @@ except Exception:
         "\tpip install -U setuptools setuptools_scm wheel\n\n"
     )
     raise
-

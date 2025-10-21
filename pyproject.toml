@@ -27,3 +27,24 @@ build-backend = "setuptools.build_meta"
 # Avoid PyPy and Python < 3.8 wheel generation
 [tool.cibuildwheel]
 skip = ["pp*", "cp36-*", "cp37-*"]
+
+[tool.black]
+# https://github.com/psf/black
+line-length = 120  # default 80
+exclude = "(.eggs|.git|.mypy_cache|.nox|.tox|_build|build|dist|venv|eoscale)"
+
+[tool.isort]
+profile = 'black'
+line_length = 120  # default 80
+skip = 'eoscale'
+
+[tool.flake8]
+exclude = [".git", "venv", "build", "dist", "docs", "eoscale"]
+extend-ignore = ["B907", "E203", "E501", "W503"]
+extend-select = ["B950"]
+max-complexity = 20
+max-line-length = 120  # default 80
+copyright-check = true
+select = ["E","F","W","C","B9","C4","B"]
+
+

@@ -19,16 +19,17 @@
 # limitations under the License.
 
 """
-    This module groups different generic methods used in Bulldozer.
+This module groups different generic methods used in Bulldozer.
 """
-import rasterio
+from typing import Any, Dict
+
 import numpy as np
 from rasterio import Affine
 
 
-def npAsContiguousArray(arr: np.array) -> np.array:
+def np_as_contiguous_array(arr: np.ndarray) -> np.ndarray:
     """
-    This method checks that the input array is contiguous. 
+    This method checks that the input array is contiguous.
     If not, returns the contiguous version of the input numpy array.
 
     Args:
@@ -37,20 +38,24 @@ def npAsContiguousArray(arr: np.array) -> np.array:
     Returns:
         contiguous array usable in C++.
     """
-    if not arr.flags['C_CONTIGUOUS']:
+    if not arr.flags["C_CONTIGUOUS"]:
         arr = np.ascontiguousarray(arr)
     return arr
 
 
-def downsample_profile(profile, factor: float):
-    
-    transform= profile['transform']
+def downsample_profile(profile: Dict[str, Any], factor: float) -> Dict[str, Any]:
+    """Downsample image profile by affine translation."""
+    transform = profile["transform"]
 
     newprofile = profile.copy()
-    dst_transform = Affine.translation(transform[2], transform[5]) * Affine.scale(transform[0]*factor, transform[4]*factor)
-    
-    newprofile.update({
-        'transform': dst_transform,
-    })
-    
+    dst_transform = Affine.translation(transform[2], transform[5]) * Affine.scale(
+        transform[0] * factor, transform[4] * factor
+    )
+
+    newprofile.update(
+        {
+            "transform": dst_transform,
+        }
+    )
+
     return newprofile

@@ -40,7 +40,7 @@ class EOShared:
 
         if virtual_path is not None:
             self._open_from_virtual_path(virtual_path = virtual_path)
-    
+
     def _extract_from_vpath(self) -> tuple:
         """
             Extract resource key and metada length from the virtual path
@@ -48,32 +48,32 @@ class EOShared:
         split_v_path: list = self.virtual_path.split("/")
         resource_key: str = split_v_path[2]
         mtd_len: str = split_v_path[1]
-        return resource_key, mtd_len    
+        return resource_key, mtd_len
 
     def _open_from_virtual_path(self, virtual_path: str):
         """ """
 
         self.virtual_path = virtual_path
-        
+
         resource_key, mtd_len = self._extract_from_vpath()
 
-        self.shared_array_memory = shared_memory.SharedMemory(name=resource_key, 
+        self.shared_array_memory = shared_memory.SharedMemory(name=resource_key,
                                                               create=False)
 
-        self.shared_metadata_memory = shared_memory.SharedMemory(name=resource_key + EOSHARED_MTD, 
+        self.shared_metadata_memory = shared_memory.SharedMemory(name=resource_key + EOSHARED_MTD,
                                                                  create=False)
 
     def _build_virtual_path(self, key: str, mtd_len: str) -> None:
         """ """
         self.virtual_path = EOSHARED_PREFIX + "/" + mtd_len + "/" + key
-    
+
     def _create_shared_metadata(self, profile: dict, key: str):
         """ """
         # Encode and compute the number of bytes of the metadata
         encoded_metadata = json.dumps(eoutils.rasterio_profile_to_dict(profile)).encode()
         mtd_size: int = len(encoded_metadata)
-        self.shared_metadata_memory = shared_memory.SharedMemory(create=True, 
-                                                                 size=mtd_size, 
+        self.shared_metadata_memory = shared_memory.SharedMemory(create=True,
+                                                                 size=mtd_size,
                                                                  name=key + EOSHARED_MTD)
         self.shared_metadata_memory.buf[:] = encoded_metadata[:]
 
@@ -82,7 +82,7 @@ class EOShared:
 
     def create_array(self, profile: dict):
         """
-            Allocate array 
+            Allocate array
         """
         # Shared key is made unique
         # this property is awesome since it allows the communication between parallel tasks
@@ -93,21 +93,21 @@ class EOShared:
 
         # Create a shared memory instance of it
         # shared memory must remain open to keep the memory view
-        self.shared_array_memory = shared_memory.SharedMemory(create=True, 
-                                                              size=d_size, 
+        self.shared_array_memory = shared_memory.SharedMemory(create=True,
+                                                              size=d_size,
                                                               name=resource_key)
-        
-        big_array = numpy.ndarray(shape=(profile["count"]  * profile["height"] * profile["width"]), 
-                                         dtype= numpy.dtype(profile["dtype"]), 
-                                         buffer=self.shared_array_memory.buf)
-                               
+
+        big_array = numpy.ndarray(shape=(profile["count"]  * profile["height"] * profile["width"]),
+                                        dtype=numpy.dtype(profile["dtype"]),
+                                        buffer=self.shared_array_memory.buf)
+
         big_array[:] = 0
 
         self._create_shared_metadata(profile = profile, key = resource_key)
 
     def create_from_raster_path(self,
-                                raster_path: str) -> str :
-        
+                                raster_path: str) -> str:
+
         """ Create a shared memory numpy array from a raster image """
         with rasterio.open(raster_path, "r") as raster_dataset:
 
@@ -120,13 +120,12 @@ class EOShared:
 
             # Create a shared memory instance of it
             # shared memory must remain open to keep the memory view
-            self.shared_array_memory = shared_memory.SharedMemory(create=True, 
-                                                                  size=d_size, 
+            self.shared_array_memory = shared_memory.SharedMemory(create=True,
+                                                                  size=d_size,
                                                                   name=resource_key)
-            
 
-            big_array = numpy.ndarray(shape=(raster_dataset.count  * raster_dataset.height * raster_dataset.width), 
-                                      dtype=raster_dataset.dtypes[0], 
+            big_array = numpy.ndarray(shape=(raster_dataset.count  * raster_dataset.height * raster_dataset.width),
+                                      dtype=raster_dataset.dtypes[0],
                                       buffer=self.shared_array_memory.buf)
 
             big_array[:] = raster_dataset.read().flatten()[:]
@@ -142,16 +141,16 @@ class EOShared:
         encoded_mtd[:] = self.shared_metadata_memory.buf[:]
         return copy.deepcopy(eoutils.dict_to_rasterio_profile(json.loads(encoded_mtd.decode())))
 
-    def get_array(self, 
+    def get_array(self,
                   tile: eoutils.MpTile = None) -> numpy.ndarray:
 
-        """            
+        """
             Return a memory view of the array or a subset of it if a tile is given
             This has be done to be respect the dimension condition of the n_images_to_m_images filter.
         """
         profile = self.get_profile()
         array_shape = (profile['count'], profile['height'], profile['width'])
-        
+
         arr = numpy.ndarray(array_shape,
                             dtype=profile['dtype'],
                             buffer=self.shared_array_memory.buf)
@@ -164,10 +163,10 @@ class EOShared:
             start_x = tile.start_x - tile.left_margin
             end_x = tile.end_x + tile.right_margin + 1
             return arr[:, start_y:end_y, start_x:end_x]
-    
+
     def _update_profile(self, profile: dict) -> None:
-        """ 
-            Update a shared metadata memory of an existing eoshared resource, 
+        """
+            Update a shared metadata memory of an existing eoshared resource,
             normally it might not be called directly by the user because it is a dangerous operation...
         """
 
@@ -177,7 +176,6 @@ class EOShared:
 
         return self.virtual_path
 
-    
     def _release_profile(self):
         """
             Method used by EOScale only, normally it might not be called directly by the user
@@ -186,27 +184,26 @@ class EOShared:
             self.shared_metadata_memory.close()
             self.shared_metadata_memory.unlink()
             self.shared_metadata_memory = None
-    
+
     def close(self):
-        """ 
+        """
             A close does not mean release from memory. Must be called by a process once it has finished
             with this resource.
         """
         if self.shared_array_memory is not None:
             self.shared_array_memory.close()
-        
+
         if self.shared_metadata_memory is not None:
             self.shared_metadata_memory.close()
-    
+
     def release(self):
-    
-        """ 
+
+        """
             Definitely release the shared memory.
         """
         if self.shared_array_memory is not None:
             self.shared_array_memory.close()
             self.shared_array_memory.unlink()
             self.shared_array_memory = None
-        
-        self._release_profile()
 
+        self._release_profile()

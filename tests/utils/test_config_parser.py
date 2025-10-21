@@ -21,20 +21,22 @@
 """
 Test module for bulldozer/utils/config_parser.py
 """
-import pytest
 import logging
-import os.path
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pytest
 from yaml import YAMLError
 
-from bulldozer.utils.bulldozer_logger import BulldozerLogger
 from bulldozer.utils.config_parser import ConfigParser
-    
+
+# pylint: disable=redefined-outer-name
+
+
 @pytest.fixture
 def setup() -> None:
     """
-        Setup function that will be provide to tests that require an input file          
+    Setup function that will be provided to tests that require an input file
     """
     parser = ConfigParser(False)
     path = Path(__file__).parent / "data/config_parser/"
@@ -43,9 +45,10 @@ def setup() -> None:
     yield {"parser": parser, "path": path}  # Provide the data to the test
     # Teardown: Clean up resources (if any) after the test
 
+
 def test_format_check(setup) -> None:
     """
-        config_parser input file format checker test            
+    config_parser input file format checker test
     """
     # Should raise exception because it's not an YAML file
     path = "test.txt"
@@ -56,24 +59,27 @@ def test_format_check(setup) -> None:
     pytest.raises(FileNotFoundError, lambda: parser.read(path))
     # Should raise exception for file not found but should pass the format check
     path = "test.yml"
-    pytest.raises(FileNotFoundError, lambda:parser.read(path))
+    pytest.raises(FileNotFoundError, lambda: parser.read(path))
+
 
 def test_existence_check(setup) -> None:
     """
-        config_parser input file checker test            
+    config_parser input file checker test
     """
     parser = setup["parser"]
     # Should raise FileNotFoundException since the file doesn't exist
     path = str(setup["path"]) + "/test.yaml"
     pytest.raises(FileNotFoundError, lambda: parser.read(path))
-    
-    # Shouldn't raise FileNotFoundException, if it raises an exception the unit test framework will flag this as an error
+
+    # Shouldn't raise FileNotFoundException,
+    # if it raises an exception the unit test framework will flag this as an error
     path = str(setup["path"]) + "/parser_test.yaml"
     parser.read(path)
 
+
 def test_read(setup) -> None:
     """
-        config_parser read function test with several data types            
+    config_parser read function test with several data types
     """
     path = str(setup["path"]) + "/parser_test.yaml"
     cfg = setup["parser"].read(path)
@@ -93,19 +99,19 @@ def test_read(setup) -> None:
 
     # Check boolean element read
     assert isinstance(cfg["boolean_test"], bool)
-    assert cfg["boolean_test"] == True
+    assert cfg["boolean_test"] is True
 
     # Check float sub-element read
     assert isinstance(cfg["parent"], dict)
     assert isinstance(cfg["parent"]["child"], float)
     assert cfg["parent"]["child"] == 10.3
     assert cfg["parent"]["child2"] == 13
-    
+
     # Check nan reading
     assert np.isnan(float(cfg["nan_test"]))
     assert cfg["none_test"] is None
     assert not cfg["none_test"]
-    
+
     path = str(setup["path"]) + "/wrong_syntax.yaml"
     # Should raise YAMLError due to the wrong YAML data format in the file
     pytest.raises(YAMLError, lambda: setup["parser"].read(path))
@@ -113,12 +119,12 @@ def test_read(setup) -> None:
 
 def test_verbose() -> None:
     """
-        Verbosity level test
+    Verbosity level test
     """
-    non_verbose_parser = ConfigParser(verbose = False)
+    non_verbose_parser = ConfigParser(verbose=False)
     # Check logging level value
     assert non_verbose_parser.level == logging.INFO
-    
-    verbose_parser = ConfigParser(verbose = True)
+
+    verbose_parser = ConfigParser(verbose=True)
     # Check logging level value
     assert verbose_parser.level == logging.DEBUG

@@ -42,7 +42,7 @@ def compute_mp_strips(image_height: int,
                       stable_margin: int,
                       along_line: bool = False) -> list:
     """
-        Return a list of strips 
+        Return a list of strips
     """
     if along_line:
         strip_width = image_width // nb_workers
@@ -82,7 +82,7 @@ def compute_mp_strips(image_height: int,
                 end_x = (worker + 1) * strip_width - 1
             else:
                 end_y = (worker + 1) * strip_height - 1
-        
+
         top_margin = stable_margin if start_y - stable_margin >= 0 else start_y
         bottom_margin = stable_margin if end_y + stable_margin <= image_height - 1 else image_height - 1 - end_y
         strips.append(eotools.MpTile(start_x=start_x,
@@ -90,7 +90,7 @@ def compute_mp_strips(image_height: int,
                                      end_x=end_x,
                                      end_y=end_y,
                                      top_margin=top_margin,
-                                     right_margin=right_margin, 
+                                     right_margin=right_margin,
                                      bottom_margin=bottom_margin,
                                      left_margin=left_margin))
 
@@ -107,7 +107,7 @@ def compute_mp_tiles(inputs: list,
     """
         Given an input eoscale virtual path and nb_workers,
         this method computes the list of strips that will
-        be processed in parallel within a stream strip or tile 
+        be processed in parallel within a stream strip or tile
     """
 
     img_idx: int = 0
@@ -125,7 +125,7 @@ def compute_mp_tiles(inputs: list,
         img_idx += 1
 
     if tile_mode:
-        
+
         nb_tiles_x: int = 0
         nb_tiles_y: int = 0
         end_x: int = 0
@@ -164,16 +164,16 @@ def compute_mp_tiles(inputs: list,
                 left_margin = stable_margin if start_x - stable_margin >= 0 else start_x
                 bottom_margin = stable_margin if end_y + stable_margin <= image_height - 1 else image_height - 1 - end_y
                 right_margin = stable_margin if end_x + stable_margin <= image_width - 1 else image_width - 1 - end_x
-                
+
                 strips.append(eotools.MpTile(start_x=start_x,
                                              start_y=start_y,
                                              end_x=end_x,
                                              end_y=end_y,
                                              top_margin=top_margin,
-                                             right_margin=right_margin, 
+                                             right_margin=right_margin,
                                              bottom_margin=bottom_margin,
                                              left_margin=left_margin))
-        
+
         return strips
 
     else:
@@ -186,7 +186,7 @@ def compute_mp_tiles(inputs: list,
 
 def default_generate_output_profiles(input_profiles: list) -> list:
     """
-        This method makes a deep copy of the input profiles 
+        This method makes a deep copy of the input profiles
     """
     return [copy.deepcopy(input_profile) for input_profile in input_profiles]
 
@@ -214,9 +214,8 @@ def execute_filter_n_images_to_n_images(image_filter: Callable,
                                         inputs: list,
                                         tile: eotools.MpTile,
                                         context_manager: eom.EOContextManager) -> tuple:
-    
     """
-        This method execute the filter on the inputs and then extract the stable 
+        This method execute the filter on the inputs and then extract the stable
         area from the resulting outputs before returning them.
     """
 
@@ -236,7 +235,7 @@ def execute_filter_n_images_to_n_images(image_filter: Callable,
             output_buffers = [output_buffers]
 
     # Reshape some output buffers if necessary since even for one channel image eoscale
-    # needs a shape like this (channel, height, width) and it is really shitty to ask 
+    # needs a shape like this (channel, height, width) and it is really shitty to ask
     # the developer to take care of this...
     for o in range(len(output_buffers)):
         if len(output_buffers[o].shape) == 2:
@@ -256,19 +255,19 @@ def execute_filter_n_images_to_n_images(image_filter: Callable,
         stable_end_x = stable_start_x + tile.end_x - tile.start_x + 1
         stable_end_y = stable_start_y + tile.end_y - tile.start_y + 1
         output_buffers[i] = output_buffers[i][:, stable_start_y:stable_end_y, stable_start_x:stable_end_x]
-    
+
     return output_buffers, tile
 
 
-def default_reduce(outputs: list, 
-                   chunk_output_buffers: list, 
+def default_reduce(outputs: list,
+                   chunk_output_buffers: list,
                    tile: eotools.MpTile) -> None:
     """ Fill the outputs buffer with the results provided by the map filter from a strip """
     for c in range(len(chunk_output_buffers)):
         outputs[c][:, tile.start_y: tile.end_y + 1, tile.start_x : tile.end_x + 1] = chunk_output_buffers[c][:, :, :]
 
 
-def n_images_to_m_images_filter(inputs: list = None, 
+def n_images_to_m_images_filter(inputs: list = None,
                                 image_filter: Callable = None,
                                 filter_parameters: dict = None,
                                 generate_output_profiles: Callable = None,
@@ -287,7 +286,7 @@ def n_images_to_m_images_filter(inputs: list = None,
         image_filter is processed in parallel
 
         generate_output_profiles is a callable taking as input a list of rasterio profiles and the dictionnary
-        filter_parameters and returning a list of output profiles. 
+        filter_parameters and returning a list of output profiles.
         This callable is used by EOScale to allocate new shared images given their profile. It determines the value m
         of the n_image_to_m_image executor.
 
@@ -302,17 +301,17 @@ def n_images_to_m_images_filter(inputs: list = None,
 
     if len(inputs) < 1:
         raise ValueError("At least one input image must be given.")
-    
+
     if image_filter is None:
         raise ValueError("A filter must be set !")
 
     if context_manager is None:
         raise ValueError("The EOScale Context Manager must be given !")
 
-    # Sometimes filter does not need parameters    
+    # Sometimes filter does not need parameters
     if filter_parameters is None:
         filter_parameters = dict()
-    
+
     # compute the strips
     tiles = compute_mp_tiles(inputs=inputs,
                              stable_margin=stable_margin,
@@ -327,7 +326,7 @@ def n_images_to_m_images_filter(inputs: list = None,
     output_profiles: list = []
     if generate_output_profiles is None:
         for key in inputs:
-            output_profiles.append(context_manager.get_profile(key=key))    
+            output_profiles.append(context_manager.get_profile(key=key))
     else:
         copied_input_mtds: list = []
         for key in inputs:
@@ -339,7 +338,7 @@ def n_images_to_m_images_filter(inputs: list = None,
     # Allocate and share the outputs
     output_eoshareds = allocate_outputs(profiles=output_profiles,
                                         context_manager=context_manager)
-    
+
     outputs = [ eoshared_inst.get_array() for eoshared_inst in output_eoshareds]
 
     # For debug, comment this section below in production
@@ -360,17 +359,17 @@ def n_images_to_m_images_filter(inputs: list = None,
                                     inputs,
                                     tile,
                                     context_manager) for tile in tiles}
-        
+
         for future in tqdm.tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=filter_desc):
 
             chunk_output_buffers, tile = future.result()
             if concatenate_filter is None:
                 default_reduce(outputs, chunk_output_buffers, tile)
-            else : 
+            else :
                 concatenate_filter(outputs, chunk_output_buffers, tile)
 
     output_virtual_paths = [eoshared_inst.virtual_path for eoshared_inst in output_eoshareds]
-    
+
     return output_virtual_paths
 
 
@@ -379,7 +378,7 @@ def execute_filter_n_images_to_m_scalars(image_filter: Callable,
                                          inputs: list,
                                          tile: eotools.MpTile,
                                          context_manager: eom.EOContextManager) -> tuple:
-    
+
     """
         This method execute the filter on the inputs and then extract the stable
         area from the resulting outputs before returning them.
@@ -395,11 +394,11 @@ def execute_filter_n_images_to_m_scalars(image_filter: Callable,
 
     if not isinstance(output_scalars, list):
         output_scalars = [output_scalars]
-    
+
     return output_scalars, tile
 
 
-def n_images_to_m_scalars(inputs: list = None, 
+def n_images_to_m_scalars(inputs: list = None,
                           image_filter: Callable = None,
                           filter_parameters: dict = None,
                           nb_output_scalars: int = None,
@@ -415,28 +414,28 @@ def n_images_to_m_scalars(inputs: list = None,
 
         concatenate_filter is processed by the master node to aggregate results
 
-        Strong hypothesis: all input image are in the same geometry and have the same size 
+        Strong hypothesis: all input image are in the same geometry and have the same size
     """
 
     if len(inputs) < 1:
         raise ValueError("At least one input image must be given.")
-    
+
     if image_filter is None:
         raise ValueError("A filter must be set !")
-    
+
     if concatenate_filter is None:
         raise ValueError("A concatenate filter must be set !")
-    
+
     if nb_output_scalars is None:
         raise ValueError("The number of output scalars must be set (integer value expected) !")
-    
+
     if context_manager is None:
         raise ValueError("The EOScale Context Manager must be given !")
 
-    # Sometimes filter does not need parameters    
+    # Sometimes filter does not need parameters
     if filter_parameters is None:
         filter_parameters = dict()
-    
+
     # compute the strips
     tiles = compute_mp_tiles(inputs=inputs,
                              stable_margin=0,
@@ -444,7 +443,7 @@ def n_images_to_m_scalars(inputs: list = None,
                              tile_mode=context_manager.tile_mode,
                              context_manager=context_manager)
 
-    # Initialize the output scalars if the user doesn't provide it 
+    # Initialize the output scalars if the user doesn't provide it
     if output_scalars is None:
         output_scalars: list = [0.0 for i in range(nb_output_scalars) ]
 
@@ -457,9 +456,8 @@ def n_images_to_m_scalars(inputs: list = None,
                                     tile,
                                     context_manager,
                                    ) for tile in tiles}
-        
-        for future in tqdm.tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=filter_desc):
 
+        for future in tqdm.tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc=filter_desc):
             chunk_output_scalars, tile = future.result()
             concatenate_filter(output_scalars, chunk_output_scalars, tile)
 

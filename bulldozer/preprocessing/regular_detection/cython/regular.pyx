@@ -19,7 +19,8 @@
 # limitations under the License.
 
 import numpy as np
-from bulldozer.utils.helper import npAsContiguousArray
+
+from bulldozer.utils.helper import np_as_contiguous_array
 
 # Begin PXD
 
@@ -62,9 +63,9 @@ cdef class PyRegularAreas:
         Return:
             mask of the regular / disturbed areas.
         """
-        cdef float[::1] dsm_memview = npAsContiguousArray(dsm_strip.ravel().astype(np.float32))
+        cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
-        cdef unsigned char[::1] regular_mask_memview = npAsContiguousArray(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
+        cdef unsigned char[::1] regular_mask_memview = np_as_contiguous_array(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
         # Regular detection
         buildRegularMask(&dsm_memview[0], &regular_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_threshold, nodata_value)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape

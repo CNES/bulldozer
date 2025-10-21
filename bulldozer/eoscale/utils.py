@@ -31,7 +31,7 @@ def rasterio_profile_to_dict(profile: rasterio.DatasetReader.profile) -> dict:
     """
         Convert a rasterio profile to a serializable python dictionnary
         needed for storing in a chunk of memory that will be shared among
-        processes 
+        processes
     """
     metadata = dict()
     for key, value in profile.items():
@@ -68,11 +68,11 @@ def dict_to_rasterio_profile(metadata: dict) -> rasterio.DatasetReader.profile :
         if key == "crs":
             rasterio_profile["crs"] = rasterio.crs.CRS.from_string(metadata['crs'])
         elif key == "transform_1":
-            rasterio_profile['transform'] = rasterio.Affine(metadata['transform_1'], 
-                                                            metadata['transform_2'], 
-                                                            metadata['transform_3'], 
-                                                            metadata['transform_4'], 
-                                                            metadata['transform_5'], 
+            rasterio_profile['transform'] = rasterio.Affine(metadata['transform_1'],
+                                                            metadata['transform_2'],
+                                                            metadata['transform_3'],
+                                                            metadata['transform_4'],
+                                                            metadata['transform_5'],
                                                             metadata['transform_6'])
         elif key.startswith("transform"):
             continue

@@ -1,0 +1,48 @@
+repos:
+- repo: local
+  hooks:
+
+  # Import sorter
+  - id: isort
+    name: Isort
+    stages: [pre-commit]
+    language: system
+    entry: isort
+    types: [python]
+    exclude: bulldozer/eoscale
+
+  # PEP 8 compliant code formatter
+  - id: black
+    name: Black
+    stages: [pre-commit]
+    language: system
+    entry: black
+    types: [python]
+    exclude: bulldozer/eoscale
+
+  # Type checker
+  - id: mypy
+    name: Mypy
+    stages: [pre-commit]
+    language: system
+    entry: mypy
+    types: [python]
+    exclude: 'bulldozer/eoscale/|tests/|setup.py'
+
+  # Style and syntax errors checker (based on PyFlakes, pycodestyle and McCabe)
+  - id: flake8
+    name: Flake8
+    stages: [pre-commit]
+    language: system
+    entry: flake8
+    types: [python]
+    exclude: bulldozer/eoscale
+
+  # Static code analyser : checks errors, coding standard and can give code smells
+  - id: pylint
+    name: PyLint
+    stages: [pre-commit]
+    language: system
+    entry: pylint --rcfile=.pylintrc
+    files: \.py$
+    exclude: 'bulldozer/eoscale/|tests/|setup.py'

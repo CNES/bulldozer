@@ -18,66 +18,78 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-    This module is used to retrieve the bulldozer parameters from an YAML configuration file.
+This module is used to retrieve the bulldozer parameters
+from an YAML configuration file.
 """
 
-from yaml import safe_load,YAMLError
-import os.path
 import logging
+import os.path
+
+from yaml import YAMLError, safe_load
+
 from bulldozer.utils.bulldozer_logger import BulldozerLogger
 
-class ConfigParser(object):
+
+class ConfigParser:
     """
-        Configuration file parser. Used to read the bulldozer parameters.
+    Configuration file parser. Used to read the bulldozer parameters.
     """
 
-    def __init__(self, verbose : bool = False) -> None:
+    def __init__(self, verbose: bool = False) -> None:
         """
-            Parser constructor.
+        Parser constructor.
 
-            Args:
-                verbose (default=False): increase output verbosity if true.
+        Args:
+            verbose (default=False): increase output verbosity if true.
         """
         if verbose:
-            self.level=logging.DEBUG
+            self.level = logging.DEBUG
         else:
-            self.level=logging.INFO
+            self.level = logging.INFO
 
-
-    def read(self, path : str) -> dict:
+    def read(self, path: str) -> dict:
         """
-            This method returns the dict containing the bulldozer parameters extracted from 
-            the input YAML configuration file.
+        This method returns the dict containing the bulldozer parameters extracted from
+        the input YAML configuration file.
 
-            Args:
-                path: path to the configuration file (expected YAML file).
+        Args:
+            path: path to the configuration file (expected YAML file).
 
-            Returns:
-                cfg: configuration parameters for bulldozer.
+        Returns:
+            cfg: configuration parameters for bulldozer.
 
-            Raises:
-                ValueError: if bad input path is provided.
-                FileNotFoundError: if the input file doesn't exist.
-                YAMLError: if an error occured while reading the yaml file.
+        Raises:
+            ValueError: if bad input path is provided.
+            FileNotFoundError: if the input file doesn't exist.
+            YAMLError: if an error occured while reading the yaml file.
         """
         # input file format check
-        if not (isinstance(path, str) and (path.endswith('.yaml') or path.endswith('.yml'))) :
-            BulldozerLogger.log('\'path\' argument should be a path to the YAML config file (here: {})'.format(path), logging.ERROR)
+        if not (isinstance(path, str) and (path.endswith(".yaml") or path.endswith(".yml"))):
+            BulldozerLogger.log(
+                "'path' argument should be a path to the YAML config file " + f"(here: {path})",
+                logging.ERROR,
+            )
             raise ValueError()
         # input file existence check
         if not os.path.isfile(path):
-            BulldozerLogger.log('The input config file \'{}\' doesn\'t exist'.format(path), logging.ERROR)
+            BulldozerLogger.log(
+                f"The input config file '{path}' doesn't exist",
+                logging.ERROR,
+            )
             raise FileNotFoundError()
-        
-        if self.level == logging.DEBUG:
-            BulldozerLogger.log('Check input config file => Passed', self.level)
 
-        with open(path, 'r') as stream:
+        if self.level == logging.DEBUG:
+            BulldozerLogger.log("Check input config file => Passed", self.level)
+
+        with open(path, "r") as stream:
             try:
                 cfg = safe_load(stream)
                 if self.level == logging.DEBUG:
-                    BulldozerLogger.log('Retrieved data: {}'.format(cfg), self.level)
+                    BulldozerLogger.log(f"Retrieved data: {cfg}", self.level)
             except YAMLError as e:
-                BulldozerLogger.log('Exception occured while reading the configuration file: {}\nException: {}'.format(path, str(e)), logging.ERROR)
-                raise YAMLError(str(e))
+                BulldozerLogger.log(
+                    f"Exception occured while reading the configuration file: {path}" f"\nException: {e}",
+                    logging.ERROR,
+                )
+                raise YAMLError(str(e)) from e
         return cfg

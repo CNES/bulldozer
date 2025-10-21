@@ -65,6 +65,7 @@ variables:
 # Steps:
 #    - build (stage, init)
 #    - test (stage, quality)
+#    - linting (stage, quality)
 #    - deploy-github (stage, deploy)
 
 build:
@@ -106,10 +107,28 @@ test:
     untracked: false
     expire_in: 1 day
 
+linting:
+  stage: quality
+  image: ${ARTIFACTORY_URL}/${TAG_IMAGE_PYTHON}
+  needs:
+    - build
+  allow_failure: true
+  script:
+    # Load previous python venv
+    - source bulldozer_venv/bin/activate
+    # Run project quality code.
+    - make lint
+    - deactivate
+    - make clean
+  artifacts:
+    untracked: false
+    expire_in: 1 day
+
 deploy-github:
   stage: deploy
   needs:
     - test
+    - linting
   # Get a small docker git image
   image:
     name: ${ARTIFACTORY_URL}/${TAG_IMAGE_GIT}

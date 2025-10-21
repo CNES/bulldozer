@@ -88,6 +88,54 @@ coverage: ## check code coverage quickly with the default Python
 	@${VENV}/bin/coverage report -m
 	@${VENV}/bin/coverage html
 
+## Code quality, linting section
+
+### Format with isort and black
+
+.PHONY: format
+format: format/isort format/black  ## run black and isort formatting (depends install)
+
+.PHONY: format/isort
+format/isort: install  ## run isort formatting (depends install)
+	@echo "+ $@"
+	@${VENV}/bin/isort bulldozer tests
+
+.PHONY: format/black
+format/black: install  ## run black formatting (depends install)
+	@echo "+ $@"
+	@${VENV}/bin/black bulldozer tests
+
+### Check code quality and linting : isort, black, flake8, pylint
+
+.PHONY: lint
+lint: lint/isort lint/black lint/mypy lint/flake8 lint/pylint ## check code quality and linting
+
+.PHONY: lint/isort
+lint/isort: ## check imports style with isort
+	@echo "+ $@"
+	@${VENV}/bin/isort --check bulldozer tests
+
+.PHONY: lint/black
+lint/black: ## check global style with black
+	@echo "+ $@"
+	@${VENV}/bin/black --check bulldozer tests
+
+.PHONY: lint/mypy
+lint/mypy: ## check typing with mypy
+	@echo "+ $@"
+	@${VENV}/bin/mypy bulldozer
+
+.PHONY: lint/flake8
+lint/flake8: ## check linting with flake8
+	@echo "+ $@"
+	@${VENV}/bin/flake8 bulldozer tests
+
+.PHONY: lint/pylint
+lint/pylint: ## check linting with pylint
+	@echo "+ $@"
+	@set -o pipefail; ${VENV}/bin/pylint bulldozer tests --rcfile=.pylintrc --output-format=parseable | tee pylint-report.txt # pipefail to propagate pylint exit code in bash
+
+
 ## Documentation section
 
 .PHONY: docs

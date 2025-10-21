@@ -19,6 +19,6 @@
 # limitations under the License.
 
 """
-    This module is used to centralize the current version of Bulldozer.
+This module is used to centralize the current version of Bulldozer.
 """
 __version__ = "1.1.2"
