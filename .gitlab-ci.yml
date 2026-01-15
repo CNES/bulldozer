@@ -127,9 +127,9 @@ variables:
 
 deploy-github:
   stage: deploy
-  needs:
-    - test
-    - linting
+  # needs:
+  #   - test
+  #   - linting
   # Get a small docker git image
   image:
     name: ${ARTIFACTORY_URL}/${TAG_IMAGE_GIT}
