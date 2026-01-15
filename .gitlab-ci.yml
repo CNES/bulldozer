@@ -29,8 +29,9 @@ workflow:
 
 # Defines groups of steps
 stages:
-  - init
-  - quality
+    #HOTFIX until artifactory is repaired
+  #- init
+  #- quality
   - deploy
 
 # Default configuration for all jobs (CNES specificity)
