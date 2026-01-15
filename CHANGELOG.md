@@ -1,10 +1,13 @@
 # Changelog
 
-## 1.2.0 Documentation online (June 2025)
+## 1.2.0_alpha Parallelization engine update - ALPHA (January 2026)
 
 ### Added
+- Add new parameter `method` to indicates if the process keep all the intermediates data in memory (`mem`) or writes temporary results 
+- Add new expert parameter `mp_context` that defines the multiprocessing context (`spawn`, `fork` or `forkserver`)
 
 ### Changed
+- Refactoring to improve code quality
 
 ### Fixed
 - Docker image push github action fixed 
