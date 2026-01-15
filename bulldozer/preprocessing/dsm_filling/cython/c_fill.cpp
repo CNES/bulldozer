@@ -104,7 +104,7 @@ namespace bulldozer {
                         }
                     }
                 }
-            }          
+            }
 
             for (int i = 0; i < dsmHeight; ++i) {
                 for (int j = 0; j < dsmWidth; ++j) {

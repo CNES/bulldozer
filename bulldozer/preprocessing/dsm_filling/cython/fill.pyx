@@ -37,7 +37,7 @@ cdef extern from "c_fill.h" namespace "bulldozer":
                               int,
                               int,
                               float,
-                              int) 
+                              int)
 
 
 # End PXD
@@ -50,12 +50,12 @@ cdef class PyFill:
         """
         pass
 
-    def iterative_filling(self, 
-                          dsm_strip : np.array, 
+    def iterative_filling(self,
+                          dsm_strip : np.array,
                           nodata_value : float,
                           nb_it : int,
                           border_nodata_strip : np.array = None) -> np.array:
-        """ 
+        """
         This method fills the DSM
 
         Args:
@@ -66,7 +66,7 @@ cdef class PyFill:
             Filled DSM
         """
         cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
-        cdef unsigned char[::1] border_nodata_mask_memview 
+        cdef unsigned char[::1] border_nodata_mask_memview
         cdef unsigned char* border_nodata_mask_ptr = NULL  # Initialize as NULL
 
         if border_nodata_strip is not None: # For the level 0
@@ -77,4 +77,4 @@ cdef class PyFill:
         iterativeFilling(&dsm_memview[0], border_nodata_mask_ptr, dsm_strip.shape[0], dsm_strip.shape[1], nodata_value, nb_it)
         # Reshape the output DSM. From array to matrix corresponding to the input DSM strip shape
         return np.asarray(dsm_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.float32)
-    
+

@@ -12,12 +12,8 @@ fail-under=10
 # number of processors available to use.
 jobs=1
 
-# When enabled, pylint would attempt to guess common misconfiguration and emit
-# user-friendly hints instead of false-positive error messages.
-suggestion-mode=yes
-
 # Files or directories to be skipped. They should be base names, not paths.
-ignore=eoscale
+#ignore
 
 
 [MESSAGES CONTROL]
@@ -226,6 +222,7 @@ valid-metaclass-classmethod-first-arg=cls
 
 # Maximum number of arguments for function / method.
 max-args=10
+max-positional-arguments=10
 
 # Maximum number of attributes for a class (see R0902).
 max-attributes=12

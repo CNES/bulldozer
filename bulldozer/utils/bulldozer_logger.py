@@ -21,6 +21,7 @@
 """
 This module aims to centralize the use of the logger in Bulldozer.
 """
+
 from __future__ import annotations
 
 import getpass
@@ -65,6 +66,11 @@ class BulldozerLogger:
             # Sub folders will inherit from the logger configuration, hence
             # we need to give the root package directory name of Bulldozer
             logger = logging.getLogger("bulldozer")
+
+            # Remove all existing handlers
+            if logger.hasHandlers():
+                logger.handlers.clear()
+
             logger.setLevel(logging.DEBUG)
 
             # create file handler which logs even debug messages

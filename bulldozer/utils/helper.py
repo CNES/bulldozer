@@ -21,6 +21,7 @@
 """
 This module groups different generic methods used in Bulldozer.
 """
+
 from typing import Any, Dict
 
 import numpy as np
@@ -59,3 +60,12 @@ def downsample_profile(profile: Dict[str, Any], factor: float) -> Dict[str, Any]
     )
 
     return newprofile
+
+
+def ubyte_profile(input_profile: Dict[str, Any]) -> Dict[str, Any]:
+    """Convert input profile to ubyte profile."""
+    output_profile = input_profile.copy()
+    output_profile["dtype"] = np.ubyte
+    output_profile["nodata"] = None
+
+    return output_profile
