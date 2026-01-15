@@ -64,17 +64,15 @@ bulldozer conf/configuration_template.yaml
 
 ## **Bulldozer** docker image
 
-[![Docker Status](http://dockeri.co/image/cnes/bulldozer)](https://hub.docker.com/r/cnes/bulldozer)
-
 **Bulldozer** is available on Docker Hub and can be downloaded using:
 ``` bash
 docker pull cnes/bulldozer
 ```
 And you can run **Bulldozer** with the following command:
 ``` bash
-docker run --user $(id -u):$(id -g) --shm-size=10gb -v <path>:/data cnes/bulldozer:latest /data/<conf>.yaml
+docker run --user $(id -u):$(id -g) -v <path>:/data cnes/bulldozer:latest /data/<conf>.yaml
 ```
-⚠️ You have to change the `<path>` to provide a valide absolute path to a directory where the input data are stored and where **Bulldozer** will write the ouput DTM. You also have to provide a configuration file (and rename `<conf>.yaml` in the command line) in this directory with an `ouput_dir` value using the `data` folder given to docker, e.g.: `output_dir : "/data/outputdir"`. If you want to run **Bulldozer** on a huge DSM, please improve the shared memory value of the command line (`--shm-size`) argument.  
+⚠️ You have to change the `<path>` to provide a valide absolute path to a directory where the input data are stored and where **Bulldozer** will write the ouput DTM. You also have to provide a configuration file (and rename `<conf>.yaml` in the command line) in this directory with an `ouput_dir` value using the `data` folder given to docker, e.g.: `output_dir : "/data/outputdir"`.  
 
 
 
