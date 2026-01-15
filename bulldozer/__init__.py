@@ -21,4 +21,5 @@
 """
 Bulldozer module init file
 """
+
 from ._version import __version__  # noqa: F401

@@ -9,7 +9,6 @@ repos:
     language: system
     entry: isort
     types: [python]
-    exclude: bulldozer/eoscale
 
   # PEP 8 compliant code formatter
   - id: black
@@ -18,7 +17,6 @@ repos:
     language: system
     entry: black
     types: [python]
-    exclude: bulldozer/eoscale
 
   # Type checker
   - id: mypy
@@ -27,7 +25,7 @@ repos:
     language: system
     entry: mypy
     types: [python]
-    exclude: 'bulldozer/eoscale/|tests/|setup.py'
+    exclude: 'tests/|setup.py'
 
   # Style and syntax errors checker (based on PyFlakes, pycodestyle and McCabe)
   - id: flake8
@@ -36,7 +34,6 @@ repos:
     language: system
     entry: flake8
     types: [python]
-    exclude: bulldozer/eoscale
 
   # Static code analyser : checks errors, coding standard and can give code smells
   - id: pylint
@@ -45,4 +42,4 @@ repos:
     language: system
     entry: pylint --rcfile=.pylintrc
     files: \.py$
-    exclude: 'bulldozer/eoscale/|tests/|setup.py'
+    exclude: 'tests/|setup.py'

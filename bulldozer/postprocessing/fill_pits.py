@@ -21,43 +21,45 @@
 """
 This module is used to fill the remaining pits in the generated DTM.
 """
-from copy import copy
-from typing import Any, Dict, List
+
+import logging
+import shutil
+from typing import Tuple, Union
 
 import numpy as np
 from rasterio.fill import fillnodata
 from scipy import ndimage
 
-import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.eoscale.manager as eom
+from bulldozer.multiprocessing.bulldozer_executor import mp_n_to_m_images
+from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.multiprocessing.utils import write
+from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.helper import ubyte_profile
 
 
 def fill_pits_filter(
-    input_buffers: List[np.ndarray],
-    input_profiles: List[Dict[str, Any]],
-    params: Dict[str, Any],
-) -> List[np.ndarray]:
+    dtm: np.ndarray,
+    border_mask: np.ndarray,
+    filter_size: float,
+    search_distance: int,
+) -> Tuple[np.ndarray, np.ndarray]:
     """
-    Perform pits removal and create pits detection mask.
+    Perform pits removal and creates pits detection mask.
 
-    :param input_buffers: DTM buffer
-    :param input_profiles: input profile.
-    :param params: extra parameters.
-    :return: a List composed of the processed dtm without pits and the pits mask
+    Args:
+        dtm: the DTM to process.
+        border_mask: Border no data.
+        filter_size: size of uniformer filter.
+        search_distance: max serch distance for fillnodata.
+
+    Returns:
+        the processed dtm without pits and the pits mask
     """
-    # pylint: disable=unused-argument
-    dtm = input_buffers[0][0, :, :]
     pits_mask = np.zeros(dtm.shape, dtype=np.ubyte)
 
-    border_mask = input_buffers[1][0, :, :]
+    dtm = fillnodata(dtm, mask=np.logical_not(border_mask), max_search_distance=search_distance)
 
-    dtm = fillnodata(
-        dtm,
-        mask=np.logical_not(border_mask),
-        max_search_distance=params["search_distance"],
-    )
-
-    dtm_lf = ndimage.uniform_filter(dtm, size=params["filter_size"])
+    dtm_lf = ndimage.uniform_filter(dtm, size=filter_size)
 
     # Retrieves the high frequencies in the input DTM
     dtm_hf = dtm - dtm_lf
@@ -69,50 +71,65 @@ def fill_pits_filter(
     # fill pits
     dtm = np.where(pits_mask, dtm_lf, dtm)
 
-    return [dtm, pits_mask]
+    return dtm, pits_mask
 
 
-def fill_pits_profile(input_profiles: List[Dict[str, Any]], params: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """
-    Defines filter outputs profiles
-    """
-    # pylint: disable=unused-argument
-    msk_profile = copy(input_profiles[0])
-    msk_profile["dtype"] = np.uint8
-    msk_profile["nodata"] = None
-    return [input_profiles[0], msk_profile]
-
-
-# TODO - rename function + add @Runtime
-def run(dtm_key: str, border_nodata_key: str, eomanager: eom.EOContextManager) -> tuple:
+# TODO - rename function
+@Runtime
+def run(
+    dtm_key: Union[str, np.ndarray],
+    border_nodata_mask_key: Union[str, np.ndarray],
+    dtm_profile: dict,
+    manager: BulldozerContextManager,
+) -> Union[str, np.ndarray]:
     """
     Performs the pit removal process using EOScale.
 
-    :param dtm_key: the dtm to process key in the eo manager
-    :param border_nodata_key: Border no data
-    :param unfilled_dsm_mask_key: the unfilled dsm mask key in the eo manager
-    :param eomanager: eoscale context manager
-    :return : The processed dtm and the pits mask keys
+    Args:
+        dtm_key: the DTM to process (numpy array or path to file).
+        border_nodata_mask_key: Border no data (numpy array or path to file).
+        dtm_profile: profile of the input DTM.
+        manager: bulldozer context manager.
+
+    Returns:
+        The processed dtm
     """
-    resolution = eomanager.get_profile(dtm_key)["transform"][0]
-    filter_size = 35.5 / resolution
+    fill_pits_profile = ubyte_profile(dtm_profile)
 
-    fill_pits_parameters: dict = {
-        "filter_size": filter_size,
-        "search_distance": 100,
-    }
+    BulldozerLogger.log("Pits removal processing...", logging.INFO)
 
-    [filled_dtm_key, pits_mask_key] = eoexe.n_images_to_m_images_filter(
-        inputs=[dtm_key, border_nodata_key],
-        image_filter=fill_pits_filter,
-        filter_parameters=fill_pits_parameters,
-        generate_output_profiles=fill_pits_profile,
-        context_manager=eomanager,
-        stable_margin=int(filter_size / 2),
-        filter_desc="Pits removal processing...",
-    )
+    filled_dtm_key: Union[str, np.ndarray]
+    pits_mask_key: Union[str, np.ndarray]
 
-    eomanager.release(key=dtm_key)
-    dtm_key = filled_dtm_key
+    filled_dtm_filename = "filled_dtm.tif"
+    pits_mask_filename = "filled_pits.tif"
 
-    return dtm_key, pits_mask_key
+    fill_pits_parameters: dict = {"filter_size": 35.5 / dtm_profile["transform"][0], "search_distance": 100}
+
+    if manager.pool is None:
+        # no multiprocessing
+        if isinstance(dtm_key, str) or isinstance(border_nodata_mask_key, str):
+            raise ValueError("Without multiprocessing the inputs must be numpy arrays.")
+        filled_dtm_key, pits_mask_key = fill_pits_filter(dtm_key, border_nodata_mask_key, **fill_pits_parameters)
+    else:
+        # multiprocessing
+        [filled_dtm_key, pits_mask_key] = mp_n_to_m_images(
+            inputs=[dtm_key, border_nodata_mask_key],
+            image_height=dtm_profile["height"],
+            image_width=dtm_profile["width"],
+            output_profiles=[dtm_profile, fill_pits_profile],
+            output_keys=[filled_dtm_filename, pits_mask_filename],
+            func=fill_pits_filter,
+            func_parameters=fill_pits_parameters,
+            context_manager=manager,
+            stable_margin=int(fill_pits_parameters["filter_size"] / 2),
+            binary=True,
+        )
+
+    pits_mask_path = manager.get_path(pits_mask_filename, "mask")
+    if isinstance(pits_mask_key, np.ndarray):
+        write(pits_mask_key, pits_mask_path, fill_pits_profile, binary=True)
+    else:  # already saved in tmp folder
+        shutil.move(pits_mask_key, pits_mask_path)
+
+    return filled_dtm_key

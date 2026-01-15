@@ -21,94 +21,133 @@
 """
 This module is used to detect ground anchors points before the main DTM extraction step.
 """
-from typing import Any, Dict, List
+
+import logging
+import shutil
+from typing import Union
 
 import numpy as np
+import rasterio
 
-import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.eoscale.manager as eom
-from bulldozer.utils.bulldozer_logger import Runtime
-
-
-def ground_anchors_profile(input_profiles: List[Dict[str, Any]], params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    This method is used in the main `detect_ground_anchors`
-    method to provide the output mask profile (binary profile).
-
-    Args:
-        input_profiles: input profile.
-        params: extra parameters.
-
-    Returns:
-        updated profile.
-    """
-    # pylint: disable=unused-argument
-    return input_profiles[2]
+from bulldozer.multiprocessing.bulldozer_executor import mp_n_to_m_images
+from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.multiprocessing.utils import write
+from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.helper import ubyte_profile
 
 
 def ground_anchors_filter(
-    input_buffers: List[np.ndarray],
-    input_profiles: List[Dict[str, Any]],
-    filter_parameters: Dict[str, Any],
+    inter_dtm: np.ndarray,
+    dsm: np.ndarray,
+    regular_mask: np.ndarray,
+    dsm_z_accuracy: float,
 ) -> np.ndarray:
     """
         This method is used in the main `detect_ground_anchors`.
 
     Args:
-        input_buffers: input DSM.
-        input_profiles: DSM profile.
-        filter_parameters: dictionary containing the DTM altimetric uncertainty.
+        inter_dtm: first estimation of the final DTM.
+        dsm: input DSM.
+        regular_mask: regular areas of the input DSM.
+        dsm_z_accuracy: DSM altimetric resolution (in meter).
 
     Returns:
         ground anchors mask.
     """
-    # pylint: disable=unused-argument
-    inter_dtm = input_buffers[0][0, :, :]
-    dsm = input_buffers[1][0, :, :]
-    regular_mask = input_buffers[2][0, :, :]
     ground_anchors_mask = np.where(
-        np.logical_and(
-            np.absolute(inter_dtm - dsm) <= filter_parameters["dsm_z_accuracy"],
-            regular_mask,
-        ),
+        np.logical_and(np.absolute(inter_dtm - dsm) <= dsm_z_accuracy, regular_mask),
         1,
         0,
     ).astype(np.uint8)
+
     return ground_anchors_mask
 
 
 @Runtime
 def detect_ground_anchors(
-    intermediate_dtm_key: str,
-    dsm_key: str,
-    regular_mask_key: str,
+    intermediate_dtm_key: Union[str, np.ndarray],
+    dsm_key: Union[str, np.ndarray],
+    regular_mask_key: Union[str, np.ndarray],
+    dsm_profile: dict,
     dsm_z_accuracy: float,
-    eomanager: eom.EOContextManager,
-) -> Dict[str, str]:
+    manager: BulldozerContextManager,
+    ground_mask_path: Union[str, None] = None,
+) -> Union[str, np.ndarray]:
     """
-    This method returns the binary mask flagging pre-detected
-    ground areas location in the provided DSM.
+    This method returns the binary mask flagging pre-detected ground areas location in the provided DSM.
 
     Args:
-        intermediate_dtm_key: first estimation of the final DTM.
-        dsm_key: input DSM.
-        regular_mask_key: regular areas of the input DSM.
+        intermediate_dtm_key: first estimation of the final DTM (numpy array or path to file).
+        dsm_key: input DSM (numpy array or path to file).
+        regular_mask_key: regular areas of the input DSM (numpy array or path to file).
+        ground_mask_path: ground mask path
+        dsm_profile: profile of the input DSM.
         dsm_z_accuracy: DSM altimetric resolution (in meter).
-        eomanager: eoscale context manager.
+        manager: bulldozer context manager.
 
     Returns:
         the regular areas mask.
     """
-    ground_anchors_parameters: dict = {"dsm_z_accuracy": dsm_z_accuracy}
+    ground_anchors_profile = ubyte_profile(dsm_profile)
 
-    [ground_anchors_mask_key] = eoexe.n_images_to_m_images_filter(
-        inputs=[intermediate_dtm_key, dsm_key, regular_mask_key],
-        image_filter=ground_anchors_filter,
-        filter_parameters=ground_anchors_parameters,
-        generate_output_profiles=ground_anchors_profile,
-        context_manager=eomanager,
-        stable_margin=0,
-        filter_desc="Ground anchors mask processing...",
-    )
+    BulldozerLogger.log("Ground anchors mask processing...", logging.INFO)
+    ground_anchors_mask_key: Union[str, np.ndarray]
+    ground_anchors_mask_filename = "ground_anchors_mask.tif"
+    ground_anchors_parameters = {"dsm_z_accuracy": dsm_z_accuracy}
+    if manager.pool is None:
+        # no multiprocessing
+        if isinstance(intermediate_dtm_key, str) or isinstance(dsm_key, str) or isinstance(regular_mask_key, str):
+            raise ValueError("Without multiprocessing the inputs must be numpy arrays.")
+        ground_anchors_mask_key = ground_anchors_filter(
+            intermediate_dtm_key, dsm_key, regular_mask_key, **ground_anchors_parameters
+        )
+    else:
+        # multiprocessing
+        [ground_anchors_mask_key] = mp_n_to_m_images(
+            inputs=[intermediate_dtm_key, dsm_key, regular_mask_key],
+            image_height=dsm_profile["height"],
+            image_width=dsm_profile["width"],
+            output_profiles=[ground_anchors_profile],
+            output_keys=[ground_anchors_mask_filename],
+            func=ground_anchors_filter,
+            func_parameters=ground_anchors_parameters,
+            context_manager=manager,
+            stable_margin=0,
+        )
 
-    return {"ground_anchors_mask_key": ground_anchors_mask_key}
+    if manager.dev_mode:
+        ground_anchors_mask_path = manager.get_path(ground_anchors_mask_filename, "dev")
+        if isinstance(ground_anchors_mask_key, np.ndarray):
+            write(ground_anchors_mask_key, ground_anchors_mask_path, ground_anchors_profile)
+        else:  # already saved in tmp folder
+            shutil.move(ground_anchors_mask_key, ground_anchors_mask_path)
+            ground_anchors_mask_key = ground_anchors_mask_path
+
+    # Union of detected ground anchors mask with provided ground_mask
+    if ground_mask_path is not None:
+        BulldozerLogger.log("Ground mask processing...", logging.INFO)
+
+        if isinstance(ground_anchors_mask_key, str):
+            with rasterio.open(ground_anchors_mask_key) as src:
+                ground_anchors_mask = src.read(1)
+        else:
+            ground_anchors_mask = ground_anchors_mask_key
+
+        with rasterio.open(ground_mask_path) as src:
+            ground_mask = src.read(1)
+
+        np.logical_or(ground_anchors_mask, ground_mask, out=ground_anchors_mask)
+
+        anchorage_mask_with_ground_filename = "anchorage_mask_with_ground.tif"
+        if manager.in_memory:
+            ground_anchors_mask_key = ground_anchors_mask
+            if manager.dev_mode:
+                anchorage_mask_with_ground_path = manager.get_path(anchorage_mask_with_ground_filename, key="dev")
+                write(ground_anchors_mask, anchorage_mask_with_ground_path, ground_anchors_profile)
+        else:
+            key = "dev" if manager.dev_mode else "tmp"
+            anchorage_mask_with_ground_path = manager.get_path(anchorage_mask_with_ground_filename, key=key)
+            write(ground_anchors_mask, anchorage_mask_with_ground_path, ground_anchors_profile)
+            ground_anchors_mask_key = anchorage_mask_with_ground_path
+
+    return ground_anchors_mask_key

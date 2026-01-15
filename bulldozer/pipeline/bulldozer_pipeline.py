@@ -22,6 +22,7 @@
 This module is used to postprocess the DTM in order to improve its quality.
 It required a DTM generated from Bulldozer.
 """
+
 import argparse
 import logging
 import multiprocessing
@@ -34,11 +35,11 @@ import argcomplete
 import numpy as np
 import rasterio
 
-import bulldozer.eoscale.manager as eom
-
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
 from bulldozer._version import __version__
+from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.multiprocessing.utils import write
 from bulldozer.pipeline.bulldozer_parameters import DEFAULT_NODATA, bulldozer_pipeline_params
 
 # Postprocessing steps of Bulldozer
@@ -68,20 +69,11 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
                   (used if the user don't provide a configuration file).
 
     """
-    # Retrieves Bulldozer settings from the config file, the CLI parameters or
-    # the Python API parameters
+    # Retrieves Bulldozer settings from the config file, the CLI parameters or the Python API parameters
     params = retrieve_params(config_path, **kwargs)
 
-    # If the target output directory does not exist, creates it
-    output_masks_dir = os.path.join(params["output_dir"], "masks")
-    os.makedirs(output_masks_dir, exist_ok=True)
-
-    # In the developer mode, if the developer directory does not exist, creates it
-    if params["developer_mode"]:
-        developer_dir = os.path.join(params["output_dir"], "developer")
-        os.makedirs(developer_dir, exist_ok=True)
-    else:
-        developer_dir = ""
+    # If the target output directories does not exist, creates it
+    os.makedirs(params["output_dir"], exist_ok=True)
 
     BulldozerLogger.get_instance(
         logger_file_path=os.path.join(
@@ -121,13 +113,15 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
             logging.DEBUG,
         )
 
-    with eom.EOContextManager(nb_workers=params["nb_max_workers"], tile_mode=True) as eomanager:
+    with BulldozerContextManager(params, tile_mode=True) as manager:
 
-        # Open the input dsm that might be noisy and full of nodatas...
-        input_dsm_key = eomanager.open_raster(raster_path=params["dsm_path"])
+        # Open the input dsm that might be noisy and full of nodata...
+        with rasterio.open(params["dsm_path"]) as input_dsm:
+            input_profile = input_dsm.profile.copy()
+            dsm = input_dsm.read(1)
 
         # Nodata value handling
-        input_nodata = eomanager.get_profile(key=input_dsm_key)["nodata"]
+        input_nodata = input_profile["nodata"]
         if input_nodata is None:
             BulldozerLogger.log(
                 "The provided nodata value is None. "
@@ -135,7 +129,6 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
                 + "during the pipeline run (Cython constraint).",
                 logging.DEBUG,
             )
-            dsm = eomanager.get_array(key=input_dsm_key)[0]
             dsm[dsm == None] = DEFAULT_NODATA  # noqa: E711 pylint: disable=singleton-comparison
             dsm = np.nan_to_num(dsm, copy=False, nan=DEFAULT_NODATA)
             pipeline_nodata = DEFAULT_NODATA
@@ -146,20 +139,27 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
                 + "during the pipeline run (Cython constraint).",
                 logging.DEBUG,
             )
-            dsm = eomanager.get_array(key=input_dsm_key)[0]
             dsm = np.nan_to_num(dsm, copy=False, nan=DEFAULT_NODATA)
             pipeline_nodata = DEFAULT_NODATA
         else:
             pipeline_nodata = input_nodata
-            BulldozerLogger.log(
-                f"Nodata retrieved and used in the pipeline: {pipeline_nodata}",
-                logging.DEBUG,
-            )
+            BulldozerLogger.log(f"Nodata retrieved and used in the pipeline: {pipeline_nodata}", logging.DEBUG)
 
-        # If the user doesn't provide an DSM altimetric accuracy,
-        # set it to default value: 2 * planimetric resolution
+        if manager.in_memory:  # cleaned_dsm_key is a numpy array
+            clean_dsm_key = dsm
+        else:  # we save cleaned dsm, cleaned_dsm_key is the path to the file
+            if pipeline_nodata == DEFAULT_NODATA:
+                clean_dsm_profile = input_profile.copy()
+                clean_dsm_profile["nodata"] = pipeline_nodata
+                clean_dsm_key = manager.get_path("clean_dsm.tif", key="tmp")
+                write(dsm, clean_dsm_key, clean_dsm_profile)
+            else:
+                clean_dsm_key = params["dsm_path"]
+        del dsm
+
+        # If the user doesn't provide an DSM altimetric accuracy, set it to default value: 2 * planimetric resolution
         if params["dsm_z_accuracy"] is None:
-            params["dsm_z_accuracy"] = 2 * eomanager.get_profile(key=input_dsm_key)["transform"][0]
+            params["dsm_z_accuracy"] = 2 * input_profile["transform"][0]
             BulldozerLogger.log(
                 '"dsm_z_accuracy" parameter is null, used default value: '
                 + f'2*planimetric resolution ({params["dsm_z_accuracy"]}m).',
@@ -167,214 +167,148 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
             )
 
         # Step 1: Compute the regular area mask
-        # Take the maximum slope between the slope provided by the user (converted in
-        # meter) and the slope derived from the altimetric dsm accuracy
+        # Take the maximum slope between the slope provided by the user (converted in meter) and the slope derived
+        # from the altimetric dsm accuracy
         regular_slope: float = max(
-            float(params["max_ground_slope"]) * eomanager.get_profile(key=input_dsm_key)["transform"][0] / 100.0,
+            float(params["max_ground_slope"]) * input_profile["transform"][0] / 100.0,
             params["dsm_z_accuracy"],
         )
-        regular_outputs = regular_detector.detect_regular_areas(
-            dsm_key=input_dsm_key,
+
+        regular_mask_key = regular_detector.detect_regular_areas(
+            dsm_key=clean_dsm_key,
+            dsm_profile=input_profile,
             regular_slope=regular_slope,
             nodata=pipeline_nodata,
             max_object_size=params["max_object_size"],
             reg_filtering_iter=params["reg_filtering_iter"],
-            eomanager=eomanager,
-            dev_mode=params["developer_mode"],
-            dev_dir=developer_dir,
+            manager=manager,
         )
-
-        regular_mask_key = regular_outputs["regular_mask_key"]
-
-        if params["developer_mode"]:
-            regular_mask_path: str = os.path.join(developer_dir, "regular_mask.tif")
-            eomanager.write(key=regular_mask_key, img_path=regular_mask_path, binary=True)
 
         # Step 2: Detect inner and border nodata masks
-        inner_outer_result = border_detector.detect_border_nodata(
-            dsm_key=input_dsm_key, eomanager=eomanager, nodata=pipeline_nodata
-        )
-
-        inner_nodata_mask_key = inner_outer_result["inner_nodata_mask"]
-        border_nodata_mask_key = inner_outer_result["border_nodata_mask"]
-
-        border_nodata_mask_path: str = os.path.join(output_masks_dir, "border_nodata.tif")
-        eomanager.write(
-            key=border_nodata_mask_key,
-            img_path=border_nodata_mask_path,
-            binary=True,
-        )
-
-        inner_nodata_mask_path: str = os.path.join(output_masks_dir, "inner_nodata.tif")
-        eomanager.write(
-            key=inner_nodata_mask_key,
-            img_path=inner_nodata_mask_path,
-            binary=True,
+        border_nodata_mask_key, inner_nodata_mask_key = border_detector.detect_border_nodata(
+            dsm_key=clean_dsm_key, dsm_profile=input_profile, nodata=pipeline_nodata, manager=manager
         )
 
         if not params["generate_dhm"]:
-            # Release the memory of inner nodata mask if the DHM is not generated
-            eomanager.release(key=inner_nodata_mask_key)
+            del inner_nodata_mask_key
 
         # Step 3: Fill the input DSM and compute the uncertainties
-        fill_outputs = dsm_filler.fill_dsm(
-            dsm_key=input_dsm_key,
-            regular_key=regular_mask_key,
-            border_nodata_key=border_nodata_mask_key,
+        filled_dsm_key = dsm_filler.fill_dsm(
+            dsm_key=clean_dsm_key,
+            regular_mask_key=regular_mask_key,
+            border_nodata_mask_key=border_nodata_mask_key,
+            dsm_profile=input_profile,
             nodata=pipeline_nodata,
             max_object_size=params["max_object_size"],
-            eomanager=eomanager,
-            dev_mode=params["developer_mode"],
-            dev_dir=developer_dir,
+            manager=manager,
         )
 
-        filled_dsm_key = fill_outputs["filled_dsm"]
-
-        if params["developer_mode"]:
-            filled_dsm_path: str = os.path.join(developer_dir, "filled_dsm.tif")
-            eomanager.write(key=filled_dsm_key, img_path=filled_dsm_path)
-
-        if params["ground_mask_path"]:
-            ground_mask_key = eomanager.open_raster(params["ground_mask_path"])
-        else:
-            ground_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+        del clean_dsm_key
 
         # Step 4 [optional]:
         # post anchor mask computation (first drape cloth + terrain pixel detection)
-        # Run a first drape cloth simulation to minimize the
-        # underestimation the terrain height (common issue)
-        # All regular pixels where the diff Z is lower or equal than
-        # dtm_max_error meters will be labeled as possible terrain points.
-        # Knowing that the drape cloth will be run again.
+        # Run a first drape cloth simulation to minimize the underestimation the terrain height (common issue)
+        # All regular pixels where the diff Z is lower or equal than dtm_max_error meters will be labeled as
+        # possible terrain points knowing that the drape cloth will be run again.
         if params["activate_ground_anchors"]:
             BulldozerLogger.log("First pass of a drape cloth filter: Starting...", logging.INFO)
             dtm_key = dtm_extraction.drape_cloth(
                 filled_dsm_key=filled_dsm_key,
-                ground_mask_key=ground_mask_key,
-                eomanager=eomanager,
+                ground_mask_key=params["ground_mask_path"],
+                filled_dsm_profile=input_profile,
+                manager=manager,
                 max_object_size=params["max_object_size"],
                 prevent_unhook_iter=params["prevent_unhook_iter"],
                 num_outer_iterations=params["num_outer_iter"],
                 num_inner_iterations=params["num_inner_iter"],
-                nodata=pipeline_nodata,
+                inter_dtm_filename="dtm_first_pass.tif",
             )
             BulldozerLogger.log("First pass of a drape cloth filter: Done.", logging.INFO)
 
-            if params["developer_mode"]:
-                inter_dtm_path: str = os.path.join(developer_dir, "dtm_first_pass.tif")
-                eomanager.write(key=dtm_key, img_path=inter_dtm_path)
-
-            ground_anchors_output = ground_anchors_detector.detect_ground_anchors(
+            ground_anchors_mask_key = ground_anchors_detector.detect_ground_anchors(
                 intermediate_dtm_key=dtm_key,
                 dsm_key=filled_dsm_key,
                 regular_mask_key=regular_mask_key,
+                ground_mask_path=params["ground_mask_path"],
+                dsm_profile=input_profile,
                 dsm_z_accuracy=params["dsm_z_accuracy"],
-                eomanager=eomanager,
+                manager=manager,
             )
-            ground_anchors_mask_key = ground_anchors_output["ground_anchors_mask_key"]
-            eomanager.release(key=dtm_key)
-
-            if params["developer_mode"]:
-                ground_anchors_mask_path: str = os.path.join(developer_dir, "ground_anchors_mask.tif")
-                eomanager.write(
-                    key=ground_anchors_mask_key,
-                    img_path=ground_anchors_mask_path,
-                )
         else:
-            ground_anchors_mask_key = eomanager.create_image(eomanager.get_profile(regular_mask_key))
+            ground_anchors_mask_key = None
 
-        eomanager.release(key=regular_mask_key)
+        del regular_mask_key
 
-        # Step 5 [optional]: ground mask
-        if params["ground_mask_path"]:
-            # Union of detected ground anchors mask with provided ground_mask
-            ground_anchors_mask = eomanager.get_array(key=ground_anchors_mask_key)
-            ground_mask = eomanager.get_array(key=ground_mask_key)
-            np.logical_or(
-                ground_anchors_mask[0, :, :],
-                ground_mask[0, :, :],
-                out=ground_anchors_mask[0, :, :],
-            )
-            if params["developer_mode"]:
-                anchorage_mask_with_ground_path: str = os.path.join(developer_dir, "anchorage_mask_with_ground.tif")
-                eomanager.write(
-                    key=ground_anchors_mask_key,
-                    img_path=anchorage_mask_with_ground_path,
-                    binary=True,
-                )
-            BulldozerLogger.log("Ground mask processing: Done.", logging.INFO)
-
-        eomanager.release(key=ground_mask_key)
-
-        # Step 6: Compute final DTM with post processed predicted terrain point
+        # Step 5: Compute final DTM with post processed predicted terrain point
         BulldozerLogger.log("Main pass of a drape cloth filter: Starting...", logging.INFO)
         dtm_key = dtm_extraction.drape_cloth(
             filled_dsm_key=filled_dsm_key,
             ground_mask_key=ground_anchors_mask_key,
-            eomanager=eomanager,
+            filled_dsm_profile=input_profile,
+            manager=manager,
             max_object_size=params["max_object_size"],
             prevent_unhook_iter=params["prevent_unhook_iter"],
             num_outer_iterations=params["num_outer_iter"],
             num_inner_iterations=params["num_inner_iter"],
-            nodata=pipeline_nodata,
+            inter_dtm_filename="dtm_second_pass.tif",
         )
         BulldozerLogger.log("Main pass of a drape cloth filter: Done.", logging.INFO)
-        eomanager.release(key=ground_anchors_mask_key)
 
-        if params["developer_mode"]:
-            eomanager.write(
-                key=dtm_key,
-                img_path=os.path.join(developer_dir, "dtm_second_pass.tif"),
-            )
+        del ground_anchors_mask_key
 
-        # Step 7: remove pits
+        # Step 6: remove pits
         BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
-        dtm_key, pits_mask_key = fill_pits.run(dtm_key, border_nodata_mask_key, eomanager)
-        eomanager.write(
-            key=pits_mask_key,
-            img_path=os.path.join(output_masks_dir, "filled_pits.tif"),
-            binary=True,
+        dtm_key = fill_pits.run(
+            dtm_key=dtm_key,
+            border_nodata_mask_key=border_nodata_mask_key,
+            dtm_profile=input_profile,
+            manager=manager,
         )
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
-        eomanager.release(key=pits_mask_key)
-
-        # last step: Apply border_nodata_mask
-        BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
-        final_dtm = eomanager.get_array(key=dtm_key)[0]
-        border_nodata_mask = eomanager.get_array(key=border_nodata_mask_key)[0]
-        final_dtm[border_nodata_mask == 1] = input_nodata
-        BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
 
         # Write final outputs
+
+        if isinstance(dtm_key, str):
+            with rasterio.open(dtm_key) as src:
+                dtm = src.read(1)
+        else:
+            dtm = dtm_key
+
+        if isinstance(border_nodata_mask_key, str):
+            with rasterio.open(border_nodata_mask_key) as src:
+                border_nodata_mask = src.read(1)
+        else:
+            border_nodata_mask = border_nodata_mask_key
+
+        # Step 7: Apply border_nodata_mask and save final dtm
+        BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
+        dtm[border_nodata_mask == 1] = input_nodata  # type: ignore
+        BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
+        write(dtm, os.path.join(params["output_dir"], "dtm.tif"), input_profile)
+
         # Step 8[optional]: write final dhm
         if params["generate_dhm"]:
+
+            if isinstance(filled_dsm_key, str):
+                with rasterio.open(filled_dsm_key) as src:
+                    dsm = src.read(1)
+            else:
+                dsm = filled_dsm_key
+
+            if isinstance(inner_nodata_mask_key, str):
+                with rasterio.open(inner_nodata_mask_key) as src:
+                    inner_nodata_mask = src.read(1)
+            else:
+                inner_nodata_mask = inner_nodata_mask_key
+
             BulldozerLogger.log("Generating DHM: Starting...", logging.INFO)
-            dsm = eomanager.get_array(key=filled_dsm_key)[0, :, :]
-            dtm = eomanager.get_array(key=dtm_key)[0, :, :]
             dhm = dsm - dtm
             BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
             dhm[border_nodata_mask == 1] = input_nodata
-            eomanager.release(key=border_nodata_mask_key)
-            inner_nodata_mask = eomanager.get_array(key=inner_nodata_mask_key)[0]
             dhm[inner_nodata_mask == 1] = input_nodata
-            eomanager.release(key=inner_nodata_mask_key)
             BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
-            with rasterio.open(
-                os.path.join(params["output_dir"], "dhm.tif"),
-                "w",
-                **eomanager.get_profile(key=filled_dsm_key),
-            ) as dhm_out:
-                dhm_out.write(dhm, 1)
+            write(dhm, os.path.join(params["output_dir"], "dhm.tif"), input_profile)
             BulldozerLogger.log("Generating DHM: Done.", logging.INFO)
-        else:
-            # if the DHM is not generated, release the border_nodata_mask memory
-            eomanager.release(key=border_nodata_mask_key)
-        eomanager.release(key=filled_dsm_key)
-
-        # write final dtm
-        eomanager.write(key=dtm_key, img_path=os.path.join(params["output_dir"], "dtm.tif"))
-        eomanager.release(key=input_dsm_key)
-        eomanager.release(key=dtm_key)
 
 
 def retrieve_params(config_path: Union[str, None] = None, **kwargs: int) -> dict:
@@ -559,6 +493,7 @@ def get_parser() -> BulldozerArgumentParser:
                     metavar=param.value_label,
                     action="store",
                     default=argparse.SUPPRESS,
+                    choices=param.choices,
                     help=param.description,
                 )
 

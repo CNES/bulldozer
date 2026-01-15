@@ -21,6 +21,7 @@
 """
 Test module for bulldozer/utils/config_parser.py
 """
+
 import logging
 from pathlib import Path
 

@@ -23,7 +23,7 @@ This module contains the Bulldozer pipeline parameter structure and
 the dictionary of default parameters.
 """
 
-from typing import Any, Union
+from typing import Any, List, Union
 
 from bulldozer.utils.bulldozer_argparse import EXPERT_PARAM_KEY, OPT_PARAM_KEY, REQ_PARAM_KEY
 
@@ -45,6 +45,7 @@ class BulldozerParam:
         param_type: type,
         default_value: Any,
         value_label: Union[str, None] = None,
+        value_choices: Union[List[Any], None] = None,
     ) -> None:
         """
         BulldozerParam constructor.
@@ -58,6 +59,7 @@ class BulldozerParam:
             description: complete parameter description displayed in helper.
             default_value: parameter default value.
             value_label: parameter value print in helper (e.g. "<value>").
+            value_choices: list of permitted values for the parameter.
         """
         self.name = name
         self.alias = alias
@@ -66,6 +68,7 @@ class BulldozerParam:
         self.param_type = param_type
         self.default_value = default_value
         self.value_label = value_label
+        self.choices = value_choices
 
     def __str__(self) -> str:
         """
@@ -167,6 +170,16 @@ bulldozer_pipeline_params = {
             bool,
             False,
         ),
+        BulldozerParam(
+            "method",
+            "mtd",
+            "Execution method",
+            "All in memory (mem) or writing temporary results (no-mem)",
+            str,
+            "mem",
+            "<value>",
+            ["mem", "no-mem"]
+        ),
     ],
     # Expert options: these parameters are considered as core settings
     # must be changed by users who are experts
@@ -225,6 +238,16 @@ bulldozer_pipeline_params = {
             int,
             5,
             "<value>",
+        ),
+        BulldozerParam(
+            "mp_context",
+            "context",
+            "Multiprocessing context",
+            "Use a specific multiprocessing context (spawn, fork or forkserver)",
+            str,
+            "fork",
+            "<value>",
+            ["spawn", "fork", "forkserver"],
         ),
     ],
 }

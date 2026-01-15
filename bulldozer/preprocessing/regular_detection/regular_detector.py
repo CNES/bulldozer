@@ -23,116 +23,112 @@ This module is used to extract the regular areas in the provided DSM.
 """
 
 import logging
-import os
-from typing import Any, Dict, List, Union
+import shutil
+from typing import Union
 
 import numpy as np
+import rasterio
 from scipy.ndimage import binary_opening
 
-import bulldozer.eoscale.eo_executors as eoexe
-import bulldozer.eoscale.manager as eom
+from bulldozer.multiprocessing.bulldozer_executor import mp_n_to_m_images
+from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.multiprocessing.utils import write
 from bulldozer.preprocessing import regular  # type: ignore
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.helper import ubyte_profile
 
 
-def regular_mask_profile(input_profiles: List[Dict[str, Any]], params: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    This method is used in the main `detect_regular_areas`
-    method to provide the output mask profile (binary profile).
-
-    Args:
-        input_profiles: input profile.
-        params: extra parameters.
-
-    Returns:
-        updated profile.
-    """
-    # pylint: disable=unused-argument
-    output_profile = input_profiles[0]
-    output_profile["dtype"] = np.ubyte
-    output_profile["nodata"] = None
-    return output_profile
-
-
-def regular_mask_filter(
-    input_buffers: List[np.ndarray],
-    input_profiles: List[Dict[str, Any]],
-    filter_parameters: Dict[str, Any],
-) -> np.ndarray:
+def regular_mask_filter(dsm: np.ndarray, regular_slope: float, nodata: float) -> np.ndarray:
     """
     This method is used in the main `detect_regular_areas`.
     It calls the Cython method to extract regular areas.
 
     Args:
-        input_buffers: input DSM.
-        input_profiles: DSM profile.
-        filter_parameters: filter parameters.
+        dsm: input DSM.
+        regular_slope: maximum slope of a regular area.
+        nodata: DSM nodata value (if nan, the nodata is set to -32768).
 
     Returns:
         regular areas mask.
     """
-    # pylint: disable=unused-argument
     reg_filter = regular.PyRegularAreas()
-    # the input_buffers[0] corresponds to the input DSM raster
-    reg_mask = reg_filter.build_regular_mask(
-        input_buffers[0][0, :, :],
-        slope_threshold=filter_parameters["regular_slope"],
-        nodata_value=filter_parameters["nodata"],
-    )
+    reg_mask = reg_filter.build_regular_mask(dsm, regular_slope, nodata)
+
     return reg_mask.astype(np.ubyte)
 
 
 @Runtime
 def detect_regular_areas(
-    dsm_key: str,
+    dsm_key: Union[str, np.ndarray],
+    dsm_profile: dict,
     regular_slope: float,
     nodata: float,
     max_object_size: int,
-    eomanager: eom.EOContextManager,
+    manager: BulldozerContextManager,
     reg_filtering_iter: Union[int, None] = None,
-    dev_mode: bool = False,
-    dev_dir: str = "",
-) -> dict:
+) -> Union[str, np.ndarray]:
     """
-    This method returns the binary mask flagging regular areas location
-    in the provided DSM.
+    This method returns the binary mask flagging regular areas location in the provided DSM.
 
     Args:
-        dsm_key: input DSM.
+        dsm_key: input DSM (numpy array or path to file).
+        dsm_profile: profile of the input DSM.
         regular_slope: maximum slope of a regular area.
         nodata: DSM nodata value (if nan, the nodata is set to -32768).
         max_object_size: foreground max object size (in meter).
         reg_filtering_iter:  number of regular mask filtering iterations.
-        eomanager: eoscale context manager.
-        dev_mode: if True, dev mode activated
-        dev_dir: path to save dev files
+        manager: bulldozer context manager.
 
     Returns:
         the regular areas mask.
     """
-    regular_parameters: dict = {
-        "regular_slope": regular_slope,
-        "nodata": nodata,
-    }
+    regular_mask_profile = ubyte_profile(dsm_profile)
 
-    [regular_mask_key] = eoexe.n_images_to_m_images_filter(
-        inputs=[dsm_key],
-        image_filter=regular_mask_filter,
-        filter_parameters=regular_parameters,
-        generate_output_profiles=regular_mask_profile,
-        context_manager=eomanager,
-        stable_margin=1,
-        filter_desc="Regular mask processing...",
-    )
+    BulldozerLogger.log("Raw regular mask processing...", logging.INFO)
 
-    bin_regular_mask = eomanager.get_array(key=regular_mask_key)[0].astype(bool)
+    regular_mask_key: Union[str, np.ndarray]
+    raw_regular_mask_filename = "raw_regular_mask.tif"
+    regular_parameters = {"regular_slope": regular_slope, "nodata": nodata}
 
-    if dev_mode:
-        eomanager.write(
-            key=regular_mask_key,
-            img_path=os.path.join(dev_dir, "raw_regular_mask.tif"),
+    if manager.pool is None:
+        # no multiprocessing
+        if isinstance(dsm_key, str):
+            raise ValueError("Without multiprocessing the input dsm must be a numpy array.")
+        regular_mask_key = regular_mask_filter(dsm_key, **regular_parameters)
+    else:
+        # multiprocessing
+        [regular_mask_key] = mp_n_to_m_images(
+            inputs=[dsm_key],
+            image_height=dsm_profile["height"],
+            image_width=dsm_profile["width"],
+            output_profiles=[regular_mask_profile],
+            output_keys=[raw_regular_mask_filename],
+            func=regular_mask_filter,
+            func_parameters=regular_parameters,
+            stable_margin=1,
+            context_manager=manager,
             binary=True,
         )
+
+    if manager.dev_mode:
+        raw_regular_path = manager.get_path(raw_regular_mask_filename, "dev")
+        if isinstance(regular_mask_key, np.ndarray):
+            write(regular_mask_key, raw_regular_path, regular_mask_profile, binary=True)
+        else:  # already saved in tmp folder
+            shutil.move(regular_mask_key, raw_regular_path)
+            regular_mask_key = raw_regular_path
+
+    BulldozerLogger.log("Regular mask processing...", logging.INFO)
+
+    bin_regular_mask: np.ndarray
+    bin_regular_mask_filename = "regular_mask.tif"
+
+    if isinstance(regular_mask_key, np.ndarray):
+        bin_regular_mask = regular_mask_key.astype(bool)
+    else:
+        with rasterio.open(regular_mask_key) as src:
+            bin_regular_mask = src.read(1).astype(bool)
+    del regular_mask_key
 
     if reg_filtering_iter is not None:
         nb_iterations = reg_filtering_iter
@@ -143,12 +139,20 @@ def detect_regular_areas(
             logging.DEBUG,
         )
 
-    # This condition allows the user to desactivate the filtering
+    # This condition allows the user to deactivate the filtering
     # (iterations=0 in binary_opening ends up to filtering until nothing change)
     if nb_iterations >= 1:
         binary_opening(bin_regular_mask, iterations=nb_iterations, output=bin_regular_mask)
 
-    regular_mask = eomanager.get_array(key=regular_mask_key)[0]
-    regular_mask[:] = bin_regular_mask
+    if not manager.in_memory:
+        key = "dev" if manager.dev_mode else "tmp"
+        regular_mask_path = manager.get_path(bin_regular_mask_filename, key=key)
+        write(bin_regular_mask, regular_mask_path, regular_mask_profile, binary=True)
+        return regular_mask_path
 
-    return {"regular_mask_key": regular_mask_key}
+    # else in memory
+    if manager.dev_mode:
+        regular_mask_path = manager.get_path(bin_regular_mask_filename, key="dev")
+        write(bin_regular_mask, regular_mask_path, regular_mask_profile, binary=True)
+
+    return bin_regular_mask
