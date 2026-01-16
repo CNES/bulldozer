@@ -11,6 +11,7 @@
 
 ### Fixed
 - Docker image push github action fixed 
+- Remove unsupported macos13 version from automatic build in github workflow
 
 ---
 
