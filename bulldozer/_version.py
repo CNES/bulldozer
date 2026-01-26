@@ -22,4 +22,4 @@
 This module is used to centralize the current version of Bulldozer.
 """
 
-__version__ = "1.2.0a"
+__version__ = "1.2.0"

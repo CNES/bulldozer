@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0_alpha Parallelization engine update - ALPHA (January 2026)
+## 1.2.0 Parallelization engine update (January 2026)
 
 ### Added
 - Add new parameter `method` to indicates if the process keep all the intermediates data in memory (`mem`) or writes temporary results 
