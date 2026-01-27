@@ -22,4 +22,6 @@
 This module is used to centralize the current version of Bulldozer.
 """
 
-__version__ = "1.2.0a"
+from pathlib import Path
+
+__version__ = Path(__file__).with_name("VERSION").read_text().strip()

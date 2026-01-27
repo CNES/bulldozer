@@ -22,11 +22,10 @@
 Setup file for bulldozer
 """
 
-from distutils.util import convert_path
-
-import numpy
+from pathlib import Path
+from setuptools import Extension, setup
 from Cython.Build import cythonize
-from setuptools import Extension, find_packages, setup
+import numpy
 
 extensions = [
     Extension(
@@ -44,25 +43,12 @@ extensions = [
     ),
 ]
 
-compiler_directives = {"language_level": 3, "embedsignature": True}
-extensions = cythonize(extensions, compiler_directives=compiler_directives)
+extensions = cythonize(
+    extensions,
+    compiler_directives={
+        "language_level": "3",
+        "embedsignature": True,
+    },
+)
 
-main_ns = {}
-ver_path = convert_path("bulldozer/_version.py")
-with open(ver_path) as ver_file:
-    exec(ver_file.read(), main_ns)
-
-try:
-    setup(
-        version=main_ns["__version__"],
-        ext_modules=extensions,
-        packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    )
-except Exception:
-    print(
-        "\n\nAn error occurred while building the project, "
-        "please ensure you have the most updated version of setuptools, "
-        "setuptools_scm and wheel with:\n"
-        "\tpip install -U setuptools setuptools_scm wheel\n\n"
-    )
-    raise
+setup(ext_modules=extensions)

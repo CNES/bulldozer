@@ -1,6 +1,18 @@
 # Changelog
 
-## 1.2.0_alpha Parallelization engine update - ALPHA (January 2026)
+## 1.3.0 Documentation online (February 2026)
+### Added
+- New version 
+
+### Changed
+- Switch to `pyproject.toml` packaging (remove `setup.cfg`) => PEP 621 / modern setuptools compliance
+- Adding `VERSION` file (required for the new pyproject.toml)
+
+### Fixed
+
+---
+
+## 1.2.0 Parallelization engine update (January 2026)
 
 ### Added
 - Add new parameter `method` to indicates if the process keep all the intermediates data in memory (`mem`) or writes temporary results 
@@ -11,6 +23,7 @@
 
 ### Fixed
 - Docker image push github action fixed 
+- Remove unsupported macos13 version from automatic build in github workflow
 
 ---
 
