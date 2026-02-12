@@ -1,5 +1,23 @@
+# Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 [MASTER]
-# Analyze C extensions capabilities packages.
+# Analyze C extensions capabilities packages (Cython).
 extension-pkg-allow-list=bulldozer.preprocessing.fill,
     bulldozer.preprocessing.regular,
     bulldozer.preprocessing.border,
@@ -31,6 +49,18 @@ disable=fixme,
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once). See also the "--disable" option for examples.
 enable=c-extension-no-member
+
+
+ # Formatting handled by black / isort / flake8
+    line-too-long,
+    bad-indentation,
+    bad-continuation,
+    trailing-whitespace,
+    mixed-indentation,
+    wrong-import-order,
+    wrong-import-position,
+    ungrouped-imports,
+    multiple-imports,
 
 [REPORTS]
 
@@ -101,19 +131,8 @@ notes=FIXME,
 
 [FORMAT]
 
-# Number of spaces of indent required inside a hanging or continued line.
-indent-after-paren=4
+# Formatting is handled by black (see pyproject.toml)
 
-# String used as indentation unit. This is usually "    " (4 spaces) or "\t" (1
-# tab).
-indent-string='    '
-
-# Maximum number of characters on a single line.
-# default is 88
-max-line-length=120
-
-# Maximum number of lines in a module.
-max-module-lines=800
 
 [STRING]
 
@@ -187,11 +206,7 @@ variable-naming-style=snake_case
 
 [IMPORTS]
 
-# Deprecated modules which should not be used, separated by a comma.
-#deprecated-modules=optparse,tkinter.tix
-
-# Force import order to recognize a module as part of a third party library.
-#known-third-party=enchant,dask
+# Import order and grouping handled by isort
 
 [CLASSES]
 
