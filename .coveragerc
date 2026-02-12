@@ -1,5 +1,8 @@
 [run]
 source = bulldozer
 omit =
-    # Omit tests
-    /tests/*
+    # Tests
+    tests/*
+
+    # Package initialization files
+    */__init__.py
