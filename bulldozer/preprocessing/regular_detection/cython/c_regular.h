@@ -1,7 +1,7 @@
 #ifndef C_REGULAR_H
 #define C_REGULAR_H
 
- /*Copyright (c) 2022-2025 Centre National d'Etudes Spatiales (CNES).
+ /*Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 
  This file is part of Bulldozer
  (see https://github.com/CNES/bulldozer).
