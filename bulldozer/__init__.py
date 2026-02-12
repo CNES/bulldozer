@@ -23,3 +23,6 @@ Bulldozer module init file
 """
 
 from ._version import __version__  # noqa: F401
+from .pipeline.bulldozer_pipeline import dsm_to_dtm
+
+__all__ = ["dsm_to_dtm"]
