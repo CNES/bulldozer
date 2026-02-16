@@ -26,23 +26,23 @@ namespace bulldozer {
                           float thresh,
                           float nodataValue) {
 
-		const long int x_size = nbCols;
-		const long int y_size = nbRows;
+		const long int xSize = nbCols;
+		const long int ySize = nbRows;
 
 
 		const int nbNeigbhors=8;
-		std::ptrdiff_t v8_off[nbNeigbhors] = {-x_size-1, -x_size,  -x_size+1, -1, +1, x_size-1, x_size,  x_size+1 };
+		std::ptrdiff_t v8Off[nbNeigbhors] = {-xSize-1, -xSize,  -xSize+1, -1, +1, xSize-1, xSize,  xSize+1 };
 
 		float sum;
 		float used;
 		std::ptrdiff_t pos;
-        std::ptrdiff_t pos_off;
+        std::ptrdiff_t posOff;
 
 
-		for (long int y=0; y<y_size; y++) {
-			for (long int x=0; x<x_size; x++) {
+		for (long int y=0; y<ySize; y++) {
+			for (long int x=0; x<xSize; x++) {
 
-				pos = x_size*y + x;
+				pos = xSize*y + x;
 
 				// compute slope on dsm
 				sum = 0;
@@ -51,12 +51,12 @@ namespace bulldozer {
 				if (dsm[pos] != nodataValue) {
 					for(int v=0; v<nbNeigbhors; v++) {
                         
-                        pos_off = pos+v8_off[v];
+                        posOff = pos+v8Off[v];
                             
-                        if(pos_off>=0 && pos_off<x_size*y_size) {
+                        if(posOff>=0 && posOff<xSize*ySize) {
                         
-                            if(dsm[pos_off] != nodataValue) {
-                                sum += std::fabs(dsm[pos_off] - dsm[pos]);
+                            if(dsm[posOff] != nodataValue) {
+                                sum += std::fabs(dsm[posOff] - dsm[pos]);
                                 used++;
                             }
                         }
