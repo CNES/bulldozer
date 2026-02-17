@@ -16,12 +16,11 @@
 # limitations under the License.
 #
 
-# pyproject.toml
 [build-system]
 requires = [
     "setuptools>=68",
     "wheel",
-    "Cython>=0.29.14",
+    "Cython>=0.29.36",
     "numpy>=1.22.2"
 ]
 build-backend = "setuptools.build_meta"
@@ -33,17 +32,18 @@ dynamic = ["version"]
 authors = [{name = "CNES", email = "dimitri.lallement@cnes.fr"}]
 description = "Digital Terrain Model (DTM) extraction tool"
 readme = "README.md"
-license-files = ["LICENSE"]
-keywords = ["bulldozer", "DTM", "DSM", "3D", "Remote Sensing", "LiDAR",]
+license = {file = "LICENSE"}
+keywords = ["DTM", "DSM", "Remote Sensing", "LiDAR", "GIS"]
+
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "Intended Audience :: End Users/Desktop",
     "Intended Audience :: Science/Research",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Image Processing",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
-    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Cython",
 ]
@@ -52,7 +52,7 @@ requires-python = ">=3.10"
 
 # Bulldozer packages dependencies
 dependencies = [
-    "Cython>=0.29.14",
+    "Cython>=0.29.36",
     "numpy>=1.22.2",
     "rasterio>=1.2.10",
     "scipy>=1.8.0",
@@ -66,26 +66,26 @@ dependencies = [
 [project.urls]
 #Documentation = "https://bulldozer.readthedocs.io/en/latest/"
 Repository = "https://github.com/CNES/bulldozer"
+Issues = "https://github.com/CNES/bulldozer/issues"
 
 [project.optional-dependencies]
 dev = [
-    "pre-commit",
+    "pre-commit>=3.7",
     "build",
-    "isort>=5.8.0",                  # Check imports
-    "black>=24.1a1",                 # PEP8 format code
-    "flake8>=3.9.1",                 # General linter
-    "flake8-comprehensions>=3.4.0",  # Check list/dict/set
-    "flake8-bugbear>=21.4.3",        # Add some rules to flake8
-    "pylint>=2.8.12",                # General linter with more rules
-    "pytest",
-    "pytest-cov",
-    "pytest-sugar",                  # for prettier pytest
-    "mypy",                          # Python typing
+    "black>=24.0,<25",                  # PEP8 format code
+    "isort>=5.13,<6",                   # Check imports
+    "flake8>=6.1,<7",                   # General linter
+    "flake8-bugbear>=24.0,<25",         # Add some rules to flake8
+    "flake8-comprehensions>=3.14,<4",   # Check list/dict/set
+    "pylint>=3.2,<4",                   # General linter with more rules
+    "pytest>=8,<9",
+    "pytest-cov>=5,<6",
+    "mypy>=1.10,<2",                    # Python typing
     "typing-extensions",
 ]
 
 docs = [
-    "mkdocs",
+    "mkdocs>=1.6,<2",
 ]
 
 # Entry points
@@ -101,19 +101,40 @@ packages = {find = {}}
 [tool.cibuildwheel]
 skip = ["pp*", "*-win32"]
 
+# -------------------
+# Formatting tools
+# -------------------
+
 [tool.black]
-line-length = 120 # default 80
-exclude = "(.eggs|.git|.mypy_cache|.nox|.tox|_build|build|dist|venv)"
+line-length = 120
+target-version = ["py310"]
 
 [tool.isort]
 profile = "black"
-line_length = 120 # default 80
+line_length = 120
 
 [tool.flake8]
-exclude = [".git", "venv", "build", "dist", "docs"]
+max-line-length = 120
+max-complexity = 30
 extend-ignore = ["B907", "E203", "E501", "W503"]
 extend-select = ["B950"]
-max-complexity = 30 # default deactivated
-max-line-length = 120 # default 80
-copyright-check = true
-select = ["E", "F", "W", "C", "B9", "C4", "B"]
+exclude = [".git", "bulldozer_venv", "build", "dist", "docs"]
+
+# -------------------
+# Type checking
+# -------------------
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = true
+ignore_missing_imports = true
+
+# -------------------
+# Pytest
+# -------------------
+
+[tool.pytest.ini_options]
+addopts = "-ra --cov=bulldozer --cov-report=term-missing"
+testpaths = ["tests"]
