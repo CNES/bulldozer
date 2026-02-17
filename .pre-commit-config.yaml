@@ -35,12 +35,14 @@ repos:
     rev: 6.1.0
     hooks:
       - id: flake8
+        args: ["--max-line-length=120"]
 
   # Type checker
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.10.0
     hooks:
       - id: mypy
+        args: ["--ignore-missing-imports"]
         exclude: "tests/|setup.py"
 
   # Static code analyser : checks errors, coding standard and can give code smells

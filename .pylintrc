@@ -57,6 +57,10 @@ output-format=text
 logging-format-style=new
 
 [BASIC]
+# Exclude protected parameters from argparse.
+exclude-protected=_group_actions,_prog
+
+[BASIC]
 # Naming style matching correct argument names.
 argument-naming-style=snake_case
 
