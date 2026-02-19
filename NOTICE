@@ -29,10 +29,5 @@ https://pyyaml.org/wiki/PyYAML
 https://github.com/tqdm/tqdm
 https://pytest.org
 https://github.com/pre-commit/pre-commit
-https://github.com/PyCQA/isort
-https://github.com/psf/black
-https://github.com/PyCQA/flake8
-https://github.com/PyCQA/flake8-bugbear
-https://github.com/adamchainz/flake8-comprehensions
-https://github.com/pytest-dev/pytest-cov
+https://github.com/astral-sh/ruff
 https://github.com/python/mypy

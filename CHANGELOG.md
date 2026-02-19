@@ -13,10 +13,11 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Added `NOTICE` file
 
 ### Changed
+- Replaced `isort`, `flake8 plugins`, `flake8`, `pylint` by [`Ruff`](http://docs.astral.sh/ruff/)
 - Switched to `pyproject.toml` packaging (removed `setup.cfg`) for PEP 621 and modern setuptools compliance
 - Added `VERSION` file (required by the new `pyproject.toml`)
 - Updated minimum supported Python version to **>= 3.10** (previously >= 3.8)
-- Updated `mypy.ini`, `MANIFEST.in`, `.pylintrc`, `AUTHORS.md`, `pyproject.toml` and `.gitignore` files
+- Updated `mypy.ini`, `MANIFEST.in`, `AUTHORS.md`, `pyproject.toml` and `.gitignore` files
 - Added missing `.pyd`, `.dll` in `.gitignore`
 - Refactored **Bulldozer** Python API (import)
 - Added new sections in `README.md`

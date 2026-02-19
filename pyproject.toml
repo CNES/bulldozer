@@ -52,7 +52,6 @@ requires-python = ">=3.10"
 
 # Bulldozer packages dependencies
 dependencies = [
-    "Cython>=0.29.36",
     "numpy>=1.22.2",
     "rasterio>=1.2.10",
     "scipy>=1.8.0",
@@ -71,17 +70,10 @@ Issues = "https://github.com/CNES/bulldozer/issues"
 [project.optional-dependencies]
 dev = [
     "pre-commit>=3.7",
-    "build",
-    "black>=24.0,<25",                  # PEP8 format code
-    "isort>=5.13,<6",                   # Check imports
-    "flake8>=6.1,<7",                   # General linter
-    "flake8-bugbear>=24.0,<25",         # Add some rules to flake8
-    "flake8-comprehensions>=3.14,<4",   # Check list/dict/set
-    "pylint>=3.2,<4",                   # General linter with more rules
-    "pytest>=8,<9",
+    "ruff>=0.5",        # Lint + format + import sort
+    "mypy>=1.10,<2",    # Python typing
+    "pytest>=8,<9",     # Tests
     "pytest-cov>=5,<6",
-    "mypy>=1.10,<2",                    # Python typing
-    "typing-extensions",
 ]
 
 docs = [
@@ -105,20 +97,34 @@ skip = ["pp*", "*-win32"]
 # Formatting tools
 # -------------------
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-target-version = ["py310"]
+target-version = "py310"
 
-[tool.isort]
-profile = "black"
-line_length = 120
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "I",   # isort 
+    "UP",  # PyUpgrade 
+]
 
-[tool.flake8]
-max-line-length = 120
-max-complexity = 30
-extend-ignore = ["B907", "E203", "E501", "W503"]
-extend-select = ["B950"]
-exclude = [".git", "bulldozer_venv", "build", "dist", "docs"]
+ignore = [
+    "E501",  # line too long
+    "B008",  # function call in default argument
+]
+
+exclude = [
+    "build", 
+    "dist", 
+    "bulldozer_venv",
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
 
 # -------------------
 # Type checking

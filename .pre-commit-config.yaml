@@ -17,38 +17,37 @@
 #
 
 repos:
-  
-  # Import sorter
-  - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+  - repo: local
     hooks:
-      - id: isort
 
-  # PEP 8 compliant code formatter
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
+      # -------------------------
+      # Ruff (lint)
+      # -------------------------
+      - id: ruff
+        name: ruff
+        entry: ruff check
+        stages: [pre-commit]
+        language: system
+        types: [python]
 
-  # Style and syntax errors checker (based on PyFlakes, pycodestyle and McCabe)
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        args: ["--max-line-length=120"]
+      # -------------------------
+      # Ruff (format)
+      # -------------------------
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format
+        stages: [pre-commit]
+        language: system
+        types: [python]
 
-  # Type checker
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
-    hooks:
+      # -------------------------
+      # MyPy (type checking)
+      # -------------------------
       - id: mypy
-        args: ["--ignore-missing-imports"]
-        exclude: "tests/|setup.py"
-
-  # Static code analyser : checks errors, coding standard and can give code smells
-  - repo: https://github.com/pycqa/pylint
-    rev: v3.2.0
-    hooks:
-      - id: pylint
-        args: ["--rcfile=.pylintrc"]
-        exclude: "tests/|setup.py"
+        name: Mypy
+        entry: mypy
+        stages: [pre-commit]
+        language: system
+        types: [python]
+        pass_filenames: false
+        exclude: 'tests/|setup.py'

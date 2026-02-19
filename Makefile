@@ -91,26 +91,24 @@ install: venv ## Install Bulldozer in editable mode with dev dependencies
 # -------------------------------------------------------------------
 
 .PHONY: format
-format: install ## Format code with isort and black
-	@$(VENV)/bin/isort bulldozer tests
-	@$(VENV)/bin/black bulldozer tests
+format: install ## Format code with Ruff
+	@$(VENV)/bin/ruff format bulldozer tests
+	@$(VENV)/bin/ruff check --fix bulldozer tests
 
 # -------------------------------------------------------------------
 # Linting & code quality
 # -------------------------------------------------------------------
 
 .PHONY: lint
-lint: install ## Run all linters via pre-commit
-	@$(VENV)/bin/pre-commit run --all-files
+lint: install ## Run Ruff and mypy
+	@$(VENV)/bin/ruff check bulldozer tests
+	@$(VENV)/bin/mypy bulldozer
 
 .PHONY: lint-manual
-lint-manual: install ## Run linters individually (debug)
-	@$(VENV)/bin/isort --check bulldozer tests
-	@$(VENV)/bin/black --check bulldozer tests
-	@$(VENV)/bin/flake8 bulldozer tests
+lint-manual: install ## Debug lint manually
+	@$(VENV)/bin/ruff check bulldozer tests
+	@$(VENV)/bin/ruff format --check bulldozer tests
 	@$(VENV)/bin/mypy bulldozer
-	@set -o pipefail; \
-	  $(VENV)/bin/pylint bulldozer tests --rcfile=.pylintrc | tee pylint-report.txt
 
 # -------------------------------------------------------------------
 # Tests
@@ -149,7 +147,6 @@ clean: ## Remove virtualenv and temporary files
 	@rm -rf $(VENV)
 	@rm -rf build dist .eggs *.egg-info
 	@rm -rf .pytest_cache .mypy_cache .coverage htmlcov site
-	@rm -f pylint-report.txt
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
 	@find . -type f -name "*.so" -delete
 	@find . -type f -name "*.cpp" ! -name "c_*.cpp" -delete
