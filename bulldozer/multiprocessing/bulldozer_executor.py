@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -23,8 +22,8 @@ This module is used to run multiprocessing in bulldozer
 """
 
 import math
+from collections.abc import Callable
 from multiprocessing.synchronize import Lock
-from typing import Callable, List, Union
 
 import numpy as np
 import rasterio
@@ -41,8 +40,8 @@ def compute_mp_strips(
     nb_workers: int,
     stable_margin: int,
     along_line: bool = False,
-    specific_strip_size: Union[int, None] = None,
-) -> List[MpTile]:
+    specific_strip_size: int | None = None,
+) -> list[MpTile]:
     """
     This method computes strips according to the image size and the number of workers.
 
@@ -119,9 +118,9 @@ def compute_mp_tiles(
     nb_workers: int,
     stable_margin: int,
     tile_mode: bool,
-    specific_tile_size: Union[int, None] = None,
+    specific_tile_size: int | None = None,
     strip_along_lines: bool = False,
-) -> List[MpTile]:
+) -> list[MpTile]:
     """
     Given an input image size and nb_workers, this method computes the list of strips that will be processed
     in parallel within a stream strip or tile
@@ -140,7 +139,6 @@ def compute_mp_tiles(
     """
 
     if tile_mode:
-
         nb_tiles_x: int = 0
         nb_tiles_y: int = 0
         end_x: int = 0
@@ -167,9 +165,7 @@ def compute_mp_tiles(
         strips: list = []
 
         for ty in range(nb_tiles_y):
-
             for tx in range(nb_tiles_x):
-
                 # Determine the stable and unstable boundaries of the tile
                 start_x = tx * tile_size
                 start_y = ty * tile_size
@@ -214,17 +210,17 @@ def mp_n_to_m_images(
     inputs: list,
     image_height: int,
     image_width: int,
-    output_keys: List[str],
-    output_profiles: List[dict],
+    output_keys: list[str],
+    output_profiles: list[dict],
     context_manager: BulldozerContextManager,
     func: Callable,
-    func_parameters: Union[dict, None] = None,
+    func_parameters: dict | None = None,
     stable_margin: int = 0,
-    tile_mode: Union[bool, None] = None,
-    specific_tile_size: Union[int, None] = None,
+    tile_mode: bool | None = None,
+    specific_tile_size: int | None = None,
     strip_along_lines: bool = False,
     binary: bool = False,
-) -> Union[List[str], List[np.ndarray]]:
+) -> list[str] | list[np.ndarray]:
     """
     Generic paradigm to process n images providing m resulting images using a paradigm similar to the old map/reduce
 
@@ -264,7 +260,7 @@ def mp_n_to_m_images(
         strip_along_lines=strip_along_lines,
     )
 
-    out: Union[List[str], List[np.ndarray]]
+    out: list[str] | list[np.ndarray]
     if context_manager.in_memory:
         # inputs are numpy arrays
         list_input = [
@@ -308,11 +304,11 @@ def mp_n_to_m_images(
 
 
 def mp_execute_from_paths(
-    input_paths: List[str],
-    output_paths: List[str],
+    input_paths: list[str],
+    output_paths: list[str],
     func: Callable,
     func_parameters: dict,
-    output_profiles: List[dict],
+    output_profiles: list[dict],
     lock: Lock,
     tile: MpTile,
     binary: bool,
@@ -376,7 +372,7 @@ def mp_execute_from_paths(
             )
 
 
-def mp_execute_from_arrays(inputs: List[np.ndarray], func: Callable, func_parameters: dict, tile: MpTile) -> dict:
+def mp_execute_from_arrays(inputs: list[np.ndarray], func: Callable, func_parameters: dict, tile: MpTile) -> dict:
     """
     This method is called within multiprocessing.
     It executes the given function on given input arrays.
