@@ -101,7 +101,7 @@ All contributors are expected to follow these rules.
 
 ### Pre-commit hooks (mandatory)
 
-The project uses **pre-commit** to automatically run formatting and linting checks.
+The project uses **pre-commit** to automatically run formatting, linting, and type checks.
 
 Hooks are installed automatically when running:
 
@@ -109,45 +109,51 @@ Hooks are installed automatically when running:
 make install
 ```
 
-Pre-commit runs automatically before each commit.
+Pre-commit runs automatically before each commit.  
 **Commits that do not pass pre-commit checks will be rejected.**
+
+You can manually run all checks with:
+```bash
+make lint
+```
+
+Or auto-fix formatting and lint issues with:
+```bash
+make ruff-fix
+```
 
 ---
 
 ### Code formatting
 
-- **Black** is used for code formatting
-  - Line length: **120**
-  - Formatting is automatic and non-configurable
+Bulldozer uses **Ruff** as a unified tool for:
+- Code formatting
+- Import sorting
+- Linting
+- Modern Python syntax upgrades
 
-- **isort** is used for import sorting
-  - Configured with the Black profile
+Ruff replaces multiple legacy tools (Black, isort, flake8, pylint).  
 
-You should not manually fight formatting changes, let the tools handle it.
+Configuration is centralized in `pyproject.toml`.
 
----
+Key rules:
+- Line length: **120**
+- Imports are automatically sorted
+- Code is automatically formatted
+- Common Python issues and potential bugs are checked
 
-### Linting
-
-The project uses multiple linters with complementary roles:
-- **flake8**
-  - General linting and code quality checks
-  - Extended with `flake8-bugbear` and `flake8-comprehensions`
-
-- **pylint**
-  - Deeper static analysis
-  - Focuses on design, complexity, and maintainability
-  - Some warnings are intentionally disabled to match project constraints
-
-Not all pylint warnings must be fixed, **but new code should not introduce new warnings.**
+You should not manually fight formatting changes, let Ruff handle it.
 
 ---
+
 
 ### Static typing
 
 - **mypy** is used for static type checking
-- Type hints are expected for all new functions and public APIs
+- Type hints are required for all new functions and public APIs
 - Existing code may be progressively typed, but new code must be typed
+
+Type checking is automatically enforced via pre-commit.
 
 --- 
 
@@ -156,7 +162,10 @@ Not all pylint warnings must be fixed, **but new code should not introduce new w
 - **pytest** is used as the test framework
 - New features and bug fixes must include appropriate tests
 - Tests should cover both normal and degraded cases when possible
-- All tests must pass before submitting a Pull Request (`make check`)
+- All tests must pass before submitting a Pull Request:
+```bash
+make check
+```
 
 ---
 
@@ -165,7 +174,7 @@ Not all pylint warnings must be fixed, **but new code should not introduce new w
 Please follow these rules when contributing code:
 - Use explicit and meaningful variable and function names
 - Add comments when introducing non-trivial logic
-- Do **not** use `print()`. Use the **Bulldozer internal logger**
+- Do **not** use `print()`. Use the Bulldozer internal logger
 - All functions must be documented (purpose, parameters, return values)
 - Avoid adding new dependencies unless strictly necessary and permissively licensed
 - Update the documentation if necessary
