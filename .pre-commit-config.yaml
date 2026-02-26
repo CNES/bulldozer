@@ -1,45 +1,53 @@
+# Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
+#
+# This file is part of Bulldozer
+# (see https://github.com/CNES/bulldozer).
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 repos:
-- repo: local
-  hooks:
+  - repo: local
+    hooks:
 
-  # Import sorter
-  - id: isort
-    name: Isort
-    stages: [pre-commit]
-    language: system
-    entry: isort
-    types: [python]
+      # -------------------------
+      # Ruff (lint)
+      # -------------------------
+      - id: ruff
+        name: ruff
+        entry: ruff check
+        stages: [pre-commit]
+        language: system
+        types: [python]
 
-  # PEP 8 compliant code formatter
-  - id: black
-    name: Black
-    stages: [pre-commit]
-    language: system
-    entry: black
-    types: [python]
+      # -------------------------
+      # Ruff (format)
+      # -------------------------
+      - id: ruff-format
+        name: ruff-format
+        entry: ruff format
+        stages: [pre-commit]
+        language: system
+        types: [python]
 
-  # Type checker
-  - id: mypy
-    name: Mypy
-    stages: [pre-commit]
-    language: system
-    entry: mypy
-    types: [python]
-    exclude: 'tests/|setup.py'
-
-  # Style and syntax errors checker (based on PyFlakes, pycodestyle and McCabe)
-  - id: flake8
-    name: Flake8
-    stages: [pre-commit]
-    language: system
-    entry: flake8
-    types: [python]
-
-  # Static code analyser : checks errors, coding standard and can give code smells
-  - id: pylint
-    name: PyLint
-    stages: [pre-commit]
-    language: system
-    entry: pylint --rcfile=.pylintrc
-    files: \.py$
-    exclude: 'tests/|setup.py'
+      # -------------------------
+      # MyPy (type checking)
+      # -------------------------
+      - id: mypy
+        name: Mypy
+        entry: mypy
+        stages: [pre-commit]
+        language: system
+        types: [python]
+        pass_filenames: false
+        exclude: 'tests/|setup.py'

@@ -1,0 +1,33 @@
+Bulldozer Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
+
+This software is distributed under the Apache Software License (ASL) v2.0, see
+LICENSE file or http://www.apache.org/licenses/LICENSE-2.0 for details.
+
+----------------------
+Bulldozer Dependencies
+----------------------
+
+The following components are provided under the BSD-3-Clause License (https://opensource.org/licenses/BSD-3-Clause).
+See project link for details.
+http://www.numpy.org/
+https://scipy.org/
+https://scikit-image.org/
+https://github.com/rasterio/rasterio
+https://github.com/giampaolo/psutil
+https://github.com/Teemu/pytest-sugar/
+https://www.mkdocs.org/
+
+The following components are provided under the Apache 2.0 License (https://opensource.org/licenses/Apache-2.0).
+See project link for details.
+https://cython.org/
+https://www.pylint.org/
+https://github.com/kislyuk/argcomplete
+
+The following components are provided under the MIT License (http://www.opensource.org/licenses/mit-license.php).
+See project link for details.
+https://pyyaml.org/wiki/PyYAML
+https://github.com/tqdm/tqdm
+https://pytest.org
+https://github.com/pre-commit/pre-commit
+https://github.com/astral-sh/ruff
+https://github.com/python/mypy
