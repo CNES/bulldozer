@@ -59,7 +59,7 @@ variables:
   # Local artifactory Dockerhub URL containing copies of docker hub images
   ARTIFACTORY_URL: "${ARTIFACTORY_HOST}/docker"
   # Github repository
-  GITHUB_REPO: "https://${GITHUB_USER}:${GITHUB_TOKEN}@github.com/CNES/bulldozer.git"
+  GITHUB_REPO: "https://${CARS_CNES_GITHUB_TOKEN_USERNAME}:${CARS_CNES_GITHUB_TOKEN_PASSWORD}@github.com/CNES/bulldozer.git"
 
 
 # Steps:
