@@ -38,20 +38,10 @@ You can install **Bulldozer** by running the following command:
 ```sh
 pip install bulldozer-dtm
 ```
-Or you can clone the GitHub repository and use the `Makefile`:
-```sh
-# Clone the project
-git clone https://github.com/CNES/bulldozer.git
-cd bulldozer/
+*For alternative installation methods, please refer to the [documentation](https://bulldozer.readthedocs.io/en/stable/installation.html).*
 
-# Create the virtual environment and install required dependencies
-make install
-
-# Activate the virtual env
-source bulldozer_venv/bin/activate
-```
 ### Requirements
-- Python 3.10 or higher
+- Python ≥ 3.10
 
 ## ⚙️ Run **Bulldozer**
 

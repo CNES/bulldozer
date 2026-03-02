@@ -24,9 +24,9 @@ docs_dir: docs/
 nav:
     - Getting Started:
       - Home: source/INTRODUCTION.md
-      - Installation: source/INSTALLATION.md
+      - Installation: source/installation.md
     - User guide:
-      - Input data preprocessing: source/INPUT_DATA_PREPROCESSING.md 
+      - Input data preprocessing: source/input_data_preprocessing.md 
       - Run Bulldozer: 
         - Prerequisite: source/RUN_BULLDOZER.md 
         - Using CLI: source/RUN_BULLDOZER_CLI.md 
