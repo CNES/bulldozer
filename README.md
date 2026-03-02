@@ -7,7 +7,8 @@
 [![docker](https://badgen.net/docker/size/cnes/bulldozer?icon=docker&label=image%20size)](https://hub.docker.com/r/cnes/bulldozer)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![Python >=3.10](https://img.shields.io/badge/python-3.10%2B-blue)</div>
+![Python >=3.10](https://img.shields.io/badge/python-3.10%2B-blue)
+[![Documentation](https://readthedocs.org/projects/bulldozer/badge/?version=stable)](https://bulldozer.readthedocs.io/?badge=stable)</div>
 
 
 # 🌏Overview
@@ -46,24 +47,15 @@ cd bulldozer/
 # Create the virtual environment and install required dependencies
 make install
 
-<<<<<<< HEAD
 # Activate the virtual env
 source bulldozer_venv/bin/activate
-=======
-As described in the [documentation](https://bulldozer.readthedocs.io/en/stable/run_bulldozer.html), there are many different ways to launch **Bulldozer**. Here are the two most popular:
-
-1. Using the CLI *(Command Line Interface)*
-Run the folowing command after updating the parameters `input_dsm.tif` and `output_dir`:
-```console
-bulldozer -dsm input_dsm.tif -out output_dir
->>>>>>> c86694c (fix: typo fixed)
 ```
 ### Requirements
 - Python 3.10 or higher
 
 ## ⚙️ Run **Bulldozer**
 
-There are different ways to launch **Bulldozer**:
+As described in the [documentation](https://bulldozer.readthedocs.io/en/stable/run_bulldozer.html), there are many different ways to launch **Bulldozer**. Here are the three most popular:
 
 1. Using the CLI *(Command Line Interface)* - Run the following command line after updating the parameters `input_dsm.tif` and `output_dir`:
 ```console
@@ -124,7 +116,8 @@ If you use **Bulldozer** in your research, please cite the following paper:
 ```
 # 📜 License
 
-**Bulldozer** is licensed under Apache License v2.0. Please refer to the [LICENSE](LICENSE) file for more details.
+**Bulldozer** is licensed under permissive [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please refer to the [LICENSE](LICENSE) file for more details.
+
 
 # 🆘 Support
 

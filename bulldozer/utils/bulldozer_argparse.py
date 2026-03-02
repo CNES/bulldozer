@@ -294,9 +294,7 @@ class BulldozerArgumentParser(argparse.ArgumentParser):
                         expert = expert.replace("prog", f"{formatter._prog}")
                         expert = expert.replace("      ", "Note: ")
                         formatter.add_text(expert.replace("prog", f"{formatter._prog}"))
-                    # TODO uncomment when doc is online
-                    # formatter.add_text("For more details, consult https://bulldozer.readthedocs.io/")  # noqa: B950
-                    formatter.add_text("For more details, consult the documentation.")
+                    formatter.add_text("For more details, consult https://bulldozer.readthedocs.io/")
                 else:
                     epilog = self.epilog.replace("prog", f"{formatter._prog}")
                     formatter.add_text(epilog)
