@@ -7,30 +7,43 @@
 [![docker](https://badgen.net/docker/size/cnes/bulldozer?icon=docker&label=image%20size)](https://hub.docker.com/r/cnes/bulldozer)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-orange.svg)](CONTRIBUTING.md)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-</div>
+![Python >=3.10](https://img.shields.io/badge/python-3.10%2B-blue)</div>
 
 
-# Overview
+# 🌏Overview
 <div align="center">
 <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/result_overview.gif" alt="demo" width="400"/>
 </div>
  
 **Bulldozer** is a pipeline designed to extract a *Digital Terrain Model* (DTM) from a *Digital Surface Model* (DSM). It supports both noisy satellite DSMs and high-quality LiDAR DSMs.
 
-# Quick Start
+# ✨ Features
 
-## Installation
+- Digital Terrain Model (DTM) extraction from a single Digital Surface Model (DSM)
+- Requires only a DSM as mandatory input
+- Optional ground / non-ground mask support
+- Designed for both noisy satellite DSMs and high-quality LiDAR DSMs
+- Command-line interface (CLI)
+- Python API
+- Configuration-file based execution
+- Docker container support
+- Fully open-source (Apache 2.0)
+
+# 🚀 Quick Start
+
+## 🛠️ Installation
+
 You can install **Bulldozer** by running the following command:
 ```sh
 pip install bulldozer-dtm
 ```
-Or you can clone the github repository and use the `Makefile`:
+Or you can clone the GitHub repository and use the `Makefile`:
 ```sh
 # Clone the project
 git clone https://github.com/CNES/bulldozer.git
 cd bulldozer/
 
-# Create the virtual environment and install required depencies
+# Create the virtual environment and install required dependencies
 make install
 
 <<<<<<< HEAD
@@ -45,11 +58,14 @@ Run the folowing command after updating the parameters `input_dsm.tif` and `outp
 bulldozer -dsm input_dsm.tif -out output_dir
 >>>>>>> c86694c (fix: typo fixed)
 ```
-## Run **Bulldozer**
+### Requirements
+- Python 3.10 or higher
+
+## ⚙️ Run **Bulldozer**
 
 There are different ways to launch **Bulldozer**:
 
-1. Using the CLI *(Command Line Interface)* - Run the folowing command line after updating the parameters `input_dsm.tif` and `output_dir`:
+1. Using the CLI *(Command Line Interface)* - Run the following command line after updating the parameters `input_dsm.tif` and `output_dir`:
 ```console
 bulldozer -dsm input_dsm.tif -out output_dir
 ```
@@ -59,37 +75,40 @@ bulldozer -dsm input_dsm.tif -out output_dir
 
 2. Using the Python API - You can directly provide the input parameters to the `dsm_to_dtm` function:
 ```python
-from bulldozer.pipeline.bulldozer_pipeline import dsm_to_dtm
+from bulldozer import dsm_to_dtm
 
 dsm_to_dtm(dsm_path="input_dsm.tif", output_dir="output_dir")
 ```
 ✅ Done! Your DTM is available in the `output_dir`.
 
-3. Using a configuration file (CLI) - Based on provided [configuration file](conf) templates, you can run the following command line:
+3. Using a configuration file (CLI) - Based on provided [configuration file](https://github.com/CNES/bulldozer/tree/master/conf) templates, you can run the following command line:
 ```console
 bulldozer conf/configuration_template.yaml
 ```
 ✅ Done! Your DTM is available in the directory defined in the configuration file.
 
-## **Bulldozer** docker image
+## 🐋 **Bulldozer** docker image
 
 **Bulldozer** is available on Docker Hub and can be downloaded using:
 ``` bash
 docker pull cnes/bulldozer
 ```
+
 And you can run **Bulldozer** with the following command:
+
+**Linux / macOS**
 ``` bash
-docker run --user $(id -u):$(id -g) -v <path>:/data cnes/bulldozer:latest /data/<conf>.yaml
+docker run --user $(id -u):$(id -g) -v <absolute/path>:/data cnes/bulldozer:latest /data/<conf>.yaml
 ```
-⚠️ You have to change the `<path>` to provide a valide absolute path to a directory where the input data are stored and where **Bulldozer** will write the ouput DTM. You also have to provide a configuration file (and rename `<conf>.yaml` in the command line) in this directory with an `ouput_dir` value using the `data` folder given to docker, e.g.: `output_dir : "/data/outputdir"`.  
+**Windows (PowerShell)**
+``` powershell
+docker run --rm  -v C:<absolute/path>:/data cnes/bulldozer:latest /data/<conf>.yaml
+```
 
+⚠️ You have to change the `<absolute/path>` to provide a valid absolute path to a directory where the input data are stored and where **Bulldozer** will write the output DTM. You also have to provide a configuration file (and rename `<conf>.yaml` in the command line) in this directory with an `output_dir` value using the `data` folder given to docker, e.g.: `output_dir : "/data/outputdir"`.  
 
+# ✒️ Credits
 
-# License
-
-**Bulldozer**  is licensed under Apache License v2.0. Please refer to the [LICENSE](LICENSE) file for more details.
-
-# <a name="Citation"></a>Citation
 If you use **Bulldozer** in your research, please cite the following paper:
 ```text
 @article{bulldozer2023,
@@ -103,3 +122,16 @@ If you use **Bulldozer** in your research, please cite the following paper:
   doi = {10.5194/isprs-archives-XLVIII-4-W7-2023-89-2023}
 }
 ```
+# 📜 License
+
+**Bulldozer** is licensed under Apache License v2.0. Please refer to the [LICENSE](LICENSE) file for more details.
+
+# 🆘 Support
+
+For issues, questions, or feature requests, please open an issue on our [GitHub Issues page](https://github.com/CNES/bulldozer/issues) or check the documentation for additional resources.
+
+
+# 🤝Contributing
+We welcome contributions! Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on how to get involved, including coding standards and submission processes.
+
+
