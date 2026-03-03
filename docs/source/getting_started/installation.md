@@ -5,7 +5,7 @@
 - **Python ≥ 3.10**
 - Recommended: virtual environment
 
-Bulldozer depends on scientific Python libraries such as `numpy`, `scipy`, and `rasterio`.  
+**Bulldozer** depends on scientific Python libraries such as `numpy`, `scipy`, and `rasterio`.  
 On some systems (especially clusters), `rasterio` may require system-level GDAL libraries.
 
 ---
@@ -57,7 +57,7 @@ pip install .
 
 ## Development installation
 
-To install Bulldozer in editable mode with development tools:
+To install **Bulldozer** in editable mode with development tools:
 
 ```sh
 pip install -e .[dev]

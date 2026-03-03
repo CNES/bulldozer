@@ -2,10 +2,10 @@
 
 This section describes a list of pre-processing steps that can be applied to **Bulldozer** input data to produce a DTM that meets user requirements:
 
-* [Handle Point Cloud (PC) format DSM](#handle-point-cloud-pc-format-dsm)
-* [Manage the nodata value](#manage-the-nodata-value)
-* [Update DSM resolution](#update-dsm-resolution)
-* [Change the DSM Coordinates Reference System (CRS)](#change-the-dsm-and-dtm-coordinates-reference-system-crs)
+- [Handle Point Cloud (PC) format DSM](#handle-point-cloud-pc-format-dsm)
+- [Manage the nodata value](#manage-the-nodata-value)
+- [Update DSM resolution](#update-dsm-resolution)
+- [Change the DSM Coordinates Reference System (CRS)](#change-the-dsm-and-dtm-coordinates-reference-system-crs)
 
 The quality of the resulting DTM strongly depends on the quality, resolution, and projection of the input DSM.
 
@@ -88,15 +88,3 @@ You can then provide this reprojected DSM as input to **Bulldozer** in order to 
 - Prefer projected metric CRS (e.g., UTM, Lambert)
 - Avoid geographic CRS (lat/lon) for terrain analysis
 - Ensure vertical units remain consistent
-
----
-
-## Important considerations
-
-Before running **Bulldozer**:
-- Check DSM consistency (no extreme artefacts)
-- Verify nodata handling
-- Confirm CRS correctness
-- Ensure resolution matches your requirements
-
-The reliability of the final DTM depends directly on the quality of the input DSM.

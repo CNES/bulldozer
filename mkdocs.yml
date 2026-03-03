@@ -24,12 +24,12 @@ docs_dir: docs/
 nav:
     - Getting Started:
       - Home: source/INTRODUCTION.md
-      - Installation: source/installation.md
+      - Installation: source/getting_started/installation.md
     - User guide:
-      - Input data preprocessing: source/input_data_preprocessing.md 
+      - Input data preprocessing: source/user_guide/input_data_preprocessing.md 
       - Run Bulldozer: 
-        - Prerequisite: source/RUN_BULLDOZER.md 
-        - Using CLI: source/RUN_BULLDOZER_CLI.md 
+        - Prerequisite: source/user_guide/how_to_run_bulldozer.md 
+        - Using CLI: source/user_guide/bulldozer_cli.md 
         - Using Python API: source/RUN_BULLDOZER_PYTHON_API.md 
         - Using QGIS Plugin: source/RUN_BULLDOZER_QGIS_PLUGIN.md
       - Configuration: source/tutorials/BULLDOZER_OPTIONS.md
