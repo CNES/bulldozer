@@ -15,10 +15,11 @@ theme:
 markdown_extensions:
   - def_list
   - attr_list
-markdown_extensions:
   - admonition
   - pymdownx.tabbed:
       alternate_style: true
+  - pymdownx.highlight
+  - pymdownx.superfences
       
 docs_dir: docs/
 nav:
@@ -42,7 +43,7 @@ nav:
       - Eoscale: source/EOSCALE.md
     - About:
       - References: source/REFERENCES.md
-      - Contributing: source/CONTRIBUTING.md
+      - Contributing: CONTRIBUTING.md
       - License: source/LICENSE.md
 extra_css:
   - stylesheets/extra.css
