@@ -91,7 +91,7 @@ All parameters available in the CLI are also available in the Python API as keyw
 
 ---
 
-# Example of Python usage with options
+### Example of Python usage with options
 
 ```python
 from bulldozer import dsm_to_dtm

@@ -117,4 +117,4 @@ The results products are listed in the [**Bulldozer** ouputs](https://bulldozer.
 - Use `-workers` to control CPU usage.
 - Use `-mtd mem` for faster processing on systems with sufficient RAM.
 - Use `-mtd no-mem` for large DSMs or memory-constrained environments.
-- On HPC systems,  ensure allocated CPU cores match the `-workers` value.
+- On HPC systems, ensure allocated CPU cores match the `-workers` value.
