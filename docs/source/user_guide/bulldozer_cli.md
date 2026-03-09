@@ -1,9 +1,8 @@
-# Command-Line Interface (CLI)
+# Bulldozer Command-Line Interface (CLI)
 
 **Bulldozer** provides a command-line interface (CLI) to extract a Digital Terrain Model (DTM) from a Digital Surface Model (DSM).
 
 The CLI can be used in two main ways:
-
 1. [Using a configuration file](#usage-with-a-configuration-file)
 2. [Passing parameters directly via command-line arguments](#usage-with-command-line-parameters)
 
@@ -86,7 +85,7 @@ bulldozer -dsm input_dsm.tif -out output_directory
 
 ### Expert parameters
 
-These parameters control internal algorithm behaviour and should be modified only by advanced users.
+These optional parameters control internal algorithm behaviour and should be modified only by advanced users.
 
 | Argument                                              | Description                                                                           |
 |-------------------------------------------------------|---------------------------------------------------------------------------------------|
@@ -118,12 +117,4 @@ The results products are listed in the [**Bulldozer** ouputs](https://bulldozer.
 - Use `-workers` to control CPU usage.
 - Use `-mtd mem` for faster processing on systems with sufficient RAM.
 - Use `-mtd no-mem` for large DSMs or memory-constrained environments.
-- On HPC systems, ensure CPU allocation matches the `-workers` value.
-
----
-
-## Reproducibility tip
-
-For scientific reproducibility:
-- Prefer configuration files over CLI-only execution.
-- All information necessary to reproduce the results is recorded in the `bulldozer_YYYY-MM-DDTHh:Mm:S.log` file, located in the `log` directory. This file contains details about the execution environment, including the configuration used, version number, operating system, allocated resources, and other relevant parameters. 
+- On HPC systems,  ensure allocated CPU cores match the `-workers` value.

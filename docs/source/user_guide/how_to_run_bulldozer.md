@@ -26,3 +26,15 @@ If any of these conditions are not satisfied, please refer to the [Input Data Pr
 For a complete description of available optional parameters, see the [**Bulldozer** parameters](https://bulldozer.readthedocs.io/en/stable/bulldozer_parameters.html) page.
 
 After execution, the list and description of output products are available on the [**Bulldozer** Outputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
+
+
+---
+
+## When to use CLI vs Python API?
+
+| Use case                                  | Recommended interface |
+|-------------------------------------------|-----------------------|
+| Quick processing                          | CLI                   |
+| HPC batch jobs                            | CLI + config file     |
+| Interactive analysis                      | Python API            |
+| Integration into a larger Python pipeline | Python API            |
