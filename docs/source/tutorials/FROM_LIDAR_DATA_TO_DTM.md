@@ -1,10 +1,10 @@
 # From LiDAR data to Digital Terrain Model (DTM)
 This section illustrates the use of **Bulldozer** from an open data point cloud to the generation of the corresponding DTM.  
-_You can find the corresponding tutorial in notebook format [here](/notebooks/From_Lidar_data_to_DTM.ipynb)._
+_You can find the corresponding tutorial in notebook format [here](/source/tutorials/notebooks/From_Lidar_data_to_DTM.ipynb)._
 ___
 
 ## Prerequisites
-To run this tutorial, you require [Python](https://www.python.org/downloads/) (version higher than 3.8) and an Internet connection.
+To run this tutorial, you require [Python](https://www.python.org/downloads/) (version higher than 3.10) and an Internet connection.
 
 ## Data downloading and pre-processing
 First of all, we'll start by creating a space to store the data for this tutorial and its associated virtualenv: 
