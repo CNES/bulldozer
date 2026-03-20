@@ -45,8 +45,8 @@ input_dsm = "input_dsm.tif"
 with rasterio.open(input_dsm, "r+") as dataset:
     dataset.nodata = -32768
 ```
-
-⚠️ Ensure the chosen nodata value does not conflict with valid elevation values.
+!!! warning
+    Ensure the chosen nodata value does not conflict with valid elevation values.
 
 ---
 
@@ -68,8 +68,9 @@ gdalwarp -tr 30 30 -r bilinear input_dsm.tif resampled_dsm.tif
 - `average`: recommended when aggregating high-resolution DSM
 - `cubic`: may introduce smoothing artefacts
 
-⚠️ Downsampling significantly modifies terrain characteristics.  
-Fine-scale features and micro-topography may be lost.
+!!! warning
+    Downsampling significantly modifies terrain characteristics.  
+    Fine-scale features and micro-topography may be lost.
 
 ---
 

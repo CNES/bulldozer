@@ -49,8 +49,10 @@ docker run --user $(id -u):$(id -g) -v <absolute/path>:/data cnes/bulldozer:late
 ```powershell
 docker run -v C:<absolute/path>:/data cnes/bulldozer:latest /data/<config>.yaml
 ```
-ℹ️The `--user` option is required on Linux/macOS to avoid file permission issues.
-It is not needed on Windows due to the way Docker Desktop handles filesystem permissions.
+
+!!! info
+    The `--user` option is required on Linux/macOS to avoid file permission issues.
+    It is not needed on Windows due to the way Docker Desktop handles filesystem permissions.
 
 ---
 
@@ -86,7 +88,8 @@ dsm_path: "/data/input_dsm.tif"
 output_dir: "/data/output"
 ```
 
-⚠️ The output directory **must also be located inside `/data`** so that results are written back to the host system.
+!!! warning
+    The output directory **must also be located inside `/data`** so that results are written back to the host system.
 
 ---
 
@@ -135,7 +138,7 @@ All CLI parameters available in the [**Bulldozer** command-line interface](https
 
 ## Output products
 
-The results products are listed in the [**Bulldozer** ouputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
+The results products are listed in the [**Bulldozer** outputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
 
 ---
 

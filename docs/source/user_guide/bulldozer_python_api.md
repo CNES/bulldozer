@@ -73,7 +73,8 @@ All parameters available in the CLI are also available in the Python API as keyw
 
 ### Expert parameters
 
-⚠️These parameters control internal algorithm behaviour and should be modified only by advanced users.
+!!! warning
+    These parameters control internal algorithm behaviour and should be modified only by advanced users.
 
 | Argument              | Description                                                                               | Type    | Default value | Required |
 |-----------------------|-------------------------------------------------------------------------------------------|---------|---------------|----------|

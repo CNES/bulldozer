@@ -13,36 +13,32 @@ theme:
   logo: source/images/bulldozer_logo.png
 
 markdown_extensions:
-  - def_list
-  - attr_list
-  - admonition
-  - pymdownx.tabbed:
-      alternate_style: true
-  - pymdownx.highlight
-  - pymdownx.superfences
+  - def_list # Enables definition lists in Markdown. This allows you to associate terms with their definitions, which is useful for glossaries or parameter descriptions.
+  - attr_list # Allows adding HTML attributes (such as classes, IDs, or styles) directly to Markdown elements. This is useful for customizing the appearance or behavior of specific elements.
+  - admonition # Provides support for admonition blocks such as notes, warnings, tips, and important messages. These blocks help highlight key information in the documentation.
+  - pymdownx.tabbed: # Adds support for tabbed content blocks, allowing multiple content sections (e.g., CLI vs Python examples) to be displayed within tabs.  
+      alternate_style: true # Enables a different visual style for better integration with some themes.
+  - pymdownx.highlight # Enhances code block syntax highlighting. It provides better control over code formatting, supports more languages, and improves readability of code snippets.
       
 docs_dir: docs/
 nav:
     - Getting Started:
-      - Home: source/INTRODUCTION.md
+      - Home: source/INTRODUCTION.md #####
       - Installation: source/getting_started/installation.md
+      - Quick start: source/getting_started/quick_start.md
     - User guide:
-      - Input data preprocessing: source/user_guide/input_data_preprocessing.md 
       - Run Bulldozer: 
         - Prerequisite: source/user_guide/how_to_run_bulldozer.md 
         - Using CLI: source/user_guide/bulldozer_cli.md 
-        - Using Python API: source/RUN_BULLDOZER_PYTHON_API.md 
-        - Using QGIS Plugin: source/RUN_BULLDOZER_QGIS_PLUGIN.md
-      - Configuration: source/tutorials/BULLDOZER_OPTIONS.md
+        - Using Python API: source/user_guide/bulldozer_python_api.md
+        - Using Docker: source/user_guide/bulldozer_docker.md
+        - Bulldozer options: source/user_guide/bulldozer_options.md
+        - Bulldozer outputs: source/user_guide/bulldozer_outputs.md
+        - Input data preprocessing: source/user_guide/input_data_preprocessing.md 
     - Tutorials:
       - From LiDAR data to DTM: source/tutorials/FROM_LIDAR_DATA_TO_DTM.md 
       - From Satellites data to DTM: source/tutorials/FROM_SATELLITES_DATA_TO_DTM.md
-    - Software Design:
-      - How it works: source/HOW_IT_WORKS.md
-      - Pipeline: source/PIPELINE.md
-      - Eoscale: source/EOSCALE.md
     - About:
-      - References: source/REFERENCES.md
       - Contributing: CONTRIBUTING.md
       - License: source/LICENSE.md
 extra_css:
