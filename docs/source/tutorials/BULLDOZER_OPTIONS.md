@@ -1,1 +1,0 @@
-Pour chaque option, expliquer l'impact et montrer comment le lancer
