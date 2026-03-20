@@ -27,3 +27,30 @@
         display: none;
     }
 }
+
+/* Expand the main content width to use the full page */
+.wy-nav-content {
+    max-width: 100% !important;
+}
+
+/* Enable horizontal scrolling for wide tables */
+.wy-table-responsive {
+    overflow-x: auto !important;
+}
+
+/* Ensure tables take full width and render properly */
+.wy-table-responsive table {
+    width: 100%;
+    display: table;
+}
+
+/* Allow text wrapping inside table cells */
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+    white-space: normal !important;
+}
+
+/* Prevent long words or content from overflowing */
+.rst-content {
+    overflow-wrap: break-word;
+}
