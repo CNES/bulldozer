@@ -5,7 +5,7 @@ This section describes a list of pre-processing steps that can be applied to **B
 - [Handle Point Cloud (PC) format DSM](#handle-point-cloud-pc-format-dsm)
 - [Manage the nodata value](#manage-the-nodata-value)
 - [Update DSM resolution](#update-dsm-resolution)
-- [Change the DSM Coordinates Reference System (CRS)](#change-the-dsm-and-dtm-coordinates-reference-system-crs)
+- [Change the DSM Coordinates Reference System (CRS)](#change-the-dsm-coordinate-reference-system-crs)
 
 The quality of the resulting DTM strongly depends on the quality, resolution, and projection of the input DSM.
 

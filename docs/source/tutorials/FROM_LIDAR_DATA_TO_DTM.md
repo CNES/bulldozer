@@ -1,6 +1,7 @@
 # From LiDAR data to Digital Terrain Model (DTM)
 This section illustrates the use of **Bulldozer** from an open data point cloud to the generation of the corresponding DTM.  
-_You can find the corresponding tutorial in notebook format [here](/source/tutorials/notebooks/From_Lidar_data_to_DTM.ipynb)._
+_You can find the corresponding tutorial in notebook format [here](notebooks/From_Lidar_data_to_DTM.ipynb)._
+
 ___
 
 ## Prerequisites
@@ -42,11 +43,11 @@ with rasterio.open('dsm.tif', 'r+') as dataset:
 </div>
 
 ## DTM extraction
-Now that the data is ready, we can install **Bulldozer** with pip (for an alternative installation method, please refer to the [corresponding section](../INSTALLATION.md)):
+Now that the data is ready, we can install **Bulldozer** with pip (for an alternative installation method, please refer to the [corresponding section](../getting_started/installation.md)):
 ```sh
 pip install bulldozer-dtm
 ```
-In this tutorial we will use the Command Line Interface (CLI) of **Bulldozer** but there are several different ways of running it (for alternative launch method, please refers to the [corresponding section](../RUN_BULLDOZER.md)):
+In this tutorial we will use the Command Line Interface (CLI) of **Bulldozer** but there are several different ways of running it (for alternative launch method, please refers to the [corresponding section](../user_guide/how_to_run_bulldozer.md)):
 <!--TODO : changer le paramètre max object width à 16 -->
 ```sh
 bulldozer -in input_dsm.tif -out output_dir -dhm true

@@ -39,8 +39,12 @@ nav:
       - From LiDAR data to DTM: source/tutorials/FROM_LIDAR_DATA_TO_DTM.md 
       - From Satellites data to DTM: source/tutorials/FROM_SATELLITES_DATA_TO_DTM.md
     - About:
-      - Contributing: CONTRIBUTING.md
+      - Contributing: source/CONTRIBUTING.md
       - License: source/LICENSE.md
+extra:
+  notebooks:
+    - source/tutorials/notebooks/From_Lidar_data_to_DTM.ipynb
+    - source/tutorials/notebooks/From_Satellites_data_to_DTM.ipynb
 extra_css:
   - stylesheets/extra.css
 extra_javascript:
