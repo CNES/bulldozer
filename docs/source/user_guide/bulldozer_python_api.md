@@ -31,7 +31,8 @@ This mode provides:
 - Cleaner experiment tracking
 - Easier parameter tuning
 
-ℹ️If additional keyword arguments are provided, they override the values defined in the configuration file.
+!!! info
+    If additional keyword arguments are provided, they override the values defined in the configuration file.
 
 ---
 
@@ -114,7 +115,7 @@ dsm_to_dtm(
 
 The function does not return the DTM as a NumPy array.  
 It writes results directly to disk for scalability and memory efficiency.  
-The results products are listed in the [**Bulldozer** ouputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
+The results products are listed in the [**Bulldozer** outputs](bulldozer_outputs.md) page.
 
 ---
 

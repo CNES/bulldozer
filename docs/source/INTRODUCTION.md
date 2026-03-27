@@ -15,11 +15,11 @@ You can install **Bulldozer** by running the following command:
 pip install bulldozer-dtm
 ```
 
-*For alternative installation method, please refer to the [corresponding section](https://bulldozer.readthedocs.io/en/stable/installation.html).*
+*For alternative installation method, please refer to the [corresponding section](/getting_started/installation.md).*
 
 ## Usage
 
-As described in the [corresponding section](https://bulldozer.readthedocs.io/en/stable/run_bulldozer.html), there are many different ways to launch **Bulldozer**. Here are the two most popular:
+As described in the [corresponding section](/user_guide/how_to_run_bulldozer.md), there are many different ways to launch **Bulldozer**. Here are the two most popular:
 
 ### 1. Using the CLI *(Command Line Interface)*
 Run the folowing command after updating the parameters `input_dsm.tif` and `output_dir`:
@@ -28,7 +28,7 @@ Run the folowing command after updating the parameters `input_dsm.tif` and `outp
 bulldozer -in input_dsm.tif -out output_dir
 ```
 
-You can also add optional parameters such as `--dhm true` (please refer to the [CLI usage section](https://bulldozer.readthedocs.io/en/stable/run_bulldozer_cli.html) to see all the parameters).  
+You can also add optional parameters such as `--dhm true` (please refer to the [CLI usage section](/user_guide/bulldozer_cli.md) to see all the parameters).  
 ✅ Done! Your DTM is available in the `output_dir`.
 
 ### 2. Using the Python API

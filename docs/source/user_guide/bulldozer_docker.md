@@ -132,13 +132,13 @@ Example:
 docker run --user $(id -u):$(id -g) -v $(pwd):/data cnes/bulldozer:latest -dsm /data/input_dsm.tif -out /data/results -ndsm -workers 8
 ```
 
-All CLI parameters available in the [**Bulldozer** command-line interface](https://bulldozer.readthedocs.io/en/stable/bulldozer_cli.html) are supported.
+All CLI parameters available in the [**Bulldozer** command-line interface](bulldozer_cli.md) are supported.
 
 ---
 
 ## Output products
 
-The results products are listed in the [**Bulldozer** outputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
+The results products are listed in the [**Bulldozer** outputs](bulldozer_outputs.md) page.
 
 ---
 

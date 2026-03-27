@@ -42,14 +42,13 @@ This mode allows you to define all parameters in a configuration file.
 
 If additional CLI arguments are provided, they override the values defined in the configuration file.
 
-ℹ️Configuration templates are available in the `conf` directory. You may also create your own configuration files, provided that they include at least the two mandatory parameters: `dsm_path` and `output_dir`.
+!!! info
+    Configuration templates are available in the `conf` directory. You may also create your own configuration files, provided that they include at least the two mandatory parameters: `dsm_path` and `output_dir`.
 
-The available optional parameters correspond to the long-form command-line options (`--<parameter>`) listed in the section [usage with command line parameters](#usage-with-command-line-parameters). For a detailed description of their behavior, please refer to the page: [**Bulldozer** parameters](https://bulldozer.readthedocs.io/en/stable/bulldozer_parameters.html).
+The available optional parameters correspond to the long-form command-line options (`--<parameter>`) listed in the section [usage with command line parameters](#usage-with-command-line-parameters). For a detailed description of their behavior, please refer to the page: [**Bulldozer** parameters](bulldozer_options.md).
 
-ℹ️This mode is recommended for:
-- Reproducible workflows
-- Large-scale production processing
-- Batch execution on HPC systems
+!!! info
+    This mode is recommended for: reproducible workflows, large-scale production processing, batch execution on HPC systems.
 
 ---
 
@@ -108,7 +107,7 @@ bulldozer -dsm input_dsm.tif -out results -ndsm -workers 8 -max_size 32 -mtd mem
 
 ## Output products
 
-The results products are listed in the [**Bulldozer** ouputs](https://bulldozer.readthedocs.io/en/stable/bulldozer_outputs.html) page.
+The results products are listed in the [**Bulldozer** outputs](bulldozer_outputs.md) page.
 
 ---
 
