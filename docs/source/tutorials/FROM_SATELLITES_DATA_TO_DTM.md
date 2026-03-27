@@ -41,7 +41,7 @@ pip install bulldozer-dtm
 ```
 In this tutorial we will use the Command Line Interface (CLI) of **Bulldozer** but there are several different ways of running it (for alternative launch method, please refers to the [corresponding section](../user_guide/how_to_run_bulldozer.md)):
 ```sh
-bulldozer -in input_dsm.tif -out output_dir -dhm true
+bulldozer -dsm cars_dsm_pre_event.tif -out output_dir -dhm
 ```
 ✅ Done! The resulting DTM is available in `output_dir`:
 
