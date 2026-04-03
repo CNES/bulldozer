@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+  {{ super() }}
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ 'source/images/logo_icon.ico' | url }}">
+{% endblock %}
+
 {% block libs %}
 <!-- Scripts needed to add "copy to clipboard" buttons in the code blocks -->
 <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>

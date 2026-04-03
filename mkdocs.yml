@@ -10,7 +10,8 @@ theme:
   hljs_languages:
     - yaml
     - python
-  logo: source/images/bulldozer_logo.png
+  logo: source/images/logo.png
+  favicon: source/images/logo_icon.ico
 
 markdown_extensions:
   - def_list # Enables definition lists in Markdown. This allows you to associate terms with their definitions, which is useful for glossaries or parameter descriptions.
@@ -19,13 +20,14 @@ markdown_extensions:
   - pymdownx.tabbed: # Adds support for tabbed content blocks, allowing multiple content sections (e.g., CLI vs Python examples) to be displayed within tabs.  
       alternate_style: true # Enables a different visual style for better integration with some themes.
   - pymdownx.highlight # Enhances code block syntax highlighting. It provides better control over code formatting, supports more languages, and improves readability of code snippets.
-      
+  # - tables
+
 docs_dir: docs/
 nav:
     - Getting Started:
       - Home: source/INTRODUCTION.md #####
       - Installation: source/getting_started/installation.md
-      - Quick start: source/getting_started/quick_start.md
+      - Quick start: source/getting_started/quick_start.md #####
     - User guide:
       - Run Bulldozer: 
         - Prerequisite: source/user_guide/how_to_run_bulldozer.md 
@@ -52,6 +54,7 @@ extra_javascript:
 
 plugins:
   - search  # make the doc searchable
+  - include-markdown # allows importing external markdown files
   - mkdocs-jupyter:
       include_source: true # allow downloading jupyter notebooks from the doc
   - mkdocstrings:
