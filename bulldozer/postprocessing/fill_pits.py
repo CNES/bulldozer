@@ -21,7 +21,6 @@
 This module is used to fill the remaining pits in the generated DTM.
 """
 
-import logging
 import shutil
 
 import numpy as np
@@ -31,7 +30,7 @@ from scipy import ndimage
 from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
 from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
 from bulldozer.eomultiprocessing.utils import write
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 from bulldozer.utils.helper import ubyte_profile_1bit
 
 
@@ -94,7 +93,7 @@ def run(
     """
     fill_pits_profile = ubyte_profile_1bit(dtm_profile)
 
-    BulldozerLogger.log("Pits removal processing...", logging.INFO)
+    logger.info("Pits removal processing...")
 
     filled_dtm_key: str | np.ndarray
     pits_mask_key: str | np.ndarray

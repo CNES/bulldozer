@@ -21,12 +21,10 @@
 This module is used to apply postprocessing on DTM and generates nDSM.
 """
 
-import logging
-
 import numpy as np
 
 from bulldozer.eomultiprocessing.utils import read
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 
 
 def ensure_dsm_below_dtm(dsm: np.ndarray, dtm: np.ndarray, nodata_mask: np.bool) -> np.ndarray:
@@ -44,7 +42,7 @@ def ensure_dsm_below_dtm(dsm: np.ndarray, dtm: np.ndarray, nodata_mask: np.bool)
         The cleaned DTM.
 
     """
-    BulldozerLogger.log("Ensuring DTM <= DSM...", logging.INFO)
+    logger.info("Ensuring DTM <= DSM...")
     np.minimum(dtm, dsm, out=dtm, where=~nodata_mask)
 
     return dtm
@@ -64,7 +62,7 @@ def compute_ndsm(dsm: np.ndarray, dtm: np.ndarray, nodata_mask: np.bool, nodata:
         tThe normalized DSM.
 
     """
-    BulldozerLogger.log("nDSM processing...", logging.INFO)
+    logger.info("nDSM processing...")
     dsm[:] = dsm - dtm
     dsm[nodata_mask] = nodata
 

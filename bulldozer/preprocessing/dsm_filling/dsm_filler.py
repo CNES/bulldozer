@@ -21,7 +21,6 @@
 This module is used to prefill the input DSM before the DTM extraction.
 """
 
-import logging
 import math
 import os
 
@@ -32,7 +31,7 @@ from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
 from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
 from bulldozer.eomultiprocessing.utils import read, write
 from bulldozer.preprocessing import fill  # type: ignore
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 from bulldozer.utils.helper import downsample_profile
 
 
@@ -142,12 +141,11 @@ def fill_dsm(
     nb_max_level = int(
         np.floor(math.log(np.min([filled_dsm.shape[0], filled_dsm.shape[1]]), dezoom_factor))
     )  # limits the number of dezoom iterations
-    BulldozerLogger.log(
+    logger.debug(
         "DSM filling parameters : "
         + f"filling_iterations={filling_iterations} / "
         + f"dezoom_factor={dezoom_factor} / "
-        + f"nb_max_level={nb_max_level}",
-        logging.DEBUG,
+        + f"nb_max_level={nb_max_level}"
     )
 
     # Identifying the remaining inner no data areas
@@ -182,7 +180,7 @@ def fill_dsm(
             del filled_dsm
 
             # First iterative filling for small no data areas
-            BulldozerLogger.log("Iterative filling DSM level 0", logging.INFO)
+            logger.info("Iterative filling DSM level 0")
             # multiprocessing
             [filled_dsm_key] = mp_n_to_m_images(
                 inputs=[filled_dsm_key, border_nodata_mask_key],
@@ -229,15 +227,13 @@ def fill_dsm(
                 width=np.shape(filled_dsm_downsampled)[1], height=np.shape(filled_dsm_downsampled)[0]
             )
 
-            # pylint: disable=line-too-long
             if downsample:
                 # TODO HOTFIX to remove: until we change eoscale we have to compute the tile size manually
-                BulldozerLogger.log(
+                logger.debug(
                     "DSM filling during downsampling step : "
                     + f"level={dezoom_level} / "
                     + f"computed_specific_tile_size={int(np.ceil(dsm_resolution * dezoom_factor**dezoom_level))} / "
-                    + f"default_tile_size={int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // manager.nb_workers))}",
-                    logging.DEBUG,
+                    + f"default_tile_size={int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // manager.nb_workers))}"
                 )
 
             else:
@@ -249,15 +245,13 @@ def fill_dsm(
                     )
                 )
                 # TODO HOTFIX to remove: until we change eoscale we have to compute the tile size manually
-                BulldozerLogger.log(
+                logger.debug(
                     "DSM filling during upsampling step : "
                     + f"level={dezoom_level} / "
                     + f"computed_specific_tile_size={int(np.ceil(dsm_resolution * dezoom_factor**dezoom_level))} / "
                     + f"default_tile_size={int(math.sqrt((filled_dsm.shape[0] * filled_dsm.shape[1]) // manager.nb_workers))} / "
-                    + f"filling_iterations={filling_iterations}",
-                    logging.DEBUG,
+                    + f"filling_iterations={filling_iterations}"
                 )
-            # pylint: enable=line-too-long
 
             if np.ceil(dsm_resolution * dezoom_factor**dezoom_level) > math.sqrt(
                 (filled_dsm.shape[0] * filled_dsm.shape[1]) // manager.nb_workers
@@ -268,7 +262,7 @@ def fill_dsm(
                 specific_tile_size = None
 
             # Iterative filling for the remaining no data areas
-            BulldozerLogger.log("Iterative filling DSM level " + str(dezoom_level), logging.INFO)
+            logger.info("Iterative filling DSM level " + str(dezoom_level))
 
             if manager.in_memory:
                 filled_dsm_downsampled_key = filled_dsm_downsampled

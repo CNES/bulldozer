@@ -28,146 +28,113 @@ import logging
 import logging.config
 import multiprocessing
 import platform
-import sys
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import psutil
 
 from bulldozer._version import __version__
 
-LOG_FORMAT = "%(asctime)s [%(levelname)s] %(module)s - %(funcName)s (line %(lineno)d): %(message)s"  # noqa: B950
-STREAM_FORMAT = "%(asctime)s [%(levelname)s] - %(message)s"
+# Global logger instance
+logger = logging.getLogger("bulldozer")
 
 
-class BulldozerLogger:
+def setup_logger(output_dir: str) -> logging.Logger:
     """
-    Bulldozer logger singleton.
-    Only used in the full pipeline mode (not for the standalone calls).
+    Set up the Bulldozer logger that logs to both console and a logfile.
+
+    Args:
+        output_dir: path to the output directory.
+
+    Returns:
+        the Bulldozer logger.
     """
+    output_path = Path(output_dir)
+    if not output_path.exists() or not output_path.is_dir():
+        raise ValueError(f"Output directory '{output_dir}' doesn't exist or isn't a directory.")
 
-    __instance = None
+    logger.setLevel(logging.DEBUG)
 
-    @staticmethod
-    def get_instance(logger_file_path: str) -> logging.Logger | None:
-        """
-        Return the logger or create it if the instance does not exist.
+    # Clean handlers if logger already exists
+    for handler in logger.handlers:
+        handler.close()
+    logger.handlers.clear()
 
-        Args:
-            logger_file_path: path to the output logfile.
+    # Console handler
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    stream_format = "%(asctime)s [%(levelname)s] - %(message)s"
+    console_formatter = logging.Formatter(stream_format, datefmt="%H:%M:%S")
+    console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
 
-        Returns:
-            the Bulldozer logger.
-        """
-        if BulldozerLogger().__instance is None:
-            # Create the Logger
-            # Sub folders will inherit from the logger configuration, hence
-            # we need to give the root package directory name of Bulldozer
-            logger = logging.getLogger("bulldozer")
+    # File handler
+    log_file_path = output_path / f"bulldozer_{datetime.now().strftime('%Y-%m-%dT%Hh%Mm%S')}.log"
+    try:
+        file_handler = logging.FileHandler(log_file_path)
+    except (PermissionError, OSError) as error:
+        logger.error(f"Failed to create log file '{log_file_path}': {error}")
+        raise PermissionError(f"Failed to create log file: {error}") from error
+    file_handler.setLevel(logging.DEBUG)
+    file_format = "%(asctime)s [%(levelname)s] %(module)s - %(funcName)s (line %(lineno)d): %(message)s"
+    file_formatter = logging.Formatter(file_format, datefmt="%Y-%m-%dT%H:%M:%S")
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
 
-            # Remove all existing handlers
-            if logger.hasHandlers():
-                logger.handlers.clear()
+    return logger
 
-            logger.setLevel(logging.DEBUG)
 
-            # create file handler which logs even debug messages
-            fh = logging.FileHandler(filename=logger_file_path, mode="w")
-            fh.setLevel(logging.DEBUG)
-
-            logger_formatter = logging.Formatter(LOG_FORMAT, datefmt="%Y-%m-%dT%H:%M:%S")
-            fh.setFormatter(logger_formatter)
-
-            logger.addHandler(fh)
-
-            sh = logging.StreamHandler(sys.stdout)
-            sh.setLevel(logging.INFO)
-
-            logger_formatter = logging.Formatter(STREAM_FORMAT, datefmt="%H:%M:%S")
-            sh.setFormatter(logger_formatter)
-
-            logger.addHandler(sh)
-            BulldozerLogger.__instance = logger
-
-            BulldozerLogger.init_logger()
-
-        return BulldozerLogger.__instance
-
-    @staticmethod
-    def log(msg: str, level: int) -> None:
-        """
-        Bulldozer logger log function.
-        The following logging levels are used:
-            DEBUG
-            INFO
-            WARNING
-            ERROR
-
-        Args:
-            msg: log message.
-            level: crticity level.
-        """
-        if BulldozerLogger.__instance is not None:
-            if level == logging.DEBUG:
-                BulldozerLogger.__instance.debug(msg)
-            if level == logging.INFO:
-                BulldozerLogger.__instance.info(msg)
-            if level == logging.WARNING:
-                BulldozerLogger.__instance.warning(msg)
-            if level == logging.ERROR:
-                BulldozerLogger.__instance.error(msg)
-
-    @staticmethod
-    def init_logger() -> None:
-        """
-        This method store the environment state in the logfile.
-        """
-        info: dict[str, Any] = {}
+def init_logfile() -> None:
+    """
+    This method stores the environment state in the logfile.
+    """
+    env_info: dict[str, Any] = {}
+    try:
+        # Node info
         try:
-            # Node info
-            try:
-                info["user"] = getpass.getuser()
-            except Exception:  # pylint: disable=broad-exception-caught
-                info["user"] = "unknown"
-            try:
-                info["node"] = platform.node()
-            except Exception:  # pylint: disable=broad-exception-caught
-                info["node"] = "unknown"
-            info["processor"] = platform.processor()
-            info["cpu_count"] = multiprocessing.cpu_count()
-            info["ram"] = str(round(psutil.virtual_memory().total / (1024**3))) + " GB"
+            env_info["user"] = getpass.getuser()
+        except (getpass.GetPassWarning, OSError):
+            logger.debug("Failed to retrieve user information")
+            env_info["user"] = "unknown"
+        env_info["node"] = "unknown" if platform.node() == "" else platform.node()
+        env_info["processor"] = platform.processor()
+        env_info["cpu_count"] = multiprocessing.cpu_count()
+        try:
+            env_info["ram"] = f"{round(psutil.virtual_memory().total / (1024**3))} GB"
+        except NameError:
+            logger.debug("psutil not installed; RAM information unavailable")
+            env_info["ram"] = "unknown"
 
-            # OS info
-            info["system"] = platform.system()
-            info["release"] = platform.release()
-            info["os_version"] = platform.version()
+        # OS info
+        env_info["system"] = platform.system()
+        env_info["release"] = platform.release()
+        env_info["os_version"] = platform.version()
 
-            # Message format
-            init = (
-                "\n"
-                + "#" * 17
-                + "\n#   BULLDOZER   #\n"
-                + "#" * 17
-                + "\n# <Bulldozer info>\n#\t- version: {}"
-                + "\n#\n# <Node info>\n#\t - user: {}\n#\t - node: {}\n#\t - "
-                "processor: {}\n#\t - CPU count: {}\n#\t - RAM: {}"
-                "\n#\n# <OS info>\n#\t - system: {}\n#\t - release: {}\n#\t - "
-                "version: {}\n" + "#" * 17
-            ).format(
-                __version__,
-                info["user"],
-                info["node"],
-                info["processor"],
-                info["cpu_count"],
-                info["ram"],
-                info["system"],
-                info["release"],
-                info["os_version"],
-            )
-            BulldozerLogger.log(init, logging.DEBUG)
-
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            BulldozerLogger.log("Error occured during logger init: \n" + str(e), logging.DEBUG)
+        # Message format
+        init_message = f"""
+{"#" * 17}
+#   BULLDOZER   #
+{"#" * 17}
+# <Bulldozer info>
+#\t- version: {__version__}
+#
+# <Node info>
+#\t- user: {env_info["user"]}
+#\t- node: {env_info["node"]}
+#\t- processor: {env_info["processor"]}
+#\t- CPU count: {env_info["cpu_count"]}
+#\t- RAM: {env_info["ram"]}
+#
+# <OS info>
+#\t- system: {env_info["system"]}
+#\t- release: {env_info["release"]}
+#\t- version: {env_info["os_version"]}
+{"#" * 17}"""
+        logger.debug(init_message)
+    except Exception as error:
+        logger.debug(f"Error occurred during logfile init: \n{error}")
 
 
 class Runtime:
@@ -196,12 +163,10 @@ class Runtime:
             the function output.
         """
         func_start = time.perf_counter()
-        BulldozerLogger.log(f"{self.function.__name__}: Starting...", logging.DEBUG)
+        logger.debug(f"{self.function.__name__}: Starting...")
         # Function run
         result = self.function(*args, **kwargs)
         func_end = time.perf_counter()
-        BulldozerLogger.log(
-            f"{self.function.__name__}: Done (Runtime: {round(func_end - func_start, 2)}s)",
-            logging.INFO,
-        )
+        logger.info(f"{self.function.__name__}: Done (Runtime: {round(func_end - func_start, 2)}s)")
+
         return result
