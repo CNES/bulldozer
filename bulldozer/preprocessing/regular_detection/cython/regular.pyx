@@ -63,12 +63,13 @@ cdef class PyRegularAreas:
         Return:
             mask of the regular / disturbed areas.
         """
+
         cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
         cdef unsigned char[::1] regular_mask_memview = np_as_contiguous_array(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
         # Regular detection
         buildRegularMask(&dsm_memview[0], &regular_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], slope_threshold, nodata_value)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
-        return np.asarray(regular_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.uint8)
+        return np.asarray(regular_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])
     
    

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -31,7 +30,7 @@ import multiprocessing
 import platform
 import sys
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 import psutil
 
@@ -50,7 +49,7 @@ class BulldozerLogger:
     __instance = None
 
     @staticmethod
-    def get_instance(logger_file_path: str) -> Optional[logging.Logger]:
+    def get_instance(logger_file_path: str) -> logging.Logger | None:
         """
         Return the logger or create it if the instance does not exist.
 
@@ -61,7 +60,6 @@ class BulldozerLogger:
             the Bulldozer logger.
         """
         if BulldozerLogger().__instance is None:
-
             # Create the Logger
             # Sub folders will inherit from the logger configuration, hence
             # we need to give the root package directory name of Bulldozer
@@ -124,7 +122,7 @@ class BulldozerLogger:
         """
         This method store the environment state in the logfile.
         """
-        info: Dict[str, Any] = {}
+        info: dict[str, Any] = {}
         try:
             # Node info
             try:
@@ -203,7 +201,7 @@ class Runtime:
         result = self.function(*args, **kwargs)
         func_end = time.perf_counter()
         BulldozerLogger.log(
-            f"{self.function.__name__}: Done " f"(Runtime: {round(func_end - func_start, 2)}s)",
+            f"{self.function.__name__}: Done (Runtime: {round(func_end - func_start, 2)}s)",
             logging.INFO,
         )
         return result

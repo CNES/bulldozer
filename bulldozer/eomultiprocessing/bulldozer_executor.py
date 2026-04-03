@@ -26,12 +26,10 @@ from collections.abc import Callable
 from multiprocessing.synchronize import Lock
 
 import numpy as np
-import rasterio
 import tqdm
-from rasterio.windows import Window
 
-from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
-from bulldozer.multiprocessing.utils import MpTile, write_window
+from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.eomultiprocessing.utils import MpTile, read_window, write_window
 
 
 def compute_mp_strips(
@@ -139,16 +137,6 @@ def compute_mp_tiles(
     """
 
     if tile_mode:
-        nb_tiles_x: int = 0
-        nb_tiles_y: int = 0
-        end_x: int = 0
-        start_y: int = 0
-        end_y: int = 0
-        top_margin: int = 0
-        right_margin: int = 0
-        bottom_margin: int = 0
-        left_margin: int = 0
-
         # Force to make square tiles (except the last one unfortunately)
         nb_pixels_per_worker: int = (image_width * image_height) // nb_workers
         if specific_tile_size:
@@ -219,7 +207,7 @@ def mp_n_to_m_images(
     tile_mode: bool | None = None,
     specific_tile_size: int | None = None,
     strip_along_lines: bool = False,
-    binary: bool = False,
+    debug: bool = False,
 ) -> list[str] | list[np.ndarray]:
     """
     Generic paradigm to process n images providing m resulting images using a paradigm similar to the old map/reduce
@@ -232,7 +220,6 @@ def mp_n_to_m_images(
 
     Strong hypothesis: all input image are in the same geometry and have the same size
     """
-
     if len(inputs) < 1:
         raise ValueError("At least one input image must be given.")
 
@@ -242,65 +229,101 @@ def mp_n_to_m_images(
     if context_manager is None:
         raise ValueError("The Context Manager must be given !")
 
-    if context_manager.pool is None:
-        raise ValueError("The Context Manager must contain a pool of process !")
-
     # Sometimes filter does not need parameters
     if func_parameters is None:
         func_parameters = {}
 
-    # compute the strips
-    tiles = compute_mp_tiles(
-        image_height=image_height,
-        image_width=image_width,
-        stable_margin=stable_margin,
-        nb_workers=context_manager.nb_workers,
-        tile_mode=tile_mode if tile_mode is not None else context_manager.tile_mode,
-        specific_tile_size=specific_tile_size,
-        strip_along_lines=strip_along_lines,
-    )
+    if context_manager.pool is None:
+        # no multiprocessing
+        for input_file in inputs:
+            if isinstance(input_file, str):
+                raise ValueError("Without multiprocessing the inputs must be a numpy arrays.")
+        output = func(*inputs, **func_parameters)
 
-    out: list[str] | list[np.ndarray]
-    if context_manager.in_memory:
-        # inputs are numpy arrays
-        list_input = [
-            (
-                [
-                    inputs[i][
-                        tile.start_y - tile.top_margin : tile.end_y + tile.bottom_margin + 1,
-                        tile.start_x - tile.left_margin : tile.end_x + tile.right_margin + 1,
-                    ]
-                    for i in range(len(inputs))
-                ],
-                func,
-                func_parameters,
-                tile,
+        if isinstance(output, np.ndarray):  # One output
+            if debug and context_manager.dev_mode:  # Write output
+                context_manager.write_tif(output, output_keys[0], output_profiles[0])
+            return [output]
+
+        if isinstance(output, tuple):  # Multiple outputs
+            if debug and context_manager.dev_mode:  # Write output
+                for i, data in enumerate(output):
+                    context_manager.write_tif(data, output_keys[i], output_profiles[i])
+            return list(output)
+
+        # else
+        raise ValueError(f"Wrong output, type {type(output)} is not recognized.")
+
+    else:  # multiprocessing
+        # compute the strips
+        tiles = compute_mp_tiles(  # type: ignore
+            image_height=image_height,
+            image_width=image_width,
+            stable_margin=stable_margin,
+            nb_workers=context_manager.nb_workers,
+            tile_mode=tile_mode if tile_mode is not None else context_manager.tile_mode,
+            specific_tile_size=specific_tile_size,
+            strip_along_lines=strip_along_lines,
+        )
+
+        out: list[str] | list[np.ndarray]
+        if context_manager.in_memory:
+            # inputs are numpy arrays
+            list_input = [
+                (
+                    [
+                        inputs[i][
+                            tile.start_y - tile.top_margin : tile.end_y + tile.bottom_margin + 1,
+                            tile.start_x - tile.left_margin : tile.end_x + tile.right_margin + 1,
+                        ]
+                        for i in range(len(inputs))
+                    ],
+                    func,
+                    func_parameters,
+                    tile,
+                )
+                for tile in tiles
+            ]
+
+            out_chunks = context_manager.pool.starmap(
+                mp_execute_from_arrays, tqdm.tqdm(list_input, total=len(list_input))
             )
-            for tile in tiles
-        ]
 
-        out_chunks = context_manager.pool.starmap(mp_execute_from_arrays, tqdm.tqdm(list_input, total=len(list_input)))
+            out = [
+                np.zeros((image_height, image_width), dtype=output_profiles[i]["dtype"])
+                for i in range(len(output_profiles))
+            ]
 
-        out = [
-            np.zeros((image_height, image_width), dtype=output_profiles[i]["dtype"])
-            for i in range(len(output_profiles))
-        ]
-        for chunk_res_dict in out_chunks:
-            tile = chunk_res_dict["tile"]
-            for i in range(len(output_profiles)):
-                out[i][tile.start_y : tile.end_y + 1, tile.start_x : tile.end_x + 1] = chunk_res_dict["data"][i]
+            for chunk_res_dict in out_chunks:
+                tile = chunk_res_dict["tile"]
+                for i in range(len(output_profiles)):
+                    out[i][tile.start_y : tile.end_y + 1, tile.start_x : tile.end_x + 1] = chunk_res_dict["data"][
+                        i
+                    ].copy()
 
-    else:
-        # inputs are paths
-        output_paths = [context_manager.get_path(output_key, key="tmp") for output_key in output_keys]
-        list_input = [
-            (inputs, output_paths, func, func_parameters, output_profiles, context_manager.lock, tile, binary)
-            for tile in tiles
-        ]
-        context_manager.pool.starmap(mp_execute_from_paths, tqdm.tqdm(list_input))
-        out = output_paths
+            if debug and context_manager.dev_mode:
+                # Write output
+                for i, data in enumerate(out):
+                    context_manager.write_tif(data, output_keys[i], output_profiles[i])
 
-    return out
+        else:
+            # inputs are paths
+            if debug and context_manager.dev_mode:
+                output_paths = [
+                    context_manager.get_path(output_key, key=context_manager.debug_key) for output_key in output_keys
+                ]
+            else:
+                output_paths = [
+                    context_manager.get_path(output_key, key=context_manager.tmp_key) for output_key in output_keys
+                ]
+            list_input = [
+                (inputs, output_paths, func, func_parameters, output_profiles, context_manager.lock, tile)
+                for tile in tiles
+            ]
+            context_manager.pool.starmap(mp_execute_from_paths, tqdm.tqdm(list_input))
+            out = output_paths
+
+    return out  # type: ignore
 
 
 def mp_execute_from_paths(
@@ -311,7 +334,6 @@ def mp_execute_from_paths(
     output_profiles: list[dict],
     lock: Lock,
     tile: MpTile,
-    binary: bool,
 ) -> None:
     """
     This method is called within multiprocessing.
@@ -327,20 +349,7 @@ def mp_execute_from_paths(
         tile: tile to process.
     """
     # Read the inputs
-    inputs = []
-    for path in input_paths:
-        with rasterio.open(path) as src:
-            inputs.append(
-                src.read(
-                    1,
-                    window=Window(
-                        col_off=tile.start_x - tile.left_margin,
-                        row_off=tile.start_y - tile.top_margin,
-                        width=tile.width_margin,
-                        height=tile.height_margin,
-                    ),
-                )
-            )
+    inputs = [read_window(path, tile) for path in input_paths]
 
     # Run the function
     outputs = func(*inputs, **func_parameters)
@@ -357,7 +366,6 @@ def mp_execute_from_paths(
                     out_path,
                     output_profiles[index],
                     tile,
-                    binary,
                 )
     else:
         with lock:
@@ -368,7 +376,6 @@ def mp_execute_from_paths(
                 output_paths[0],
                 output_profiles[0],
                 tile,
-                binary,
             )
 
 

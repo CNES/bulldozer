@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -24,7 +23,7 @@ This module contains some utils function for bulldozer processing.
 
 import os
 from collections import namedtuple
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 import rasterio
@@ -48,27 +47,51 @@ MpTile = namedtuple(
     ],
 )
 
+MAX_CACHE = 64  # Mb, cache size for rasterio reading and writing operations, by default 5% of the usable physical RAM
 
-def write(data: np.ndarray, img_path: str, target_profile: Dict[str, Any], binary: bool = False) -> None:
+
+def write(data: np.ndarray, img_path: str, target_profile: dict[str, Any]) -> None:
     """Save in file with rasterio."""
-    if binary:
-        with rasterio.open(img_path, "w", nbits=1, **target_profile) as out_dataset:
-            out_dataset.write(data, indexes=1)
-    else:
+    with rasterio.Env(GDAL_CACHEMAX=MAX_CACHE):
         with rasterio.open(img_path, "w", **target_profile) as out_dataset:
             out_dataset.write(data, indexes=1)
 
 
-def write_window(
-    img_buffer: np.ndarray, img_path: str, target_profile: Dict[str, Any], tile: MpTile, binary: bool = False
-) -> None:
+def write_window(img_buffer: np.ndarray, img_path: str, target_profile: dict[str, Any], tile: MpTile) -> None:
     """Update window in file."""
     width = tile.end_x - tile.start_x + 1
     height = tile.end_y - tile.start_y + 1
     mode = "r+" if os.path.isfile(img_path) else "w"
-    if binary:
-        with rasterio.open(img_path, mode, nbits=1, **target_profile) as out_dataset:
-            out_dataset.write(img_buffer, window=Window(tile.start_x, tile.start_y, width, height), indexes=1)
-    else:
+    with rasterio.Env(GDAL_CACHEMAX=MAX_CACHE):
         with rasterio.open(img_path, mode, **target_profile) as out_dataset:
             out_dataset.write(img_buffer, window=Window(tile.start_x, tile.start_y, width, height), indexes=1)
+
+
+def read(img_path: str) -> np.ndarray:
+    """Read a file with minimal GDAL cache"""
+    with rasterio.Env(GDAL_CACHEMAX=MAX_CACHE):
+        with rasterio.open(img_path, "r") as src:
+            data = src.read(1)
+
+    return data
+
+
+def read_and_get_profile(img_path: str) -> tuple[np.ndarray, dict]:
+    """Read a file with minimal GDAL cache and also get its profile"""
+    with rasterio.Env(GDAL_CACHEMAX=MAX_CACHE):
+        with rasterio.open(img_path, "r") as src:
+            input_profile = src.profile.copy()
+            data = src.read(1)
+
+    return data, input_profile
+
+
+def read_window(img_path: str, tile: MpTile) -> np.ndarray:
+    """Read a window from a file with minimal GDAL cache"""
+    col_off = tile.start_x - tile.left_margin
+    row_off = tile.start_y - tile.top_margin
+    with rasterio.Env(GDAL_CACHEMAX=MAX_CACHE):
+        with rasterio.open(img_path, "r") as src:
+            data = src.read(1, window=Window(col_off, row_off, tile.width_margin, tile.height_margin))
+
+    return data

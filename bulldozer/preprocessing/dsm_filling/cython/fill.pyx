@@ -65,6 +65,7 @@ cdef class PyFill:
         Return:
             Filled DSM
         """
+
         cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
         cdef unsigned char[::1] border_nodata_mask_memview
         cdef unsigned char* border_nodata_mask_ptr = NULL  # Initialize as NULL
@@ -76,5 +77,5 @@ cdef class PyFill:
         # Iterative Filling
         iterativeFilling(&dsm_memview[0], border_nodata_mask_ptr, dsm_strip.shape[0], dsm_strip.shape[1], nodata_value, nb_it)
         # Reshape the output DSM. From array to matrix corresponding to the input DSM strip shape
-        return np.asarray(dsm_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1]).astype(np.float32)
+        return np.asarray(dsm_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])
 

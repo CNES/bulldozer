@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -81,14 +80,14 @@ class ConfigParser:
         if self.level == logging.DEBUG:
             BulldozerLogger.log("Check input config file => Passed", self.level)
 
-        with open(path, "r") as stream:
+        with open(path) as stream:
             try:
                 cfg = safe_load(stream)
                 if self.level == logging.DEBUG:
                     BulldozerLogger.log(f"Retrieved data: {cfg}", self.level)
             except YAMLError as e:
                 BulldozerLogger.log(
-                    f"Exception occured while reading the configuration file: {path}" f"\nException: {e}",
+                    f"Exception occured while reading the configuration file: {path}\nException: {e}",
                     logging.ERROR,
                 )
                 raise YAMLError(str(e)) from e
