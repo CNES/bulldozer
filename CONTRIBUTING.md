@@ -12,7 +12,7 @@ This document describes how to contribute effectively and consistently to the pr
 1. [Reporting issues](#reporting-issues)
 2. [Development setup](#development-setup)
 3. [Contributing workflow](#contributing-workflow)
-4. [Code style & tooling](#code-style--tooling)
+4. [Code style and tooling](#code-style-and-tooling)
 5. [Coding guidelines](#coding-guidelines)
 6. [Pull request acceptance process](#pull-request-acceptance-process)
 
@@ -94,7 +94,7 @@ When working on a branch (strongly recommended), prefix the branch name with the
 
 ---
 
-## Code style & tooling
+## Code style and tooling
 
 Bulldozer uses a set of standard Python tools to ensure code quality and consistency.
 All contributors are expected to follow these rules.
