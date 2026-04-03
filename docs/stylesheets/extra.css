@@ -54,3 +54,9 @@
 .rst-content {
     overflow-wrap: break-word;
 }
+
+/* Resize Bulldozer logo in lateral pannel */
+.wy-side-nav-search img {
+    max-width: 120px;
+    height: auto;
+}

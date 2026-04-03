@@ -25,9 +25,9 @@ markdown_extensions:
 docs_dir: docs/
 nav:
     - Getting Started:
-      - Home: source/INTRODUCTION.md #####
+      - Home: source/index.md
       - Installation: source/getting_started/installation.md
-      - Quick start: source/getting_started/quick_start.md #####
+      - Quick start: source/getting_started/quick_start.md
     - User guide:
       - Run Bulldozer: 
         - Prerequisite: source/user_guide/how_to_run_bulldozer.md 
@@ -38,8 +38,7 @@ nav:
         - Bulldozer outputs: source/user_guide/bulldozer_outputs.md
         - Input data preprocessing: source/user_guide/input_data_preprocessing.md 
     - Tutorials:
-      - From LiDAR data to DTM: source/tutorials/FROM_LIDAR_DATA_TO_DTM.md 
-      - From Satellites data to DTM: source/tutorials/FROM_SATELLITES_DATA_TO_DTM.md
+      - From LiDAR data to DTM: source/tutorials/from_lidar_to_dtm.md 
     - About:
       - Contributing: source/CONTRIBUTING.md
       - License: source/LICENSE.md
