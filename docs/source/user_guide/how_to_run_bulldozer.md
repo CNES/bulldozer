@@ -18,6 +18,7 @@ If any of these conditions are not satisfied, please refer to the [Input Data Pr
 ## Bulldozer interfaces
 
 **Bulldozer** can be executed using several interfaces, depending on your workflow:
+
 - [Command-Line Interface (CLI)](bulldozer_cli.md)
 - [Python API](bulldozer_python_api.md)
 - [Docker image](bulldozer_docker.md)

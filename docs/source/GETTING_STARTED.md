@@ -2,7 +2,7 @@
 
 
 <div align="center">
-<img src="images/result_overview.gif" alt="demo" width="400"/>
+<img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/result_overview.gif" alt="demo" width="400"/>
 </div>
 
 **Bulldozer** is a free scalable open source Digital Terrain Model (DTM) extraction tool developed at [CNES](https://cnes.fr/fr/).  
