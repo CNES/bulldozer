@@ -80,6 +80,7 @@ docs = [
     "mkdocs>=1.6,<2",
     "mkdocs-jupyter",
     "mkdocstrings-python",
+    "mkdocs-include-markdown-plugin"
 ]
 
 # Entry points
