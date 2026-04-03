@@ -107,7 +107,7 @@ my_project/
 ```yaml
 dsm_path: "/data/input_dsm.tif"
 output_dir: "/data/results"
-generate_dhm: true
+generate_ndsm: true
 nb_max_workers: 8
 ```
 

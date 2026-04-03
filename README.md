@@ -51,7 +51,7 @@ As described in the [documentation](https://bulldozer.readthedocs.io/en/stable/r
 ```console
 bulldozer -dsm input_dsm.tif -out output_dir
 ```
-*You can also add optional parameters such as `-dhm`, please refer to the  helper (`bulldozer -h`) command to see all the options.*  
+*You can also add optional parameters such as `-ndsm`, please refer to the  helper (`bulldozer -h`) command to see all the options.*  
 
 ✅ Done! Your DTM is available in the `output_dir`.
 

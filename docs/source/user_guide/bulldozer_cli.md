@@ -3,8 +3,9 @@
 **Bulldozer** provides a command-line interface (CLI) to extract a Digital Terrain Model (DTM) from a Digital Surface Model (DSM).
 
 The CLI can be used in two main ways:
-1. [Using a configuration file](#usage-with-a-configuration-file)
-2. [Passing parameters directly via command-line arguments](#usage-with-command-line-parameters)
+
+- [Using a configuration file](#usage-with-a-configuration-file)
+- [Passing parameters directly via command-line arguments](#usage-with-command-line-parameters)
 
 ---
 
@@ -73,7 +74,7 @@ bulldozer -dsm input_dsm.tif -out output_directory
 
 | Argument                                              | Description                                        |
 |-------------------------------------------------------|----------------------------------------------------|
-| `-ndsm`, `--generate_ndsm`                            | Generate a Digital Height Model (DHM = DSM − DTM). |
+| `-ndsm`, `--generate_ndsm`                            | Generate a Digital Height Model (nDSM = DSM − DTM). |
 | `-max_size <value>`, `--max_object_size <value>`      | Maximum size of foreground objects (meters).       |
 | `-ground <mask.tif>`, `--ground_mask_path <mask.tif>` | Path to a binary ground classification mask.       |
 | `-anchors`, `--activate_ground_anchors`               | Activate automatic ground anchor detection.        |

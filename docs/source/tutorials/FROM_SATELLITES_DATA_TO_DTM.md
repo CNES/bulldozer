@@ -31,7 +31,7 @@ wget https://github.com/cars-cnes/discover-cnes-3d-tools/raw/gh-pages/outputs_tu
 
 ✅ Done! Our data is ready to be used with **Bulldozer**.
 <div align="left">
-    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/tutorial_DSM_Nice.png" width=512>
+    <img src="../images/tutorial_DSM_Nice.png" width=512>
 </div>
 
 ## DTM extraction
@@ -41,12 +41,12 @@ pip install bulldozer-dtm
 ```
 In this tutorial we will use the Command Line Interface (CLI) of **Bulldozer** but there are several different ways of running it (for alternative launch method, please refers to the [corresponding section](../user_guide/how_to_run_bulldozer.md)):
 ```sh
-bulldozer -dsm cars_dsm_pre_event.tif -out output_dir -dhm
+bulldozer -dsm cars_dsm_pre_event.tif -out output_dir -ndsm
 ```
 ✅ Done! The resulting DTM is available in `output_dir`:
 
 <div align="left">
-    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/tutorial_result_DTM_Nice.png" width=512>
+    <img src="https://raw.githubusercontent.com/CNES/bulldozer/master/docs/source/images/tutorials/tutorial_LiDAR_result_DTM_Nice.png" width=512>
 </div>
 We can also observe the Digital Height Model (DHM), which represents the above-ground structures (buildings, vegetation, etc.) and ignores the topography:
 
