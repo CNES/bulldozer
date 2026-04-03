@@ -29,15 +29,15 @@ namespace bulldozer {
 		const long int xSize = nbCols;
 		const long int ySize = nbRows;
 
-
-		const int nbNeigbhors=8;
-		std::ptrdiff_t v8Off[nbNeigbhors] = {-xSize-1, -xSize,  -xSize+1, -1, +1, xSize-1, xSize,  xSize+1 };
+		const int nbNeighbors=8;
+		std::ptrdiff_t v8Off[nbNeighbors] = {-xSize-1, -1, xSize-1, -xSize, xSize, -xSize+1, +1, xSize+1};
+		int start_v;
+		int end_v;
 
 		float sum;
 		float used;
 		std::ptrdiff_t pos;
         std::ptrdiff_t posOff;
-
 
 		for (long int y=0; y<ySize; y++) {
 			for (long int x=0; x<xSize; x++) {
@@ -49,8 +49,20 @@ namespace bulldozer {
 				used = 0;
 
 				if (dsm[pos] != nodataValue) {
-					for(int v=0; v<nbNeigbhors; v++) {
-                        
+
+				    if (x == 0) {  // First column, no left neighbours
+                        start_v = 3;
+                        end_v = nbNeighbors;
+                    } else if (x == xSize-1) { // Last column, no right neighbours
+                        start_v = 0;
+                        end_v = nbNeighbors-3;
+                    } else {
+                        start_v = 0;
+                        end_v = nbNeighbors;
+                    }
+
+					for(int v=start_v; v<end_v; v++) {
+
                         posOff = pos+v8Off[v];
                             
                         if(posOff>=0 && posOff<xSize*ySize) {

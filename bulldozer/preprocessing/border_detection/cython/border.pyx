@@ -51,8 +51,7 @@ cdef class PyBorderNodata:
 
     def build_border_nodata_mask(self, 
                                dsm_strip : np.array, 
-                               nodata_value : float,
-                               is_transposed: bool) -> np.array:
+                               nodata_value : float) -> np.array:
         """
         This method detects the border nodata areas in the input DSM window.
         For the border nodata along vertical axis, transpose the input DSM window.
@@ -60,21 +59,14 @@ cdef class PyBorderNodata:
         Args:
             dsm_strip: part of the DSM analyzed.
             nodata_value: nodata value used in the input DSM.
-            is_transposed: boolean flag indicating if the computation is vertical or horizontal.
         Returns:
             mask of the border nodata areas in the input DSM window.
         """
-        if is_transposed:
-            first_index = 0
-            second_index = 1
-        else:
-            first_index = 1
-            second_index = 2
 
         cdef float[::1] dsm_memview = np_as_contiguous_array(dsm_strip.ravel().astype(np.float32))
         # Ouput mask that will be filled by the C++ part
-        cdef unsigned char[::1] border_nodata_mask_memview = np_as_contiguous_array(np.zeros((dsm_strip.shape[first_index] * dsm_strip.shape[second_index]), dtype=np.uint8))
+        cdef unsigned char[::1] border_nodata_mask_memview = np_as_contiguous_array(np.zeros((dsm_strip.shape[0] * dsm_strip.shape[1]), dtype=np.uint8))
         # Border nodata detection
-        buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[first_index], dsm_strip.shape[second_index], nodata_value)
+        buildBorderNodataMask(&dsm_memview[0], &border_nodata_mask_memview[0], dsm_strip.shape[0], dsm_strip.shape[1], nodata_value)
         # Reshape the output mask. From array to matrix corresponding to the input DSM strip shape
-        return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[first_index], dsm_strip.shape[second_index]).astype(np.ubyte)
+        return np.asarray(border_nodata_mask_memview).reshape(dsm_strip.shape[0], dsm_strip.shape[1])

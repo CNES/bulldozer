@@ -10,7 +10,7 @@ output_dir : "output_dir_path"
 #         Options         #
 #-------------------------#
 # [Optional] - If True, generates the Digital Height Model (DHM=DSM-DTM) in the output directory 
-generate_dhm : True
+generate_ndsm : True
 # [Optional] - Foreground max object size (in meter)
 max_object_size : 16
 # [Optional] - Path to the binary ground classification mask (expected format: "<folder_1>/<folder_2>/<mask>.<[tif/tiff]>") 
@@ -21,8 +21,6 @@ activate_ground_anchors : False
 nb_max_workers : null
 # [Optional] - If True, keep the intermediate results
 developer_mode : False
-# [Optional] - If True, keep temporary results in memory instead of writing files
-memory_mode : False
 
 #-------------------------#
 #     Expert options      #
@@ -43,3 +41,5 @@ num_outer_iter : 25
 num_inner_iter : 5
 # [Optional] - Multiprocessing context (spawn, fork or forkserver)
 mp_context : "fork"
+# [Optional] - If True, write temporary results instead of keeping them in memory
+intermediate_write : False

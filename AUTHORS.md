@@ -24,7 +24,7 @@ This file keeps track of the people who have contributed to **Bulldozer**.
 
 - [**Pierre Lassalle**](mailto:pierre.lassalle@cnes.fr) - previous co-maintainer
 - [**Yannick Ott**](mailto:yannick.ott@thalesgroup.com) - designer & developer
-- [**Celine Raille**](mailto:celine.raille@thalesgroup.com) - desginer & developer
+- [**Celine Raille**](mailto:celine.raille@thalesgroup.com) - designer & developer
 - [**Hugo Fournier**](mailto:hugo.fournier@cnes.fr) - developer (CI and Docker) 
 - [**Florian Bueno**](mailto:florian.bueno@thalesgroup.com) - developer
 - [**Aurélie Emilien**](mailto:aurelie.emilien@thalesgroup.com) - developer

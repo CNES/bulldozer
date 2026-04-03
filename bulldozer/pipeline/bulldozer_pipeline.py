@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -29,7 +28,6 @@ import multiprocessing
 import os
 import sys
 from datetime import datetime
-from typing import Union
 
 import argcomplete
 import numpy as np
@@ -38,27 +36,28 @@ import rasterio
 # Drape cloth filter
 import bulldozer.extraction.drape_cloth as dtm_extraction
 from bulldozer._version import __version__
-from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
-from bulldozer.multiprocessing.utils import write
+from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.eomultiprocessing.utils import read, read_and_get_profile, write
 from bulldozer.pipeline.bulldozer_parameters import DEFAULT_NODATA, bulldozer_pipeline_params
 
 # Postprocessing steps of Bulldozer
 from bulldozer.postprocessing import fill_pits
+from bulldozer.postprocessing.bulldozer_postprocess import run_postprocess
+
+# Preprocessing steps of Bulldozer
 from bulldozer.preprocessing.border_detection import border_detector
 from bulldozer.preprocessing.dsm_filling import dsm_filler
 from bulldozer.preprocessing.ground_detection import ground_anchors_detector
-
-# Preprocessing steps of Bulldozer
 from bulldozer.preprocessing.regular_detection import regular_detector
-from bulldozer.utils.bulldozer_argparse import EXPERT_PARAM_KEY, OPT_PARAM_KEY, REQ_PARAM_KEY, BulldozerArgumentParser
 
 # Building arguments parser
+from bulldozer.utils.bulldozer_argparse import EXPERT_PARAM_KEY, OPT_PARAM_KEY, REQ_PARAM_KEY, BulldozerArgumentParser
 from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
 from bulldozer.utils.config_parser import ConfigParser
 
 
 @Runtime
-def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
+def dsm_to_dtm(config_path: str | None = None, **kwargs: int) -> None:
     """
     Main pipeline orchestrator.
 
@@ -98,7 +97,7 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
     # Warns the user that he/she provides parameters that are not used
     if "ignored_params" in params:
         BulldozerLogger.log(
-            f'The following input parameters are ignored: {params["ignored_params"]}. '
+            f"The following input parameters are ignored: {params['ignored_params']}. "
             + "\nPlease refer to the documentation for the list of valid parameters.",
             logging.WARNING,
         )
@@ -109,16 +108,17 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
         params["nb_max_workers"] = multiprocessing.cpu_count()
         BulldozerLogger.log(
             '"nb_max_workers" parameter is not set. The default value is used:'
-            + f' maximum number of available CPU core ({params["nb_max_workers"]}).',
+            + f" maximum number of available CPU core ({params['nb_max_workers']}).",
             logging.DEBUG,
         )
 
-    with BulldozerContextManager(params, tile_mode=True) as manager:
+    BulldozerLogger.log(
+        f"Creates a pool of {params['nb_max_workers']} process in {params['mp_context']} context", logging.DEBUG
+    )
 
+    with BulldozerContextManager(params, tile_mode=True) as manager:
         # Open the input dsm that might be noisy and full of nodata...
-        with rasterio.open(params["dsm_path"]) as input_dsm:
-            input_profile = input_dsm.profile.copy()
-            dsm = input_dsm.read(1)
+        dsm, input_profile = read_and_get_profile(params["dsm_path"])
 
         # Nodata value handling
         input_nodata = input_profile["nodata"]
@@ -151,7 +151,7 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
             if pipeline_nodata == DEFAULT_NODATA:
                 clean_dsm_profile = input_profile.copy()
                 clean_dsm_profile["nodata"] = pipeline_nodata
-                clean_dsm_key = manager.get_path("clean_dsm.tif", key="tmp")
+                clean_dsm_key = manager.get_path("clean_dsm.tif", key=manager.tmp_key)
                 write(dsm, clean_dsm_key, clean_dsm_profile)
             else:
                 clean_dsm_key = params["dsm_path"]
@@ -162,7 +162,7 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
             params["dsm_z_accuracy"] = 2 * input_profile["transform"][0]
             BulldozerLogger.log(
                 '"dsm_z_accuracy" parameter is null, used default value: '
-                + f'2*planimetric resolution ({params["dsm_z_accuracy"]}m).',
+                + f"2*planimetric resolution ({params['dsm_z_accuracy']}m).",
                 logging.DEBUG,
             )
 
@@ -185,12 +185,9 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
         )
 
         # Step 2: Detect inner and border nodata masks
-        border_nodata_mask_key, inner_nodata_mask_key = border_detector.detect_border_nodata(
+        border_nodata_mask_key, inner_nodata_mask_path = border_detector.detect_border_nodata(
             dsm_key=clean_dsm_key, dsm_profile=input_profile, nodata=pipeline_nodata, manager=manager
         )
-
-        if not params["generate_dhm"]:
-            del inner_nodata_mask_key
 
         # Step 3: Fill the input DSM and compute the uncertainties
         filled_dsm_key = dsm_filler.fill_dsm(
@@ -234,6 +231,7 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
                 dsm_z_accuracy=params["dsm_z_accuracy"],
                 manager=manager,
             )
+
         else:
             ground_anchors_mask_key = None
 
@@ -254,64 +252,66 @@ def dsm_to_dtm(config_path: Union[str, None] = None, **kwargs: int) -> None:
         )
         BulldozerLogger.log("Main pass of a drape cloth filter: Done.", logging.INFO)
 
-        del ground_anchors_mask_key
+        del ground_anchors_mask_key, filled_dsm_key
 
-        # Step 6: remove pits
-        BulldozerLogger.log("Pits removal: Starting.", logging.INFO)
+        # Step 6: remove pits (includes clean DTM)
+        BulldozerLogger.log("Pits removal: Starting...", logging.INFO)
         dtm_key = fill_pits.run(
             dtm_key=dtm_key,
             border_nodata_mask_key=border_nodata_mask_key,
             dtm_profile=input_profile,
+            nodata=input_nodata,
             manager=manager,
         )
         BulldozerLogger.log("Pits removal: Done.", logging.INFO)
 
-        # Write final outputs
+        # Step 7 : post process - compare with DSM (optional) + computes nDSM (optional)
+        if params["enforce_dtm_below_dsm"] or params["generate_ndsm"]:
+            BulldozerLogger.log("Postprocessing: Starting...", logging.INFO)
+            # Compute nodata mask
+            nodata_mask = (
+                read(border_nodata_mask_key).astype(np.bool)
+                if isinstance(border_nodata_mask_key, str)
+                else border_nodata_mask_key
+            )
+            inner_nodata_mask = read(inner_nodata_mask_path)
+            nodata_mask[:] = np.logical_or(nodata_mask, inner_nodata_mask)
+            del inner_nodata_mask, border_nodata_mask_key
 
+            # Run postprocess
+            postprocess_dict = run_postprocess(
+                params["dsm_path"],
+                dtm_key,
+                nodata_mask,
+                input_nodata,
+                params["enforce_dtm_below_dsm"],
+                params["generate_ndsm"],
+            )
+
+            del nodata_mask
+            if "dtm" in postprocess_dict.keys():
+                dtm_key = postprocess_dict["dtm"]
+            BulldozerLogger.log("Postprocessing: Done.", logging.INFO)
+        else:
+            del border_nodata_mask_key
+
+        # Step 8 : write outputs
+        BulldozerLogger.log("Writing DTM...", logging.INFO)
+        dtm_filename = "dtm.tif"
         if isinstance(dtm_key, str):
-            with rasterio.open(dtm_key) as src:
-                dtm = src.read(1)
-        else:
-            dtm = dtm_key
+            # DTM has already been written in tmp folder
+            manager.move_tif(dtm_key, dtm_filename, key="out")
+        else:  # DTM is a numpy array
+            manager.write_tif(dtm_key, dtm_filename, input_profile, key="out")
 
-        if isinstance(border_nodata_mask_key, str):
-            with rasterio.open(border_nodata_mask_key) as src:
-                border_nodata_mask = src.read(1)
-        else:
-            border_nodata_mask = border_nodata_mask_key
-
-        # Step 7: Apply border_nodata_mask and save final dtm
-        BulldozerLogger.log("Applying border no data: Starting...", logging.INFO)
-        dtm[border_nodata_mask == 1] = input_nodata  # type: ignore
-        BulldozerLogger.log("Applying border no data: Done...", logging.INFO)
-        write(dtm, os.path.join(params["output_dir"], "dtm.tif"), input_profile)
-
-        # Step 8[optional]: write final dhm
-        if params["generate_dhm"]:
-
-            if isinstance(filled_dsm_key, str):
-                with rasterio.open(filled_dsm_key) as src:
-                    dsm = src.read(1)
-            else:
-                dsm = filled_dsm_key
-
-            if isinstance(inner_nodata_mask_key, str):
-                with rasterio.open(inner_nodata_mask_key) as src:
-                    inner_nodata_mask = src.read(1)
-            else:
-                inner_nodata_mask = inner_nodata_mask_key
-
-            BulldozerLogger.log("Generating DHM: Starting...", logging.INFO)
-            dhm = dsm - dtm
-            BulldozerLogger.log("Applying border no data to DHM: Starting...", logging.INFO)
-            dhm[border_nodata_mask == 1] = input_nodata
-            dhm[inner_nodata_mask == 1] = input_nodata
-            BulldozerLogger.log("Applying border no data to DHM: Done...", logging.INFO)
-            write(dhm, os.path.join(params["output_dir"], "dhm.tif"), input_profile)
-            BulldozerLogger.log("Generating DHM: Done.", logging.INFO)
+        if params["generate_ndsm"]:
+            ndsm = postprocess_dict["ndsm"]
+            del postprocess_dict, dtm_key
+            BulldozerLogger.log("Writing nDSM...", logging.INFO)
+            manager.write_tif(ndsm, "ndsm.tif", input_profile, key="out")
 
 
-def retrieve_params(config_path: Union[str, None] = None, **kwargs: int) -> dict:
+def retrieve_params(config_path: str | None = None, **kwargs: int) -> dict:
     """
     Defines the input parameters based on the provided configuration file (if provided),
     or the kwargs (CLI or Python API).
@@ -362,8 +362,7 @@ def retrieve_params(config_path: Union[str, None] = None, **kwargs: int) -> dict
                 else:
                     value = param.value_label.lower()
                 raise ValueError(
-                    f"No {param.label.lower()} provided or invalid YAML key syntax. "
-                    f"\nExpected: {param.name}={value}"
+                    f"No {param.label.lower()} provided or invalid YAML key syntax. \nExpected: {param.name}={value}"
                 )
             bulldozer_params[param.name] = input_params[param.name]
 
@@ -468,7 +467,7 @@ def get_parser() -> BulldozerArgumentParser:
         group = parser.add_argument_group(description=group_name)
         for param in list_params:
             # Add argument with the correct store action
-            if param.param_type == bool:
+            if param.param_type is bool:
                 if param.default_value is False:
                     group.add_argument(
                         f"-{param.alias}",

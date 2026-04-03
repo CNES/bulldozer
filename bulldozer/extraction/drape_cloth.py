@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -23,17 +22,14 @@ This module is used to simulate a drape cloth.
 """
 
 import os
-import shutil
-from typing import Union
 
 import numpy as np
-import rasterio
 import scipy
 from tqdm import tqdm
 
-from bulldozer.multiprocessing.bulldozer_executor import mp_n_to_m_images
-from bulldozer.multiprocessing.bulldozer_manager import BulldozerContextManager
-from bulldozer.multiprocessing.utils import write
+from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
+from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
+from bulldozer.eomultiprocessing.utils import read
 from bulldozer.utils.bulldozer_logger import Runtime
 from bulldozer.utils.helper import downsample_profile, ubyte_profile
 
@@ -70,12 +66,12 @@ def get_max_pyramid_level(max_object_size_pixels: float) -> int:
 def apply_first_tension(
     dsm: np.ndarray,
     prevent_unhook_iter: int,
-    ground_mask: Union[np.ndarray, None] = None,
+    ground_mask: np.ndarray | None = None,
 ) -> np.ndarray:
     dtm = dsm.copy()
     # Prevent unhook from hills
     for _ in tqdm(range(prevent_unhook_iter), desc="Prevent unhook from hills..."):
-        dtm = scipy.ndimage.uniform_filter(dtm, output=dtm, size=3)
+        dtm = scipy.ndimage.uniform_filter(dtm, size=3)
         if ground_mask is not None:
             dtm[ground_mask > 0] = dsm[ground_mask > 0]
 
@@ -110,7 +106,7 @@ def upsample(dtm: np.ndarray, filled_dsm: np.ndarray) -> np.ndarray:
 def drape_cloth_filter_gradient(
     dtm: np.ndarray,
     dsm: np.ndarray,
-    predicted_anchors: Union[np.ndarray, None],
+    predicted_anchors: np.ndarray | None,
     num_outer_iterations: int,
     num_inner_iterations: int,
     step_scale: float,
@@ -119,10 +115,11 @@ def drape_cloth_filter_gradient(
     grad = np.abs(np.gradient(dtm))
 
     step = np.maximum(grad[0, :, :], grad[1, :, :]) * step_scale
-    step = scipy.ndimage.maximum_filter(step, 5)
+    step[:] = scipy.ndimage.maximum_filter(step, 5)
+
+    del grad
 
     for _i in range(num_outer_iterations):
-
         dtm += step
 
         for _j in range(num_inner_iterations):
@@ -134,7 +131,7 @@ def drape_cloth_filter_gradient(
             np.minimum(dtm, dsm, out=dtm)
 
             # apply spring tension forces (blur the DTM)
-            dtm = scipy.ndimage.uniform_filter(dtm, size=3)
+            dtm[:] = scipy.ndimage.uniform_filter(dtm, size=3)
 
     # One final intersection check
     if predicted_anchors is not None:
@@ -147,7 +144,7 @@ def drape_cloth_filter_gradient(
 
 @Runtime
 def drape_cloth(
-    filled_dsm_key: Union[str, np.ndarray],
+    filled_dsm_key: str | np.ndarray,
     filled_dsm_profile: dict,
     max_object_size: float,
     prevent_unhook_iter: int,
@@ -155,8 +152,8 @@ def drape_cloth(
     num_inner_iterations: int,
     inter_dtm_filename: str,
     manager: BulldozerContextManager,
-    ground_mask_key: Union[str, np.ndarray, None] = None,
-) -> Union[str, np.ndarray]:
+    ground_mask_key: str | np.ndarray | None = None,
+) -> str | np.ndarray:
     """ """
     dsm_resolution: float = filled_dsm_profile["transform"][0]
 
@@ -166,24 +163,16 @@ def drape_cloth(
     # Determine the dezoom factor wrt to max size of an object on the ground.
     nb_levels = get_max_pyramid_level(max_object_size_pixels / 2) + 1
 
-    if isinstance(filled_dsm_key, str):
-        with rasterio.open(filled_dsm_key) as src:
-            filled_dsm = src.read(1)
-    else:
-        filled_dsm = filled_dsm_key
+    filled_dsm = read(filled_dsm_key) if isinstance(filled_dsm_key, str) else filled_dsm_key
     del filled_dsm_key
 
     if ground_mask_key is not None:
         use_ground_mask = True
-        if isinstance(ground_mask_key, str):
-            with rasterio.open(ground_mask_key) as src:
-                ground_mask = src.read(1)
-        else:
-            ground_mask = ground_mask_key
+        ground_mask = read(ground_mask_key) if isinstance(ground_mask_key, str) else ground_mask_key
         dtm = apply_first_tension(
             dsm=filled_dsm[:: 2 ** (nb_levels - 1), :: 2 ** (nb_levels - 1)],
             prevent_unhook_iter=prevent_unhook_iter,
-            ground_mask=ground_mask[:: 2 ** (nb_levels - 1), :: 2 ** (nb_levels - 1)],  # type: ignore
+            ground_mask=ground_mask[:: 2 ** (nb_levels - 1), :: 2 ** (nb_levels - 1)],
         )
     else:
         use_ground_mask = False
@@ -194,17 +183,16 @@ def drape_cloth(
     del ground_mask_key
 
     # Init classical parameters of drape cloth
-    dtm_key: Union[str, np.ndarray]
-    filled_dsm_memview_key: Union[str, np.ndarray]
-    ground_mask_memview_key: Union[str, np.ndarray, None]
-    extracted_dtm_key: Union[str, np.ndarray]
+    dtm_key: str | np.ndarray
+    filled_dsm_memview_key: str | np.ndarray
+    ground_mask_memview_key: str | np.ndarray | None
+    extracted_dtm_key: str | np.ndarray
 
     level = nb_levels - 1
     current_num_outer_iterations = num_outer_iterations
     dtm_key = dtm
 
     while level >= 0:
-
         print(f"Process level {level} ...")
 
         # Create the memviews of the filled dsm map of this level
@@ -222,8 +210,7 @@ def drape_cloth(
 
         if level < nb_levels - 1:
             if isinstance(dtm_key, str):
-                with rasterio.open(dtm_key) as ds_dtm:
-                    dtm = upsample(ds_dtm.read(1), filled_dsm_memview)
+                dtm = upsample(read(dtm_key), filled_dsm_memview)
                 os.remove(dtm_key)
             else:
                 dtm = upsample(dtm_key, filled_dsm_memview)
@@ -233,20 +220,19 @@ def drape_cloth(
             filled_dsm_memview_key = filled_dsm_memview
             ground_mask_memview_key = ground_mask_memview
         else:  # Create tifs
-            dtm_path = manager.get_path("dezoom_dtm.tif", key="tmp")
-            write(dtm, dtm_path, current_dtm_dezoom_profile)
-            filled_dsm_memview_path = manager.get_path("dezoom_dsm.tif", key="tmp")
-            write(filled_dsm_memview, filled_dsm_memview_path, current_dezoom_profile)
-            if use_ground_mask:
-                ground_mask_memview_path = manager.get_path("dezoom_ground_mask.tif", key="tmp")
-                write(ground_mask_memview, ground_mask_memview_path, current_ground_mask_dezoom_profile)  # type: ignore
-            else:
-                ground_mask_memview_path = None
-            dtm_key, filled_dsm_memview_key, ground_mask_memview_key = (
-                dtm_path,
-                filled_dsm_memview_path,
-                ground_mask_memview_path,
+            dtm_key = manager.write_tif(dtm, "dezoom_dtm.tif", current_dtm_dezoom_profile, key=manager.tmp_key)
+            filled_dsm_memview_key = manager.write_tif(
+                filled_dsm_memview, "dezoom_dsm.tif", current_dezoom_profile, key=manager.tmp_key
             )
+            if use_ground_mask:
+                ground_mask_memview_key = manager.write_tif(
+                    ground_mask_memview,  # type: ignore
+                    "dezoom_ground_mask.tif",
+                    current_ground_mask_dezoom_profile,
+                    key=manager.tmp_key,
+                )
+            else:
+                ground_mask_memview_key = None
         del dtm, filled_dsm_memview, ground_mask_memview
 
         print("Drape cloth simulation...")
@@ -257,42 +243,33 @@ def drape_cloth(
             "step_scale": 1.0 / (2 ** (nb_levels - level)),
         }
 
-        if manager.pool is None:
-            # no multiprocessing
-            if (
-                isinstance(dtm_key, str)
-                or isinstance(filled_dsm_memview_key, str)
-                or isinstance(ground_mask_memview_key, str)
-            ):
-                raise ValueError("Without multiprocessing the inputs must be numpy arrays.")
-            extracted_dtm_key = drape_cloth_filter_gradient(
-                dtm_key, filled_dsm_memview_key, ground_mask_memview_key, **drape_cloth_parameters
-            )
+        if use_ground_mask:
+            inputs = [dtm_key, filled_dsm_memview_key, ground_mask_memview_key]
         else:
-            # multiprocessing
-            mp_parameters = {
-                "image_height": current_dezoom_profile["height"],
-                "image_width": current_dezoom_profile["width"],
-                "output_profiles": [current_dtm_dezoom_profile],
-                "output_keys": ["extracted_dtm.tif"],
-                "func": drape_cloth_filter_gradient,
-                "context_manager": manager,
-                "stable_margin": int(
-                    current_num_outer_iterations * num_inner_iterations * (3 / 2)
-                ),  # 3 correspond to filter size
-            }
+            inputs = [dtm_key, filled_dsm_memview_key]
+            drape_cloth_parameters["predicted_anchors"] = None
 
-            if use_ground_mask:
-                [extracted_dtm_key] = mp_n_to_m_images(
-                    inputs=[dtm_key, filled_dsm_memview_key, ground_mask_memview_key],
-                    func_parameters=drape_cloth_parameters,
-                    **mp_parameters,
-                )
-            else:
-                drape_cloth_parameters["predicted_anchors"] = None
-                [extracted_dtm_key] = mp_n_to_m_images(
-                    inputs=[dtm_key, filled_dsm_memview_key], func_parameters=drape_cloth_parameters, **mp_parameters
-                )
+        if level == 0:  # we want to save the final dtm
+            dtm_filename = inter_dtm_filename
+            debug = True
+        else:
+            dtm_filename = "extracted_dtm.tif"
+            debug = False
+
+        [extracted_dtm_key] = mp_n_to_m_images(
+            inputs=inputs,
+            image_height=current_dezoom_profile["height"],
+            image_width=current_dezoom_profile["width"],
+            output_profiles=[current_dtm_dezoom_profile],
+            output_keys=[dtm_filename],
+            func=drape_cloth_filter_gradient,
+            func_parameters=drape_cloth_parameters,
+            context_manager=manager,
+            stable_margin=int(
+                current_num_outer_iterations * num_inner_iterations * (3 / 2)
+            ),  # 3 correspond to filter size
+            debug=debug,
+        )
 
         if not manager.in_memory:
             os.remove(dtm_key)  # type: ignore
@@ -304,19 +281,5 @@ def drape_cloth(
 
         level -= 1
         current_num_outer_iterations = max(1, int(num_outer_iterations / 2 ** (nb_levels - 1 - level)))
-
-    if not manager.in_memory:
-        key = "dev" if manager.dev_mode else "tmp"
-        dtm_path = manager.get_path(inter_dtm_filename, key=key)
-        if isinstance(dtm_key, str):
-            shutil.move(dtm_key, dtm_path)
-        else:
-            write(dtm_key, dtm_path, filled_dsm_profile)
-        return dtm_path
-
-    # else in memory
-    if manager.dev_mode:
-        dtm_path = manager.get_path(inter_dtm_filename, key="dev")
-        write(dtm_key, dtm_path, filled_dsm_profile)
 
     return dtm_key

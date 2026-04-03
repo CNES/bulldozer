@@ -11,6 +11,8 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 ### Added
 - Added `NOTICE` file
+- Added regular mask in output mask folder
+- Added optional postprocessing step ensuring DTM is below DSM with the parameter `-below_dsm`
 
 ### Changed
 - Replaced `isort`, `flake8 plugins`, `flake8`, `pylint` by [`Ruff`](http://docs.astral.sh/ruff/)
@@ -21,11 +23,14 @@ and this project follows [Semantic Versioning](https://semver.org/).
 - Added missing `.pyd`, `.dll` in `.gitignore`
 - Refactored **Bulldozer** Python API (import)
 - Added new sections in `README.md`
+- Reduced memory usage by avoiding duplication and memory cache in workers
+- Refactored eomultiprocessing module for better MP context management and readability
+- Replaced DHM by nDSM computed from the input DSM
 
 ### Fixed
-
-- Cleaned changelog and switch to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format
+- Cleaned changelog and switched to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format
 - Ignored package initialization files in `.coveragerc` file
+- Fixed neighborhood for right and left columns in regular detection step
 
 ---
 

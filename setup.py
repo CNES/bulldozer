@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022-2026 Centre National d'Etudes Spatiales (CNES).
 #
@@ -22,10 +21,9 @@
 Setup file for bulldozer
 """
 
-from pathlib import Path
-from setuptools import Extension, setup
-from Cython.Build import cythonize
 import numpy
+from Cython.Build import cythonize
+from setuptools import Extension, setup
 
 extensions = [
     Extension(

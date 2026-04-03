@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# coding: utf8
 #
 # Copyright (c) 2022 Centre National d'Etudes Spatiales (CNES).
 #
@@ -22,7 +21,7 @@
 This module groups different generic methods used in Bulldozer.
 """
 
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np
 from rasterio import Affine
@@ -44,7 +43,7 @@ def np_as_contiguous_array(arr: np.ndarray) -> np.ndarray:
     return arr
 
 
-def downsample_profile(profile: Dict[str, Any], factor: float) -> Dict[str, Any]:
+def downsample_profile(profile: dict[str, Any], factor: float) -> dict[str, Any]:
     """Downsample image profile by affine translation."""
     transform = profile["transform"]
 
@@ -62,10 +61,18 @@ def downsample_profile(profile: Dict[str, Any], factor: float) -> Dict[str, Any]
     return newprofile
 
 
-def ubyte_profile(input_profile: Dict[str, Any]) -> Dict[str, Any]:
+def ubyte_profile(input_profile: dict[str, Any], nodata_value: float | None = None) -> dict[str, Any]:
     """Convert input profile to ubyte profile."""
     output_profile = input_profile.copy()
     output_profile["dtype"] = np.ubyte
-    output_profile["nodata"] = None
+    output_profile["nodata"] = nodata_value
+
+    return output_profile
+
+
+def ubyte_profile_1bit(input_profile: dict[str, Any], nodata_value: float | None = None) -> dict[str, Any]:
+    """Convert input profile to ubyte profile."""
+    output_profile = ubyte_profile(input_profile, nodata_value)
+    output_profile["nbits"] = 1
 
     return output_profile
