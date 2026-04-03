@@ -25,7 +25,7 @@ markdown_extensions:
 docs_dir: docs/
 nav:
     - Getting Started:
-      - Home: source/index.md
+      - Home: index.md
       - Installation: source/getting_started/installation.md
       - Quick start: source/getting_started/quick_start.md
     - User guide:

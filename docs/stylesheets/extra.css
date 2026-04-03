@@ -56,7 +56,7 @@
 }
 
 /* Resize Bulldozer logo in lateral pannel */
-.wy-side-nav-search img {
-    max-width: 120px;
-    height: auto;
+.wy-side-nav-search a img {
+    max-width: 150px !important;
+    height: auto !important;
 }
