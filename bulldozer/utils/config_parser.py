@@ -26,7 +26,7 @@ import os.path
 
 from yaml import YAMLError, safe_load
 
-from bulldozer.utils.bulldozer_logger import BulldozerLogger
+from bulldozer.utils.bulldozer_logger import logger
 
 
 class ConfigParser:
@@ -64,31 +64,22 @@ class ConfigParser:
         """
         # input file format check
         if not (isinstance(path, str) and (path.endswith(".yaml") or path.endswith(".yml"))):
-            BulldozerLogger.log(
-                "'path' argument should be a path to the YAML config file " + f"(here: {path})",
-                logging.ERROR,
-            )
+            logger.error(f"'path' argument should be a path to the YAML config file (here: {path})")
             raise ValueError()
         # input file existence check
         if not os.path.isfile(path):
-            BulldozerLogger.log(
-                f"The input config file '{path}' doesn't exist",
-                logging.ERROR,
-            )
+            logger.error(f"The input config file '{path}' doesn't exist")
             raise FileNotFoundError()
 
         if self.level == logging.DEBUG:
-            BulldozerLogger.log("Check input config file => Passed", self.level)
+            logger.debug("Check input config file => Passed")
 
         with open(path) as stream:
             try:
                 cfg = safe_load(stream)
                 if self.level == logging.DEBUG:
-                    BulldozerLogger.log(f"Retrieved data: {cfg}", self.level)
+                    logger.debug(f"Retrieved data: {cfg}")
             except YAMLError as e:
-                BulldozerLogger.log(
-                    f"Exception occured while reading the configuration file: {path}\nException: {e}",
-                    logging.ERROR,
-                )
+                logger.error(f"Exception occured while reading the configuration file: {path}\nException: {e}")
                 raise YAMLError(str(e)) from e
         return cfg

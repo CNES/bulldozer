@@ -21,8 +21,6 @@
 This module is used to extract the regular areas in the provided DSM.
 """
 
-import logging
-
 import numpy as np
 from scipy.ndimage import binary_opening
 
@@ -30,7 +28,7 @@ from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
 from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
 from bulldozer.eomultiprocessing.utils import read
 from bulldozer.preprocessing import regular  # type: ignore
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 from bulldozer.utils.helper import ubyte_profile_1bit
 
 
@@ -80,7 +78,7 @@ def detect_regular_areas(
     """
     regular_mask_profile = ubyte_profile_1bit(dsm_profile)
 
-    BulldozerLogger.log("Raw regular mask processing...", logging.INFO)
+    logger.info("Raw regular mask processing...")
 
     regular_mask_key: str | np.ndarray
 
@@ -97,7 +95,7 @@ def detect_regular_areas(
         debug=True,
     )
 
-    BulldozerLogger.log("Regular mask processing...", logging.INFO)
+    logger.info("Regular mask processing...")
 
     bin_regular_mask: np.ndarray
     bin_regular_mask_filename = "regular_mask.tif"
@@ -111,10 +109,7 @@ def detect_regular_areas(
         nb_iterations = reg_filtering_iter
     else:
         nb_iterations = int(np.max([1, max_object_size / 4]))
-        BulldozerLogger.log(
-            f"'reg_filtering_iter' is not set or less than 1. Used default computed value: {nb_iterations}",
-            logging.DEBUG,
-        )
+        logger.debug(f"'reg_filtering_iter' is not set or less than 1. Used default computed value: {nb_iterations}")
 
     # This condition allows the user to deactivate the filtering
     # (iterations=0 in binary_opening ends up to filtering until nothing change)

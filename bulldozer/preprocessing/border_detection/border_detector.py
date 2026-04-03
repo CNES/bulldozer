@@ -21,8 +21,6 @@
 This module is used to detect border and inner nodata in the input DSM.
 """
 
-import logging
-
 import numpy as np
 from scipy.ndimage import binary_fill_holes
 
@@ -30,7 +28,7 @@ from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
 from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
 from bulldozer.eomultiprocessing.utils import read
 from bulldozer.preprocessing import border  # type: ignore
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 from bulldozer.utils.helper import ubyte_profile_1bit
 
 
@@ -83,7 +81,7 @@ def detect_border_nodata(
     nodata_mask_profile = ubyte_profile_1bit(dsm_profile)
 
     # Horizontal border nodata detection
-    BulldozerLogger.log("Horizontal nodata mask processing...", logging.INFO)
+    logger.info("Horizontal nodata mask processing...")
     hor_border_nodata_mask_key: str | np.ndarray
 
     [hor_border_nodata_mask_key] = mp_n_to_m_images(
@@ -100,7 +98,7 @@ def detect_border_nodata(
     )
 
     # Vertical border nodata detection
-    BulldozerLogger.log("Vertical nodata mask processing...", logging.INFO)
+    logger.info("Vertical nodata mask processing...")
     ver_border_nodata_mask_key: str | np.ndarray
 
     [ver_border_nodata_mask_key] = mp_n_to_m_images(
@@ -137,7 +135,7 @@ def detect_border_nodata(
     )
 
     # Inner nodata detection
-    BulldozerLogger.log("Build Inner NoData Mask", logging.INFO)
+    logger.info("Build Inner NoData Mask")
     dsm = read(dsm_key) if isinstance(dsm_key, str) else dsm_key
 
     inner_nodata_mask = np.logical_and(np.logical_not(border_nodata_mask), dsm == nodata)

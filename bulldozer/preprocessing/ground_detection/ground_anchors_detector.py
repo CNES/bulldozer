@@ -21,14 +21,12 @@
 This module is used to detect ground anchors points before the main DTM extraction step.
 """
 
-import logging
-
 import numpy as np
 
 from bulldozer.eomultiprocessing.bulldozer_executor import mp_n_to_m_images
 from bulldozer.eomultiprocessing.bulldozer_manager import BulldozerContextManager
 from bulldozer.eomultiprocessing.utils import read
-from bulldozer.utils.bulldozer_logger import BulldozerLogger, Runtime
+from bulldozer.utils.bulldozer_logger import Runtime, logger
 from bulldozer.utils.helper import ubyte_profile_1bit
 
 
@@ -86,7 +84,7 @@ def detect_ground_anchors(
     """
     ground_anchors_profile = ubyte_profile_1bit(dsm_profile)
 
-    BulldozerLogger.log("Ground anchors mask processing...", logging.INFO)
+    logger.info("Ground anchors mask processing...")
 
     ground_anchors_mask_key: str | np.ndarray
     [ground_anchors_mask_key] = mp_n_to_m_images(
@@ -104,7 +102,7 @@ def detect_ground_anchors(
 
     # Union of detected ground anchors mask with provided ground_mask
     if ground_mask_path is not None:
-        BulldozerLogger.log("Ground mask processing...", logging.INFO)
+        logger.info("Ground mask processing...")
 
         ground_anchors_mask = (
             read(ground_anchors_mask_key) if isinstance(ground_anchors_mask_key, str) else ground_anchors_mask_key
