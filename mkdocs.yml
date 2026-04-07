@@ -1,0 +1,63 @@
+site_name: Bulldozer
+repo_url: https://gitlab.cnes.fr/3d/bulldozer
+repo_name: 3d/bulldozer
+theme: 
+  # Readthedocs template
+  name: readthedocs
+  custom_dir: docs/overrides
+  # Enables highlighting of source code in code blocks
+  highlightjs: true
+  hljs_languages:
+    - yaml
+    - python
+  logo: source/images/logo.png
+  favicon: source/images/logo_icon.ico
+
+markdown_extensions:
+  - def_list # Enables definition lists in Markdown. This allows you to associate terms with their definitions, which is useful for glossaries or parameter descriptions.
+  - attr_list # Allows adding HTML attributes (such as classes, IDs, or styles) directly to Markdown elements. This is useful for customizing the appearance or behavior of specific elements.
+  - admonition # Provides support for admonition blocks such as notes, warnings, tips, and important messages. These blocks help highlight key information in the documentation.
+  - pymdownx.tabbed: # Adds support for tabbed content blocks, allowing multiple content sections (e.g., CLI vs Python examples) to be displayed within tabs.  
+      alternate_style: true # Enables a different visual style for better integration with some themes.
+  - pymdownx.highlight # Enhances code block syntax highlighting. It provides better control over code formatting, supports more languages, and improves readability of code snippets.
+  # - tables
+
+docs_dir: docs/
+nav:
+    - Getting Started:
+      - Home: index.md
+      - Installation: source/getting_started/installation.md
+      - Quick start: source/getting_started/quick_start.md
+    - User guide:
+      - Run Bulldozer: 
+        - Prerequisite: source/user_guide/how_to_run_bulldozer.md 
+        - Using CLI: source/user_guide/bulldozer_cli.md 
+        - Using Python API: source/user_guide/bulldozer_python_api.md
+        - Using Docker: source/user_guide/bulldozer_docker.md
+        - Bulldozer options: source/user_guide/bulldozer_options.md
+        - Bulldozer outputs: source/user_guide/bulldozer_outputs.md
+        - Input data preprocessing: source/user_guide/input_data_preprocessing.md 
+    - Tutorials:
+      - From LiDAR data to DTM: source/tutorials/from_lidar_to_dtm.md 
+    - About:
+      - Contributing: source/CONTRIBUTING.md
+      - License: source/LICENSE.md
+extra:
+  notebooks:
+    - source/tutorials/notebooks/From_Lidar_data_to_DTM.ipynb
+    - source/tutorials/notebooks/From_Satellites_data_to_DTM.ipynb
+extra_css:
+  - stylesheets/extra.css
+extra_javascript:
+  - javascripts/extra.js
+
+plugins:
+  - search  # make the doc searchable
+  - include-markdown # allows importing external markdown files
+  - mkdocs-jupyter:
+      include_source: true # allow downloading jupyter notebooks from the doc
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google

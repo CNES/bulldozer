@@ -63,7 +63,7 @@ dependencies = [
 ]
 
 [project.urls]
-#Documentation = "https://bulldozer.readthedocs.io/en/latest/"
+Documentation = "https://bulldozer.readthedocs.io/en/latest/"
 Repository = "https://github.com/CNES/bulldozer"
 Issues = "https://github.com/CNES/bulldozer/issues"
 
@@ -78,6 +78,9 @@ dev = [
 
 docs = [
     "mkdocs>=1.6,<2",
+    "mkdocs-jupyter",
+    "mkdocstrings-python",
+    "mkdocs-include-markdown-plugin"
 ]
 
 # Entry points

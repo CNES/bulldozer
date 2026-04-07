@@ -1,9 +1,9 @@
 # Credits
 
-Copyright (c) 2022–2026  Centre National d'Études Spatiales (CNES).
+Copyright (c) 2022–2026 Centre National d'Études Spatiales (CNES).
 
-**Bulldozer** is licensed under the permissive Apache License 2.0  
-(see the [LICENSE](LICENSE) file for details).
+**Bulldozer** is licensed under permissive [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0). Please refer to the [LICENSE](LICENSE) file for more details.
+
 
 The copyright is held by CNES to ensure long-term maintenance and governance.
 
@@ -44,4 +44,6 @@ We would also like to thank the maintainers and contributors of the open-source 
 - [numpy](https://github.com/numpy/numpy)
 - [scipy](https://github.com/scipy/scipy)
 - [Cython](https://github.com/cython/cython)
+- [cibuildwheel](https://github.com/pypa/cibuildwheel)
+- [mkdocs](https://github.com/mkdocs)
 - and many others.
