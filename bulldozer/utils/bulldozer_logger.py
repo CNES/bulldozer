@@ -132,7 +132,7 @@ def init_logfile() -> None:
         logger.debug(f"Error occurred during logfile init: \n{error}")
 
 
-def clean_handlers():
+def clean_handlers() -> None:
     """
     Clean handlers if logger already exists
     """
