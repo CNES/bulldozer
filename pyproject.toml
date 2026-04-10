@@ -78,9 +78,14 @@ dev = [
 
 docs = [
     "mkdocs>=1.6,<2",
+    "mkdocs-include-markdown-plugin",
     "mkdocs-jupyter",
-    "mkdocstrings-python",
-    "mkdocs-include-markdown-plugin"
+    "mkdocstrings>=0.24",   # plugin MkDocs
+    "mkdocstrings-python",  # handler Python
+    "pymdown-extensions",   # extensions for Python Markdown
+    "nbconvert",            # required for mkdocs-jupyter
+    "jupyter",              # required for mkdocs-jupyter
+    "pygments"              # syntax highlighter
 ]
 
 # Entry points

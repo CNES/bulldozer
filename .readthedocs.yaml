@@ -23,10 +23,13 @@ build:
   tools:
     python: "3.10"
 
-jobs:
-    pre_install:
-        #TODO update to install from requirements
-        - pip install mkdocs
+python:
+  install:
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
+
 mkdocs:
   configuration: mkdocs.yml
   fail_on_warning: false

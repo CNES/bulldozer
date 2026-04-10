@@ -10,6 +10,12 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [1.3.1] - 2026-04-10
+
+### Fixed
+- Fixed readthedocs setup
 
 ---
 
