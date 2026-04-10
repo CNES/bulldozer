@@ -15,6 +15,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 ## [1.3.1] - 2026-04-10
 
 ### Fixed
+- Added a finally block to ensure all active logger handlers are properly removed
 - Fixed readthedocs setup
 - Fixed cetificate issue in gitlab CI
 

@@ -57,11 +57,6 @@ def setup_logger(output_dir: str) -> logging.Logger:
 
     logger.setLevel(logging.DEBUG)
 
-    # Clean handlers if logger already exists
-    for handler in logger.handlers:
-        handler.close()
-    logger.handlers.clear()
-
     # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
@@ -135,6 +130,15 @@ def init_logfile() -> None:
         logger.debug(init_message)
     except Exception as error:
         logger.debug(f"Error occurred during logfile init: \n{error}")
+
+
+def clean_handlers():
+    """
+    Clean handlers if logger already exists
+    """
+    for handler in logger.handlers:
+        handler.close()
+    logger.handlers.clear()
 
 
 class Runtime:
