@@ -16,6 +16,7 @@ and this project follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - Fixed readthedocs setup
+- Fixed cetificate issue in gitlab CI
 
 ---
 

@@ -130,6 +130,9 @@ deploy-github:
     name: ${ARTIFACTORY_URL}/${TAG_IMAGE_GIT}
     entrypoint: [""]
   before_script:
+    # Add CNES certificate
+    - cat ${CNES_CERTIFICATE} > /usr/local/share/ca-certificates/my-cert.crt
+    - update-ca-certificates
     # Set git credentials
     - git config --global user.email "${GITLAB_USER_EMAIL}"
     - git config --global user.name "${GITLAB_USER_NAME}"
